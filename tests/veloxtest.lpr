@@ -23,20 +23,55 @@ uses
   Velox.Controls,
   Velox.VirtualGrid,
   Velox.Async,
-  Velox.System;
+  Velox.System,
+  Velox.Export,
+  Velox.Hotkeys,
+  Velox.Config,
+  Velox.Charts,
+  Velox.Toast,
+  Velox.EventBus,
+  Velox.Reactive,
+  Velox.TreeBuilder,
+  Velox.StyledButton,
+  Velox.TaskDialog,
+  Velox.CommandPalette,
+  Velox.AppShell;
 
 type
   TTestRow = record
     Id: Integer;
+    ParentId: Integer;
+    Depth: Integer;
     Name: string;
     Metric: Double;
   end;
 
   TGridSortHelper = class
   public
+    HotkeyHits: Integer;
+    EventBusHits: Integer;
+    LastEventTopic: string;
+    LastEventPayload: string;
+    ObservableHits: Integer;
+    LastObservableVal: Integer;
+    DebounceHits: Integer;
+    ChipSelectedIdx: Integer;
+    CommandExecuted: Boolean;
+    SwitchedPageId: string;
     function CompareRows(const A, B: TTestRow; const ACol: Integer): Integer;
     function CollectSample: Integer;
     procedure DeliverSample(const AVal: Integer);
+    function ProvideExportCell(const ARow, ACol: Integer): string;
+    procedure OnHotkeyFired(Sender: TObject);
+    procedure OnBusEvent(const AEvent: TVeloxEventMessage);
+    procedure OnObsChanged(const AVal: Integer);
+    function FormatObsInt(const AVal: Integer): string;
+    procedure OnDebouncedFired(Sender: TObject);
+    procedure ExtractTreeIds(const AItem: TTestRow; out ANodeId, AParentId: Cardinal);
+    procedure SetTreeDepth(var AItem: TTestRow; const ADepth: Integer);
+    procedure OnChipSelect(Sender: TObject; const ASelectedIndex: Integer);
+    procedure OnCommandRun;
+    procedure OnShellPageSwitch(const APageId: string; APagePanel: TPanel);
   end;
 
 function TGridSortHelper.CompareRows(const A, B: TTestRow; const ACol: Integer): Integer;
@@ -62,6 +97,84 @@ begin
   // No-op in console test
 end;
 
+function TGridSortHelper.ProvideExportCell(const ARow, ACol: Integer): string;
+begin
+  if ARow = 0 then
+  begin
+    case ACol of
+      0: Result := '100';
+      1: Result := 'nova, "core"';
+      2: Result := '42.5%';
+    else
+      Result := '';
+    end;
+  end
+  else
+  begin
+    case ACol of
+      0: Result := '200';
+      1: Result := 'velox|ui';
+      2: Result := '12.0%';
+    else
+      Result := '';
+    end;
+  end;
+end;
+
+procedure TGridSortHelper.OnHotkeyFired(Sender: TObject);
+begin
+  Inc(HotkeyHits);
+end;
+
+procedure TGridSortHelper.OnBusEvent(const AEvent: TVeloxEventMessage);
+begin
+  Inc(EventBusHits);
+  LastEventTopic := AEvent.Topic;
+  LastEventPayload := AEvent.Payload;
+end;
+
+procedure TGridSortHelper.OnObsChanged(const AVal: Integer);
+begin
+  Inc(ObservableHits);
+  LastObservableVal := AVal;
+end;
+
+function TGridSortHelper.FormatObsInt(const AVal: Integer): string;
+begin
+  Result := IntToStr(AVal);
+end;
+
+procedure TGridSortHelper.OnDebouncedFired(Sender: TObject);
+begin
+  Inc(DebounceHits);
+end;
+
+procedure TGridSortHelper.ExtractTreeIds(const AItem: TTestRow; out ANodeId, AParentId: Cardinal);
+begin
+  ANodeId := Cardinal(AItem.Id);
+  AParentId := Cardinal(AItem.ParentId);
+end;
+
+procedure TGridSortHelper.SetTreeDepth(var AItem: TTestRow; const ADepth: Integer);
+begin
+  AItem.Depth := ADepth;
+end;
+
+procedure TGridSortHelper.OnChipSelect(Sender: TObject; const ASelectedIndex: Integer);
+begin
+  ChipSelectedIdx := ASelectedIndex;
+end;
+
+procedure TGridSortHelper.OnCommandRun;
+begin
+  CommandExecuted := True;
+end;
+
+procedure TGridSortHelper.OnShellPageSwitch(const APageId: string; APagePanel: TPanel);
+begin
+  SwitchedPageId := APageId;
+end;
+
 var
   Failures: Integer = 0;
   Passed: Integer = 0;
@@ -82,7 +195,7 @@ end;
 
 var
   Ring: TVeloxRingBuffer;
-  Arr: TSingleDynArray;
+  Arr, ArrB: TSingleDynArray;
   DarkColors, LightColors: TVeloxThemeColors;
   Bmp: TBitmap;
   Frm: TForm;
@@ -92,7 +205,7 @@ var
   Btn: TButton;
   Lv: TListView;
   Grid: TVeloxVirtualGrid<TTestRow>;
-  Rows: TList<TTestRow>;
+  Rows, TreeOut: TList<TTestRow>;
   R: TTestRow;
   Helper: TGridSortHelper;
   Modal: TVeloxModalDialog;
@@ -102,14 +215,31 @@ var
   ProcMask, SysMask: NativeUInt;
   GdiCnt, UserCnt: Cardinal;
   VerInfo: TVeloxFileVersionInfo;
-  CmdLine, SysRoot: string;
+  CmdLine, SysRoot, CsvStr, JsonStr, MdStr, CheatStr, TmpIni: string;
+  Hotkeys: TVeloxHotkeyRegistry;
+  TestKey: Word;
+  Cfg: TVeloxConfig;
+  ClampL, ClampT, ClampW, ClampH: Integer;
+  Toast: TVeloxToast;
+  Bus: TVeloxEventBus;
+  SubId1, SubIdWild: Integer;
+  ObsInt: TVeloxObservable<Integer>;
+  BoundLbl: TLabel;
+  Debouncer: TVeloxDebouncer;
+  StyledBtn: TVeloxStyledButton;
+  Chips: TVeloxChipGroup;
+  TaskDlgH: TVeloxTaskDialogHandle;
+  CmdPalette: TVeloxCommandPalette;
+  CmdFiltered: TVeloxCommandArray;
+  Shell: TVeloxAppShell;
+  Page1, Page2: TPanel;
   I: Integer;
 begin
   try
-    WriteLn('=== VeloxUI Automated Verification Suite ===');
+    WriteLn('=== VeloxUI Automated Verification Suite (19 Modules) ===');
 
     // 1. Ring Buffer & Telemetry Primitives
-    WriteLn('[1/7] Testing TVeloxRingBuffer & TVeloxUtils...');
+    WriteLn('[1/19] Testing TVeloxRingBuffer & TVeloxUtils...');
     Ring.Clear(10);
     Check('ring: initial count is 0', Ring.Count = 0);
     Check('ring: initial capacity is 10', Ring.Capacity = 10);
@@ -134,7 +264,7 @@ begin
     Check('utils: UTF-8/UTF-16 sort arrows non-empty', (VELOX_ARROW_ASC <> '') and (VELOX_ARROW_DESC <> ''));
 
     // 2. GDI+ Hardware-Accelerated Vector Engine
-    WriteLn('[2/7] Testing TVeloxGdiPlus Anti-Aliased Primitives...');
+    WriteLn('[2/19] Testing TVeloxGdiPlus Anti-Aliased Primitives...');
     Bmp := TBitmap.Create;
     try
       Bmp.SetSize(240, 120);
@@ -151,13 +281,13 @@ begin
     end;
 
     // 3. DWM & UXTheme Dark Mode Engine
-    WriteLn('[3/7] Testing TVeloxThemeEngine (DWM, UXTheme & Recursive Styling)...');
+    WriteLn('[3/19] Testing TVeloxThemeEngine (DWM, UXTheme & Recursive Styling)...');
     TVeloxThemeEngine.InitializeProcessDarkMode(True);
     Check('theme: InitializeProcessDarkMode (Ordinal 135) succeeds', True);
     Check('theme: DetectSystemTheme returns valid enum', TVeloxThemeEngine.DetectSystemTheme in [vtDark, vtLight]);
 
     // 4. Fluent Control Factories (SearchBox, DarkCheckBox, ComboBox Sync, Modal)
-    WriteLn('[4/7] Testing TVeloxControls (SearchBox, DarkCheckBox, High-DPI ComboBox, Modal)...');
+    WriteLn('[4/19] Testing TVeloxControls (SearchBox, DarkCheckBox, High-DPI ComboBox, Modal)...');
     Frm := TForm.CreateNew(nil);
     try
       Frm.SetBounds(100, 100, 800, 600);
@@ -204,7 +334,7 @@ begin
       end;
 
       // 5. Generic Virtual Grid Controller (TVeloxVirtualGrid<T>)
-      WriteLn('[5/7] Testing TVeloxVirtualGrid<T> (OwnerData, QuickSort, Natural Sort Direction)...');
+      WriteLn('[5/19] Testing TVeloxVirtualGrid<T> (OwnerData, QuickSort, Natural Sort Direction)...');
       Lv := TListView.Create(Frm);
       Lv.Parent := Frm;
       Lv.SetBounds(16, 100, 760, 400);
@@ -213,9 +343,9 @@ begin
       Helper := TGridSortHelper.Create;
       Rows := TList<TTestRow>.Create;
       try
-        Grid.AddColumn('ID', 70, taLeftJustify, False);       // Text/ID: default ascending
-        Grid.AddColumn('Name', 200, taLeftJustify, False);    // Text: default ascending
-        Grid.AddColumn('RAM (MB)', 120, taRightJustify, True); // Numeric: default descending!
+        Grid.AddColumn('ID', 70, taLeftJustify, False);
+        Grid.AddColumn('Name', 200, taLeftJustify, False);
+        Grid.AddColumn('RAM (MB)', 120, taRightJustify, True);
 
         Check('grid: OwnerData enabled automatically', Lv.OwnerData);
         Check('grid: 3 columns registered', Lv.Columns.Count = 3);
@@ -224,7 +354,6 @@ begin
         R.Id := 1; R.Name := 'Alpha'; R.Metric := 900.0; Rows.Add(R);
         R.Id := 3; R.Name := 'Gamma'; R.Metric := 420.0; Rows.Add(R);
 
-        // Clicking Column 2 ('RAM (MB)') first time should sort DESCENDING because DefaultDescending = True
         Grid.ClickColumn(2);
         Check('grid: numeric column defaults to descending on first click', (Grid.SortColumn = 2) and (not Grid.SortAscending));
         Grid.SortList(Rows, Helper.CompareRows);
@@ -233,7 +362,6 @@ begin
         Check('grid: header indicator shows descending arrow',
           Pos(VELOX_ARROW_DESC, Lv.Columns[2].Caption) > 0);
 
-        // Clicking Column 1 ('Name') first time should sort ASCENDING because DefaultDescending = False
         Grid.ClickColumn(1);
         Check('grid: text column defaults to ascending on first click', (Grid.SortColumn = 1) and Grid.SortAscending);
         Grid.SortList(Rows, Helper.CompareRows);
@@ -254,7 +382,7 @@ begin
     end;
 
     // 6. Async Poller & Hysteresis Threshold Alert Engine
-    WriteLn('[6/7] Testing TVeloxPoller<T> & TVeloxThresholdAlert...');
+    WriteLn('[6/19] Testing TVeloxPoller<T> & TVeloxThresholdAlert...');
     Alert.Configure(75.0, 90.0, 2, 10000, 5.0);
     Check('alert: first warning spike (streak 1/2) does not fire yet', not Alert.Evaluate(80.0, 1000, Sev));
     Check('alert: second sustained warning spike (streak 2/2) fires vsWarning',
@@ -285,7 +413,7 @@ begin
     end;
 
     // 7. Win32 & NT Kernel System Helpers (TVeloxSystem)
-    WriteLn('[7/7] Testing TVeloxSystem (NT Command Line, VersionInfo, GUI Resources, Affinity)...');
+    WriteLn('[7/19] Testing TVeloxSystem (NT Command Line, VersionInfo, GUI Resources, Affinity)...');
     CmdLine := TVeloxSystem.GetProcessCommandLine(GetCurrentProcessId);
     Check('system: GetProcessCommandLine(CurrentPID) via NtQueryInformationProcess(60) non-empty', CmdLine <> '');
     Check('system: GetProcessCommandLine(PID 0) guarded', TVeloxSystem.GetProcessCommandLine(0) = '');
@@ -306,6 +434,265 @@ begin
       TVeloxSystem.TrimProcessWorkingSet(GetCurrentProcessId));
     Check('system: RunTask rejects empty command',
       not TVeloxSystem.RunTask('   ', False));
+
+    // 8. Universal Data Exporter (TVeloxExporter)
+    WriteLn('[8/19] Testing TVeloxExporter (CSV, JSON, Markdown)...');
+    Helper := TGridSortHelper.Create;
+    try
+      Check('export: EscapeCsvField quotes commas and quotes',
+        TVeloxExporter.EscapeCsvField('nova, "core"') = '"nova, ""core"""');
+      Check('export: EscapeJsonString escapes quotes and backslashes',
+        TVeloxExporter.EscapeJsonString('C:\app\"bin"') = 'C:\\app\\\"bin\"');
+      CsvStr := TVeloxExporter.BuildCsvTable(['PID', 'Name', 'CPU'], 2, Helper.ProvideExportCell);
+      Check('export: BuildCsvTable includes header and escaped rows',
+        (Pos('PID,Name,CPU', CsvStr) > 0) and (Pos('"nova, ""core"""', CsvStr) > 0));
+      JsonStr := TVeloxExporter.BuildJsonTable('VeloxTest', ['PID', 'Name', 'CPU'], 2, Helper.ProvideExportCell);
+      Check('export: BuildJsonTable includes generator, count, and escaped JSON items',
+        (Pos('"generator": "VeloxTest"', JsonStr) > 0) and (Pos('"count": 2', JsonStr) > 0));
+      MdStr := TVeloxExporter.BuildMarkdownTable(['PID', 'Name', 'CPU'], 2, Helper.ProvideExportCell);
+      Check('export: BuildMarkdownTable escapes pipe characters in GFM cells',
+        (Pos('| PID | Name | CPU |', MdStr) > 0) and (Pos('velox\|ui', MdStr) > 0));
+    finally
+      Helper.Free;
+    end;
+
+    // 9. Declarative Hotkey & Action Registry (TVeloxHotkeyRegistry)
+    WriteLn('[9/19] Testing TVeloxHotkeyRegistry (Key Dispatch & Cheat Sheet)...');
+    Helper := TGridSortHelper.Create;
+    Hotkeys := TVeloxHotkeyRegistry.Create;
+    try
+      Hotkeys.Bind(Ord('F'), [ssCtrl], 'Ctrl+F', 'Focus search bar', Helper.OnHotkeyFired, 'Navigation');
+      Hotkeys.Bind(VK_F1, [], 'F1', 'Show help modal', Helper.OnHotkeyFired, 'Help');
+      Check('hotkeys: 2 bindings registered', Hotkeys.Count = 2);
+      TestKey := Ord('F');
+      Check('hotkeys: HandleKeyDown matches Ctrl+F and zeroes Key',
+        Hotkeys.HandleKeyDown(nil, TestKey, [ssCtrl]) and (TestKey = 0) and (Helper.HotkeyHits = 1));
+      CheatStr := Hotkeys.GenerateCheatSheet('VeloxTest');
+      Check('hotkeys: GenerateCheatSheet includes Ctrl+F and category',
+        (Pos('Ctrl+F', CheatStr) > 0) and (Pos('[Navigation]', CheatStr) > 0));
+    finally
+      Hotkeys.Free;
+      Helper.Free;
+    end;
+
+    // 10. Persistent Config & Window Placement Manager (TVeloxConfig)
+    WriteLn('[10/19] Testing TVeloxConfig (Key/Value, Theme & Multi-Monitor Clamp)...');
+    TmpIni := ExtractFilePath(ParamStr(0)) + 'velox_test_cfg.ini';
+    Cfg := TVeloxConfig.Create;
+    try
+      Cfg.WriteString('app.name', 'VeloxApp');
+      Cfg.WriteInt('poll.ms', 1500);
+      Cfg.WriteBool('tray.min', True);
+      Cfg.WriteTheme(vtLight);
+      Check('config: SaveToFile succeeds', Cfg.SaveToFile(TmpIni));
+    finally
+      Cfg.Free;
+    end;
+    Cfg := TVeloxConfig.Create(TmpIni);
+    try
+      Check('config: ReadString roundtrip', Cfg.ReadString('app.name') = 'VeloxApp');
+      Check('config: ReadInt roundtrip', Cfg.ReadInt('poll.ms') = 1500);
+      Check('config: ReadBool roundtrip', Cfg.ReadBool('tray.min') = True);
+      Check('config: ReadTheme roundtrip', Cfg.ReadTheme = vtLight);
+      ClampL := 3200; ClampT := -200; ClampW := 800; ClampH := 600;
+      TVeloxConfig.ClampToDesktop(ClampL, ClampT, ClampW, ClampH, 1920, 1080);
+      Check('config: ClampToDesktop rescues off-screen coordinates into 1920x1080',
+        (ClampL = 1120) and (ClampT = 0));
+    finally
+      Cfg.Free;
+      if FileExists(TmpIni) then SysUtils.DeleteFile(TmpIni);
+    end;
+
+    // 11. Advanced GDI+ Charts (TVeloxCharts: DonutGauge, DualSparkline, HeatGrid)
+    WriteLn('[11/19] Testing TVeloxCharts (DonutGauge, DualSparkline, HeatGrid)...');
+    Bmp := TBitmap.Create;
+    try
+      Bmp.SetSize(300, 160);
+      SetLength(ArrB, 6);
+      for I := 0 to 5 do ArrB[I] := (I + 1) * 15.0;
+      TVeloxCharts.DrawDonutGauge(Bmp.Canvas, Rect(10, 10, 110, 110), 78.5, '78.5%', 'CPU', DarkColors, DarkColors.Accent);
+      Check('charts: DrawDonutGauge executes cleanly', True);
+      TVeloxCharts.DrawDualSparkline(Bmp.Canvas, Rect(120, 10, 290, 80), Arr, ArrB, DarkColors.Accent, DarkColors.Success, DarkColors.SurfaceCard);
+      Check('charts: DrawDualSparkline executes cleanly', True);
+      TVeloxCharts.DrawHeatGrid(Bmp.Canvas, Rect(120, 90, 290, 150), ArrB, DarkColors, 3);
+      Check('charts: DrawHeatGrid executes cleanly', True);
+    finally
+      Bmp.Free;
+    end;
+
+    // 12. Non-Blocking Floating Toast Banner (TVeloxToast)
+    WriteLn('[12/19] Testing TVeloxToast...');
+    Frm := TForm.CreateNew(nil);
+    try
+      Frm.SetBounds(100, 100, 640, 480);
+      Toast := TVeloxToast.Create(Frm);
+      Toast.ShowToast(Frm, 'Memory Alert', 'RAM exceeded 85%', vsWarning, DarkColors, 3000);
+      Check('toast: ShowToast makes banner visible with title and severity',
+        Toast.IsVisible and (Toast.Title = 'Memory Alert') and (Toast.Severity = vsWarning));
+      Toast.Dismiss;
+      Check('toast: Dismiss hides banner immediately', not Toast.IsVisible);
+    finally
+      Frm.Free;
+    end;
+
+    // 13. Thread-Safe Publish/Subscribe Event Bus (TVeloxEventBus)
+    WriteLn('[13/19] Testing TVeloxEventBus (Topic & Wildcard Routing)...');
+    Helper := TGridSortHelper.Create;
+    Bus := TVeloxEventBus.Create;
+    try
+      SubId1 := Bus.Subscribe('telemetry.cpu', Helper.OnBusEvent);
+      SubIdWild := Bus.Subscribe('*', Helper.OnBusEvent);
+      Check('eventbus: 2 subscribers registered', Bus.SubscriberCount = 2);
+      Check('eventbus: Publish(telemetry.cpu) notifies both topic and wildcard subscribers',
+        Bus.Publish('telemetry.cpu', '88.4%', 88.4, vsWarning) = 2);
+      Check('eventbus: Publish(telemetry.ram) notifies only wildcard subscriber',
+        Bus.Publish('telemetry.ram', '64.0%', 64.0, vsNormal) = 1);
+      Check('eventbus: Unsubscribe removes topic subscriber',
+        Bus.Unsubscribe(SubId1) and (Bus.SubscriberCount = 1));
+      Bus.Unsubscribe(SubIdWild);
+    finally
+      Bus.Free;
+      Helper.Free;
+    end;
+
+    // 14. Reactive Observable & UI Debouncer (TVeloxObservable<T> & TVeloxDebouncer)
+    WriteLn('[14/19] Testing TVeloxObservable<T> & TVeloxDebouncer...');
+    Helper := TGridSortHelper.Create;
+    Frm := TForm.CreateNew(nil);
+    ObsInt := TVeloxObservable<Integer>.Create(10);
+    try
+      BoundLbl := TLabel.Create(Frm);
+      BoundLbl.Parent := Frm;
+      ObsInt.BindLabel(BoundLbl, 'Processes: ', ' active', Helper.FormatObsInt);
+      Check('reactive: BindLabel formats initial value immediately',
+        BoundLbl.Caption = 'Processes: 10 active');
+      ObsInt.Subscribe(Helper.OnObsChanged, True);
+      ObsInt.Value := 42;
+      Check('reactive: setting Value updates bound TLabel and notifies subscriber',
+        (BoundLbl.Caption = 'Processes: 42 active') and (Helper.LastObservableVal = 42) and (Helper.ObservableHits = 2));
+
+      Debouncer := TVeloxDebouncer.CreateDebouncer(Frm, 200, Helper.OnDebouncedFired);
+      Debouncer.Trigger(Frm);
+      Debouncer.Trigger(Frm);
+      Debouncer.Trigger(Frm);
+      Check('reactive: rapid Trigger calls coalesce while pending',
+        Debouncer.IsPending and (Debouncer.PendingCount = 3) and (Helper.DebounceHits = 0));
+      Debouncer.Flush;
+      Check('reactive: Flush executes single coalesced callback and clears pending state',
+        (not Debouncer.IsPending) and (Helper.DebounceHits = 1));
+    finally
+      ObsInt.Free;
+      Frm.Free;
+      Helper.Free;
+    end;
+
+    // 15. Generic Flat-to-Hierarchical Tree Flattener (TVeloxTreeBuilder<T>)
+    WriteLn('[15/19] Testing TVeloxTreeBuilder<T> (O(N) Hierarchy & Cycle Protection)...');
+    Helper := TGridSortHelper.Create;
+    Rows := TList<TTestRow>.Create;
+    TreeOut := TList<TTestRow>.Create;
+    try
+      R.Id := 10; R.ParentId := 0;  R.Name := 'explorer.exe'; Rows.Add(R);
+      R.Id := 30; R.ParentId := 20; R.Name := 'conhost.exe';  Rows.Add(R);
+      R.Id := 20; R.ParentId := 10; R.Name := 'pwsh.exe';     Rows.Add(R);
+      TVeloxTreeBuilder<TTestRow>.BuildHierarchy(Rows, TreeOut, Helper.ExtractTreeIds, Helper.SetTreeDepth);
+      Check('tree: BuildHierarchy orders root(10) -> child(20) -> grandchild(30) with depths 0,1,2',
+        (TreeOut.Count = 3) and
+        (TreeOut[0].Id = 10) and (TreeOut[0].Depth = 0) and
+        (TreeOut[1].Id = 20) and (TreeOut[1].Depth = 1) and
+        (TreeOut[2].Id = 30) and (TreeOut[2].Depth = 2));
+      Check('tree: FormatIndentedCaption prefixes branch glyph for depth > 0',
+        Pos(VELOX_TREE_BRANCH, TVeloxTreeBuilder<TTestRow>.FormatIndentedCaption('pwsh.exe', 1)) > 0);
+    finally
+      TreeOut.Free;
+      Rows.Free;
+      Helper.Free;
+    end;
+
+    // 16. GDI+ Styled Button & Filter Chip Group (TVeloxStyledButton & TVeloxChipGroup)
+    WriteLn('[16/19] Testing TVeloxStyledButton & TVeloxChipGroup...');
+    Helper := TGridSortHelper.Create;
+    Frm := TForm.CreateNew(nil);
+    try
+      StyledBtn := TVeloxStyledButton.CreateButton(Frm, Frm, 16, 16, 120, 32, 'End Task', DarkColors, vsbDanger);
+      Check('styledbtn: CreateButton sets caption and variant',
+        (StyledBtn.CaptionText = 'End Task') and (StyledBtn.Variant = vsbDanger));
+      Chips := TVeloxChipGroup.CreateGroup(Frm, Frm, 16, 60, 28,
+        ['All', 'Heavy RAM', 'Active CPU', 'Alerts'], DarkColors, Helper.OnChipSelect);
+      Check('chipgroup: 4 filter chips created with index 0 selected by default',
+        (Chips.ChipCount = 4) and (Chips.SelectedIndex = 0));
+      Chips.SelectedIndex := 2;
+      Check('chipgroup: SelectedIndex updates active chip to 2', Chips.SelectedIndex = 2);
+    finally
+      Frm.Free;
+      Helper.Free;
+    end;
+
+    // 17. Fluent Theme-Aware TaskDialog (TVeloxTaskDialog)
+    WriteLn('[17/19] Testing TVeloxTaskDialog (Headless Dialog Builder)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      TaskDlgH := TVeloxTaskDialog.BuildDialog(Frm, 'Confirm Action', 'Terminate Process?',
+        'Unsaved data in this process will be lost.', DarkColors, vsCritical,
+        'Terminate', 'Cancel', True, 'force', 'Don''t ask again');
+      try
+        Check('taskdialog: BuildDialog creates BodyLabel, InputEdit, and CheckBox',
+          Assigned(TaskDlgH.Modal.Form) and Assigned(TaskDlgH.BodyLabel) and
+          Assigned(TaskDlgH.InputEdit) and (TaskDlgH.InputEdit.Text = 'force') and
+          Assigned(TaskDlgH.CheckBox));
+      finally
+        TaskDlgH.Modal.Form.Free;
+      end;
+    finally
+      Frm.Free;
+    end;
+
+    // 18. VS Code / Raycast Fuzzy Command Palette (TVeloxCommandPalette)
+    WriteLn('[18/19] Testing TVeloxCommandPalette (Fuzzy Scoring, Filtering & Execution)...');
+    Helper := TGridSortHelper.Create;
+    CmdPalette := TVeloxCommandPalette.Create(nil);
+    try
+      CmdPalette.RegisterCommand('theme.toggle', 'Toggle Dark / Light Theme', 'Appearance', 'Ctrl+T', Helper.OnCommandRun);
+      CmdPalette.RegisterCommand('export.csv', 'Export Process Table to CSV', 'Data', 'Ctrl+E', Helper.OnCommandRun);
+      CmdPalette.RegisterCommand('proc.kill', 'Terminate Selected Process', 'Process', 'Del', Helper.OnCommandRun);
+      Check('cmdpalette: 3 commands registered', CmdPalette.Count = 3);
+      Check('cmdpalette: FuzzyMatchScore ranks subsequence match > 0',
+        TVeloxCommandPalette.FuzzyMatchScore('epcsv', 'Export Process Table to CSV') > 0);
+      CmdFiltered := CmdPalette.FilterCommands('csv');
+      Check('cmdpalette: FilterCommands("csv") returns export.csv first',
+        (Length(CmdFiltered) >= 1) and (CmdFiltered[0].Id = 'export.csv'));
+      Check('cmdpalette: ExecuteById invokes command callback',
+        CmdPalette.ExecuteById('theme.toggle') and Helper.CommandExecuted);
+    finally
+      CmdPalette.Free;
+      Helper.Free;
+    end;
+
+    // 19. 1-Line Windows 11 Desktop Application Shell (TVeloxAppShell)
+    WriteLn('[19/19] Testing TVeloxAppShell (Sidebar, Header Search, Multi-Page Router, Status Bar)...');
+    Helper := TGridSortHelper.Create;
+    Frm := TForm.CreateNew(nil);
+    try
+      Frm.SetBounds(100, 100, 1024, 680);
+      Shell := TVeloxAppShell.CreateShell(Frm, 'NovaApp', 'LIVE TELEMETRY', DarkColors, 220);
+      Shell.OnPageSwitch := Helper.OnShellPageSwitch;
+      Page1 := Shell.AddPage('processes', 'Processes');
+      Page2 := Shell.AddPage('services', 'Services');
+      Check('appshell: 2 pages registered and first page auto-activated',
+        (Shell.PageCount = 2) and (Shell.ActivePageId = 'processes') and Page1.Visible and (not Page2.Visible));
+      Check('appshell: SwitchPage("services") activates Page2 and hides Page1',
+        Shell.SwitchPage('services') and (Shell.ActivePageId = 'services') and Page2.Visible and
+        (not Page1.Visible) and (Helper.SwitchedPageId = 'services'));
+      Shell.SetStatusMessage('Connected to kernel telemetry', vsNormal);
+      Check('appshell: SetStatusMessage updates Footer StatusLabel',
+        Shell.StatusLabel.Caption = 'Connected to kernel telemetry');
+      Shell.ApplyColors(LightColors);
+      Check('appshell: ApplyColors updates ContentPanel to LightColors.Background',
+        Shell.ContentPanel.Color = LightColors.Background);
+    finally
+      Frm.Free;
+      Helper.Free;
+    end;
 
   except
     on E: Exception do
