@@ -1,0 +1,18 @@
+# Compiled binaries & unit output
+bin/
+lib/
+tests/lib/
+*.exe
+*.ppu
+*.o
+*.or
+*.obj
+*.res
+*.compiled
+*.dcu
+*.local
+*.identcache
+*.stat
+*.bak
+*~
+backup/
