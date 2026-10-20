@@ -94,9 +94,9 @@
 
     <!-- Spec Pill Tags (Clean Minimalist Chips) -->
     <g transform="translate(3, 118)">
-      <!-- Pill 1: 30 Units -->
+      <!-- Pill 1: 40 Units -->
       <rect x="0" y="0" width="90" height="22" rx="11" fill="#111827" stroke="#1f293d" stroke-width="1"/>
-      <text x="45" y="15" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#94a3b8" text-anchor="middle" letter-spacing="1">30 UNITS</text>
+      <text x="45" y="15" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#94a3b8" text-anchor="middle" letter-spacing="1">40 UNITS</text>
 
       <!-- Pill 2: Win11 Fluent -->
       <rect x="100" y="0" width="116" height="22" rx="11" fill="#111827" stroke="#1f293d" stroke-width="1"/>

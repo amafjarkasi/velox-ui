@@ -3,16 +3,16 @@
 </p>
 
 <p align="center">
-  <a href="#-30-framework-modules-7-core--23-expansion"><img src="https://img.shields.io/badge/Modules-30%20Zero--Dependency%20Units-6366f1?style=for-the-badge" alt="30 Modules" /></a>
+  <a href="#-40-framework-modules-7-core--33-expansion"><img src="https://img.shields.io/badge/Modules-40%20Zero--Dependency%20Units-6366f1?style=for-the-badge" alt="40 Modules" /></a>
   <a href="#-getting-started--installation"><img src="https://img.shields.io/badge/Compilers-Delphi%20VCL%20%7C%20Free%20Pascal%203.2.2%20LCL-38bdf8?style=for-the-badge" alt="Compilers" /></a>
   <a href="#-before-vs-after-85-less-boilerplate"><img src="https://img.shields.io/badge/Boilerplate%20Reduction--85%25%20LOC-10b981?style=for-the-badge" alt="Boilerplate Reduction" /></a>
-  <a href="#-automated-verification-suite-128128-passing"><img src="https://img.shields.io/badge/Tests-128%2F128%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
+  <a href="#-automated-verification-suite-175175-passing"><img src="https://img.shields.io/badge/Tests-175%2F175%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
   <a href="#-12-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win11%20Fluent-DWM%20Mica%20%7C%20GDI%2B%20%7C%20High--DPI-f59e0b?style=for-the-badge" alt="Win11 Fluent" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f43f5e?style=for-the-badge" alt="License" /></a>
 </p>
 
 <p align="center">
-  <strong>VeloxUI</strong> is a high-velocity, zero-dependency <strong>Object Pascal (Delphi VCL &amp; Lazarus / Free Pascal LCL)</strong> desktop UI and MVVM micro-framework. It distills every hard-won Win32, Windows 11 DWM (Mica/Acrylic/Dark Titlebar), undocumented <code>uxtheme.dll</code> dark scrollbar, High-DPI control alignment, hardware-accelerated <code>GDI+</code> vector rendering, flicker-free virtual <code>TListView</code>, 60 FPS easing animation, reactive MVVM data-binding, and NT Kernel pattern into <strong>30 drop-in units</strong>.
+  <strong>VeloxUI</strong> is a high-velocity, zero-dependency <strong>Object Pascal (Delphi VCL &amp; Lazarus / Free Pascal LCL)</strong> desktop UI and MVVM micro-framework. It distills every hard-won Win32, Windows 11 DWM (Mica/Acrylic/Dark Titlebar), undocumented <code>uxtheme.dll</code> dark scrollbar, Per-Monitor v2 High-DPI scaling, hardware-accelerated <code>GDI+</code> vector rendering, flicker-free virtual <code>TListView</code>, 60 FPS easing animation, two-way MVVM data-binding, WinHTTP networking, GitHub self-updater, runtime i18n, minidump crash reporting, and NT Kernel pattern into <strong>40 drop-in units</strong>.
 </p>
 
 ---
@@ -65,10 +65,14 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 | **VS Code / Raycast `Ctrl+K` Fuzzy-Search Command Palette** | ~210 lines (Subsequence scorer + owner-draw list + keyboard nav) | **2 lines** (`TVeloxCommandPalette` + `ShowPaletteModal`) |
 | **Theme-Aware Fluent `Confirm` / `Alert` / `Prompt` TaskDialogs** | ~110 lines (Replaces blinding white `MessageDlg` & `InputQuery`) | **1 line** (`TVeloxTaskDialog.Confirm(...)`) |
 | **Control / Form / Component Gallery PNG Screenshot Capture** | ~85 lines (`PaintTo` offscreen `pf24bit` `TBitmap` + `TPortableNetworkGraphic`) | **1 line** (`TVeloxScreenshot.CaptureControlToPng(...)`) |
+| **Two-Way MVVM Control ↔ Observable Data Binding (`TEdit`, `ToggleSwitch`, `Slider`)** | ~120 lines (Re-entrancy guards + `OnChange` / subscriber wiring) | **1 line** (`Binder.BindEdit(Edit, Obs)` / `BindToggle(...)`) |
+| **Zero-Dependency WinHTTP Client + GitHub Releases Self-Updater** | ~320 lines (`winhttp.dll` loader + JSON parser + SemVer + swap script) | **1 line** (`TVeloxUpdater.CheckLatest(...)`) |
+| **Runtime JSON i18n Language Switcher with Live Control Re-Captioning** | ~130 lines (String tables + fallback lookup + control iteration) | **2 lines** (`Loc.Bind(Ctrl, Key)` + `Loc.SetLanguage('es')`) |
+| **Global Crash Reporter + `dbghelp.dll` `.dmp` MiniDump Writer** | ~180 lines (`Application.OnException` + stack walk + `MiniDumpWriteDump`) | **1 line** (`CrashReporter.Install`) |
 
 ---
 
-## 📦 30 Framework Modules (7 Core + 23 Expansion)
+## 📦 40 Framework Modules (7 Core + 33 Expansion)
 
 ### Part I — 7 Core Foundation Modules
 
@@ -84,7 +88,7 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 
 ---
 
-### Part II — 23 Expansion & Ecosystem Modules
+### Part II — 33 Expansion & Ecosystem Modules
 
 | # | Module | Key Classes | Open-Source Inspiration & Capabilities |
 | :---: | :--- | :--- | :--- |
@@ -111,6 +115,16 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 | **28** | [`src/Velox.Validator.pas`](src/Velox.Validator.pas) | `TVeloxValidator` | Inspired by [`danieleteti/delphimvcframework`](https://github.com/danieleteti/delphimvcframework). Declarative form input validator (`AddRequired`, `AddIntRange`, `AddFloatRange`, `AddCustom`, `ValidateAll`). |
 | **29** | [`src/Velox.MarkdownView.pas`](src/Velox.MarkdownView.pas) | `TVeloxMarkdownView` | Native GDI+ Markdown & changelog control rendering `# H1`/`## H2`/`### H3` headings, bullet lists, callout quotes (`> `), and rules without WebView2. |
 | **30** | [`src/Velox.Screenshot.pas`](src/Velox.Screenshot.pas) | `TVeloxScreenshot` | Captures any `TWinControl` / `TForm` (`CaptureControlToPng`) to PNG and generates live GDI+ component showcase galleries (`RenderComponentShowcase`) for docs and visual regression testing. |
+| **31** | [`src/Velox.Json.pas`](src/Velox.Json.pas) | `TVeloxJson` | Inspired by [`ahausladen/JsonDataObjects`](https://github.com/ahausladen/JsonDataObjects) & [`neslib/Neslib.Json`](https://github.com/neslib/Neslib.Json). Zero-dependency RFC-8259 JSON parser & fluent builder DOM with dotted/indexed `Path('assets[0].name')` navigation, typed accessors (`AsString`/`AsInt`/`AsFloat`/`AsBool`), and compact/pretty serialization. |
+| **32** | [`src/Velox.Http.pas`](src/Velox.Http.pas) | `TVeloxHttp` | Zero-dependency HTTP/HTTPS client built directly on Win32 `winhttp.dll` (OS TLS + system proxy, zero OpenSSL/Indy DLLs): `ParseUrl`, `Request`, `Get`, `PostJson`, `DownloadToFile` with progress/cancel, and `RequestAsync`. |
+| **33** | [`src/Velox.Updater.pas`](src/Velox.Updater.pas) | `TVeloxUpdater` | Self-updater powered by the GitHub Releases API (`Velox.Http` + `Velox.Json`): SemVer `CompareVersions` (including `-prerelease`), `ParseRelease`, `CheckLatest`, `DownloadUpdate`, `BuildSwapScript`, and `ApplyUpdateAndRestart`. |
+| **34** | [`src/Velox.Localization.pas`](src/Velox.Localization.pas) | `TVeloxLocalizer` | Inspired by `dxgettext` / LCL `.po` workflows without external tools. Runtime multi-language string tables (`AddLanguageFromJson`), fallback language resolution, `Tr` / `TrF`, and `Bind(Control, Key)` live control re-captioning on `SetLanguage`. |
+| **35** | [`src/Velox.Dpi.pas`](src/Velox.Dpi.pas) | `TVeloxDpi` | Per-Monitor-V2 High-DPI engine (`EnablePerMonitorV2`, `GetSystemDpi`, `GetWindowDpi`, `GetScaleFactor`, `Scale`/`Unscale`, `ScaleControlTree`, and `RescaleForm` for `WM_DPICHANGED`). |
+| **36** | [`src/Velox.ViewModel.pas`](src/Velox.ViewModel.pas) | `TVeloxViewModel`, `TVeloxBinder` | Inspired by Grijjy MVVM & Spring4D data binding. Property-changed notification base class with `BeginUpdate`/`EndUpdate` batching & dirty tracking + two-way loop-guarded control binder (`BindEdit`, `BindCheckBox`, `BindToggle`, `BindSlider`, `BindVisible`, `BindEnabled`). |
+| **37** | [`src/Velox.Tray.pas`](src/Velox.Tray.pas) | `TVeloxTray` | Themed system-tray manager with severity balloon notifications, dynamic 16×16 GDI+ live telemetry badge icon (`RenderBadgeBitmap` / `SetBadge`), Win11 bottom-right quick-settings flyout (`BuildFlyout`/`ShowFlyout`), and `HideToTray`/`RestoreFromTray`. |
+| **38** | [`src/Velox.Feedback.pas`](src/Velox.Feedback.pas) | `TVeloxInfoBar`, `TVeloxProgressRing`, `TVeloxSkeleton` | Inspired by [`microsoft/microsoft-ui-xaml`](https://github.com/microsoft/microsoft-ui-xaml) WinUI 3 controls. Inline severity `TVeloxInfoBar` with close hit-test, determinate/indeterminate `TVeloxProgressRing`, and shimmering `TVeloxSkeleton` placeholders. |
+| **39** | [`src/Velox.CrashReporter.pas`](src/Velox.CrashReporter.pas) | `TVeloxCrashReporter` | Inspired by `JclDebug` / `madExcept`. Hooks `Application.OnException`, captures call-stack frames (`CaptureStackTrace`) + `TVeloxLogger` ring-buffer history (`BuildReport`), writes a native `.dmp` minidump via `dbghelp.dll` (`MiniDumpWriteDump`), and displays a themed crash modal. |
+| **40** | [`src/Velox.Tabs.pas`](src/Velox.Tabs.pas) | `TVeloxTabStrip` | Edge / Windows Terminal style GDI+ tab strip with selected accent indicator, per-tab close button (`vthClose`), trailing `+` button (`vthAdd`), drag-to-reorder (`MoveTab`), and mouse-wheel overflow scrolling. |
 
 ---
 
@@ -157,48 +171,58 @@ flowchart TD
 
 ---
 
-## 🧪 Automated Verification Suite (`128/128 Passing`)
+## 🧪 Automated Verification Suite (`175/175 Passing`)
 
-VeloxUI includes a self-contained console verification suite ([`tests/veloxtest.lpr`](tests/veloxtest.lpr)) that tests all **30 modules** headlessly and regenerates the Dark/Light component gallery PNGs in ~2.6 seconds:
+VeloxUI includes a self-contained console verification suite ([`tests/veloxtest.lpr`](tests/veloxtest.lpr)) that tests all **40 modules** headlessly and regenerates the Dark/Light component gallery PNGs in ~2.8 seconds:
 
 ```powershell
-# Compile and run the 128-assertion verification suite with Lazarus / Free Pascal
+# Compile and run the 175-assertion verification suite with Lazarus / Free Pascal
 lazbuild -B tests\veloxtest.lpi
 .\tests\lib\veloxtest.exe
 ```
 
 | Test Suite Section | Assertions | What Is Verified |
 | :--- | :---: | :--- |
-| **`[1/30]` RingBuffer & Utils** | `15` | Circular capacity cap, oldest eviction, `.Latest`/`.Peak`/`.Average`, Dark/Light token palettes, `BlendColor`, `FormatBytes`/`MB`/`KBps`/`Percent`/`Duration`, UTF-8/UTF-16 arrows |
-| **`[2/30]` GDI+ Vector Engine** | `4` | Hardware-accelerated `DrawCard`, `DrawProgressBar`, `DrawBadge`, and `DrawSparkline` on offscreen bitmaps |
-| **`[3/30]` DWM & UXTheme Engine** | `2` | Process-wide `InitializeProcessDarkMode` (Ordinal 135) and OS registry `DetectSystemTheme` |
-| **`[4/30]` Fluent Controls & Modals** | `12` | `TVeloxSearchBox` 28px wrapper, `bsNone`, `Top=6` vertical centering, `Left=10` margin; `TVeloxDarkCheckBox` caption decoupling; `SyncComboBoxHeight`; `ApplyFormTheme`; `CreateModalDialog` |
-| **`[5/30]` Generic VirtualGrid** | `9` | Automatic `OwnerData`, column registration, numeric column defaulting to **descending** on first click, text column defaulting to **ascending** on first click, QuickSort ordering, header arrows, `RefreshCount` |
-| **`[6/30]` Async Poller & Alerts** | `9` | Sustained streak gating (`2/2`), immediate escalation to `vsCritical`, hysteresis recovery margin, live `SetInterval`, and `<50ms` interruptible thread shutdown |
-| **`[7/30]` Win32 & NT System** | `8` | `NtQueryInformationProcess(60)` command-line extraction, `PID 0` guard, `version.dll` Microsoft publisher metadata on `kernel32.dll`, `GetGuiResources`, CPU affinity masks, `EmptyWorkingSet`, and `RunTask` guards |
-| **`[8/30]` Universal Exporter** | `5` | RFC-4180 CSV field quoting, JSON escaping, `BuildCsvTable`, `BuildJsonTable`, and GFM `BuildMarkdownTable` pipe escaping |
-| **`[9/30]` Declarative Hotkeys** | `3` | Shortcut registration, `HandleKeyDown` key interception (`Ctrl+F`), and `GenerateCheatSheet` output |
-| **`[10/30]` Config & Bounds Clamp** | `6` | INI key/value persistence (`String`, `Int`, `Bool`, `Theme`) and `ClampToDesktop` off-screen monitor rescue |
-| **`[11/30]` Advanced GDI+ Charts** | `3` | `DrawDonutGauge`, `DrawDualSparkline`, and multi-cell `DrawHeatGrid` rendering |
-| **`[12/30]` Floating Toast Banner** | `2` | Non-blocking `ShowToast` visibility/severity state and `Dismiss` lifecycle |
-| **`[13/30]` Thread-Safe EventBus** | `4` | Topic subscription, wildcard `'*'` routing, synchronous `Publish` delivery count, and `Unsubscribe` |
-| **`[14/30]` Reactive Observable & Debouncer** | `4` | `TVeloxObservable<T>.BindLabel` live caption formatting, subscriber notification, and `TVeloxDebouncer` `Trigger`/`Flush` coalescing |
-| **`[15/30]` Generic TreeBuilder** | `2` | `O(N)` DFS hierarchy flattening (`root -> child -> grandchild` depths `0, 1, 2`) and `FormatIndentedCaption` (`└─ `) |
-| **`[16/30]` StyledButton & ChipGroup** | `3` | `TVeloxStyledButton` custom variant creation and `TVeloxChipGroup` mutual-exclusion chip switching |
-| **`[17/30]` Fluent TaskDialog** | `1` | Headless `BuildDialog` verification of themed `BodyLabel`, `InputEdit`, and `TVeloxDarkCheckBox` |
-| **`[18/30]` Fuzzy Command Palette** | `4` | Command registration, subsequence `FuzzyMatchScore`, ranked `FilterCommands`, and `ExecuteById` callback invocation |
-| **`[19/30]` Win11 Desktop AppShell** | `4` | `CreateShell` scaffolding, `AddPage`/`SwitchPage` multi-page routing, `SetStatusMessage`, and `ApplyColors` live theme switching |
-| **`[20/30]` Structured Ring Logger** | `3` | `Info`/`Warn`/`Error` ring buffering, `FormatAsText`, and `FormatAsJsonLines` (`.jsonl`) output |
-| **`[21/30]` 60 FPS Easing Animator** | `4` | `EvaluateEasing` boundary conditions, `LerpInt`, `StartIntTween`, and `CompleteImmediately` |
-| **`[22/30]` ToggleSwitch & Slider** | `3` | `TVeloxToggleSwitch` state & `OnToggle` callback, plus `TVeloxSlider` range clamping |
-| **`[23/30]` Dark Popup ContextMenu** | `2` | `TVeloxPopupMenu` item registration and `ExecuteById` dispatch |
-| **`[24/30]` Single-Instance & IPC** | `2` | Win32 Named Mutex primary acquisition and secondary instance collision detection (`IsPrimaryInstance = False`) |
-| **`[25/30]` Fluent SplitView** | `3` | `TVeloxSplitter` minimum width clamping (`MinSize = 160`) and `ToggleCollapse` hide/restore cycle |
-| **`[26/30]` QPC Stopwatch & Profiler** | `2` | Hardware `QueryPerformanceCounter` microsecond measurement and `TVeloxFrameProfiler` `PeakMs`/`P95Ms` |
-| **`[27/30]` Inline SparkGrid Cells** | `3` | `DrawInlineBar`, `DrawInlineSparkline`, and `DrawStatusDotCell` rendering |
-| **`[28/30]` Declarative Validator** | `2` | `AddRequired` and `AddIntRange` rejection of out-of-range input and acceptance of valid input |
-| **`[29/30]` Native GDI+ MarkdownView** | `2` | Multi-block Markdown parsing and heading/bold token stripping |
-| **`[30/30]` Screenshot & Gallery PNG** | `2` | `RenderComponentShowcase` live PNG generation for both `vtDark` and `vtLight` themes |
+| **`[1/40]` RingBuffer & Utils** | `15` | Circular capacity cap, oldest eviction, `.Latest`/`.Peak`/`.Average`, Dark/Light token palettes, `BlendColor`, `FormatBytes`/`MB`/`KBps`/`Percent`/`Duration`, UTF-8/UTF-16 arrows |
+| **`[2/40]` GDI+ Vector Engine** | `4` | Hardware-accelerated `DrawCard`, `DrawProgressBar`, `DrawBadge`, and `DrawSparkline` on offscreen bitmaps |
+| **`[3/40]` DWM & UXTheme Engine** | `2` | Process-wide `InitializeProcessDarkMode` (Ordinal 135) and OS registry `DetectSystemTheme` |
+| **`[4/40]` Fluent Controls & Modals** | `12` | `TVeloxSearchBox` 28px wrapper, `bsNone`, `Top=6` vertical centering, `Left=10` margin; `TVeloxDarkCheckBox` caption decoupling; `SyncComboBoxHeight`; `ApplyFormTheme`; `CreateModalDialog` |
+| **`[5/40]` Generic VirtualGrid** | `9` | Automatic `OwnerData`, column registration, numeric column defaulting to **descending** on first click, text column defaulting to **ascending** on first click, QuickSort ordering, header arrows, `RefreshCount` |
+| **`[6/40]` Async Poller & Alerts** | `9` | Sustained streak gating (`2/2`), immediate escalation to `vsCritical`, hysteresis recovery margin, live `SetInterval`, and `<50ms` interruptible thread shutdown |
+| **`[7/40]` Win32 & NT System** | `8` | `NtQueryInformationProcess(60)` command-line extraction, `PID 0` guard, `version.dll` Microsoft publisher metadata on `kernel32.dll`, `GetGuiResources`, CPU affinity masks, `EmptyWorkingSet`, and `RunTask` guards |
+| **`[8/40]` Universal Exporter** | `5` | RFC-4180 CSV field quoting, JSON escaping, `BuildCsvTable`, `BuildJsonTable`, and GFM `BuildMarkdownTable` pipe escaping |
+| **`[9/40]` Declarative Hotkeys** | `3` | Shortcut registration, `HandleKeyDown` key interception (`Ctrl+F`), and `GenerateCheatSheet` output |
+| **`[10/40]` Config & Bounds Clamp** | `6` | INI key/value persistence (`String`, `Int`, `Bool`, `Theme`) and `ClampToDesktop` off-screen monitor rescue |
+| **`[11/40]` Advanced GDI+ Charts** | `3` | `DrawDonutGauge`, `DrawDualSparkline`, and multi-cell `DrawHeatGrid` rendering |
+| **`[12/40]` Floating Toast Banner** | `2` | Non-blocking `ShowToast` visibility/severity state and `Dismiss` lifecycle |
+| **`[13/40]` Thread-Safe EventBus** | `4` | Topic subscription, wildcard `'*'` routing, synchronous `Publish` delivery count, and `Unsubscribe` |
+| **`[14/40]` Reactive Observable & Debouncer** | `4` | `TVeloxObservable<T>.BindLabel` live caption formatting, subscriber notification, and `TVeloxDebouncer` `Trigger`/`Flush` coalescing |
+| **`[15/40]` Generic TreeBuilder** | `2` | `O(N)` DFS hierarchy flattening (`root -> child -> grandchild` depths `0, 1, 2`) and `FormatIndentedCaption` (`└─ `) |
+| **`[16/40]` StyledButton & ChipGroup** | `3` | `TVeloxStyledButton` custom variant creation and `TVeloxChipGroup` mutual-exclusion chip switching |
+| **`[17/40]` Fluent TaskDialog** | `1` | Headless `BuildDialog` verification of themed `BodyLabel`, `InputEdit`, and `TVeloxDarkCheckBox` |
+| **`[18/40]` Fuzzy Command Palette** | `4` | Command registration, subsequence `FuzzyMatchScore`, ranked `FilterCommands`, and `ExecuteById` callback invocation |
+| **`[19/40]` Win11 Desktop AppShell** | `4` | `CreateShell` scaffolding, `AddPage`/`SwitchPage` multi-page routing, `SetStatusMessage`, and `ApplyColors` live theme switching |
+| **`[20/40]` Structured Ring Logger** | `3` | `Info`/`Warn`/`Error` ring buffering, `FormatAsText`, and `FormatAsJsonLines` (`.jsonl`) output |
+| **`[21/40]` 60 FPS Easing Animator** | `4` | `EvaluateEasing` boundary conditions, `LerpInt`, `StartIntTween`, and `CompleteImmediately` |
+| **`[22/40]` ToggleSwitch & Slider** | `3` | `TVeloxToggleSwitch` state & `OnToggle` callback, plus `TVeloxSlider` range clamping |
+| **`[23/40]` Dark Popup ContextMenu** | `2` | `TVeloxPopupMenu` item registration and `ExecuteById` dispatch |
+| **`[24/40]` Single-Instance & IPC** | `2` | Win32 Named Mutex primary acquisition and secondary instance collision detection (`IsPrimaryInstance = False`) |
+| **`[25/40]` Fluent SplitView** | `3` | `TVeloxSplitter` minimum width clamping (`MinSize = 160`) and `ToggleCollapse` hide/restore cycle |
+| **`[26/40]` QPC Stopwatch & Profiler** | `2` | Hardware `QueryPerformanceCounter` microsecond measurement and `TVeloxFrameProfiler` `PeakMs`/`P95Ms` |
+| **`[27/40]` Inline SparkGrid Cells** | `3` | `DrawInlineBar`, `DrawInlineSparkline`, and `DrawStatusDotCell` rendering |
+| **`[28/40]` Declarative Validator** | `2` | `AddRequired` and `AddIntRange` rejection of out-of-range input and acceptance of valid input |
+| **`[29/40]` Native GDI+ MarkdownView** | `2` | Multi-block Markdown parsing and heading/bold token stripping |
+| **`[30/40]` Screenshot & Gallery PNG** | `2` | `RenderComponentShowcase` live PNG generation for both `vtDark` and `vtLight` themes |
+| **`[31/40]` RFC-8259 JSON DOM & Builder** | `5` | `TVeloxJson.Parse`, `Find`, dotted/indexed `Path('assets[0].name')`, and `NewObject` + `Serialize` roundtrip |
+| **`[32/40]` WinHTTP Client** | `3` | `TVeloxHttp.ParseUrl` HTTPS/HTTP host, port, path parsing, and scheme validation |
+| **`[33/40]` GitHub Releases Self-Updater** | `5` | SemVer `CompareVersions` (including `-beta` prereleases), `ParseRelease` asset selection, and `BuildSwapScript` |
+| **`[34/40]` Runtime i18n Localizer** | `5` | `AddLanguageFromJson`, `Bind` live control re-captioning on `SetLanguage`, fallback lookup, and `TrF` |
+| **`[35/40]` Per-Monitor v2 High-DPI** | `4` | `GetSystemDpi`, `GetScaleFactor`, `Scale`/`Unscale`, and recursive `ScaleControlTree` (`96 -> 144 DPI`) |
+| **`[36/40]` Two-Way MVVM ViewModel & Binder** | `7` | `BeginUpdate`/`EndUpdate` property coalescing, `IsDirty`/`ClearDirty`, two-way `BindEdit`, and `BindToggle` |
+| **`[37/40]` System Tray, Badge & Flyout** | `3` | 16×16 GDI+ `RenderBadgeBitmap`, bottom-right `CalcFlyoutPos`, and borderless `BuildFlyout` |
+| **`[38/40]` WinUI Feedback Controls** | `4` | `TVeloxInfoBar` close hit-testing & `Dismiss`, `TVeloxProgressRing.Step`, and `TVeloxSkeleton.Step` shimmer |
+| **`[39/40]` Crash Reporter & MiniDump** | `5` | `Install`/`Uninstall` exception hook, `BuildReport`, `CaptureStackTrace`, and `dbghelp.dll` `WriteMiniDump` |
+| **`[40/40]` Fluent Tab Strip** | `6` | `AddTab`, `HitTest` (`vthTab`, `vthClose`, `vthAdd`), `MoveTab` reorder with selection tracking, and `RemoveTab` |
 
 ---
 

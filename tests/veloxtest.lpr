@@ -47,7 +47,17 @@ uses
   Velox.SparkGrid,
   Velox.Validator,
   Velox.MarkdownView,
-  Velox.Screenshot;
+  Velox.Screenshot,
+  Velox.Json,
+  Velox.Http,
+  Velox.Updater,
+  Velox.Localization,
+  Velox.Dpi,
+  Velox.ViewModel,
+  Velox.Tray,
+  Velox.Feedback,
+  Velox.CrashReporter,
+  Velox.Tabs;
 
 type
   TTestRow = record
@@ -74,6 +84,9 @@ type
     TweenLastColor: TColor;
     ToggleClicks: Integer;
     MenuClicked: Boolean;
+    VmPropHits: Integer;
+    LastVmProp: string;
+    TabSelectedIdx: Integer;
     function CompareRows(const A, B: TTestRow; const ACol: Integer): Integer;
     function CollectSample: Integer;
     procedure DeliverSample(const AVal: Integer);
@@ -92,6 +105,8 @@ type
     procedure OnTweenColor(const ACurrentColor: TColor);
     procedure OnToggleChanged(Sender: TObject);
     procedure OnMenuItemClick(Sender: TObject);
+    procedure OnVmChanged(const APropName: string);
+    procedure OnTabSelected(Sender: TObject; const AIndex: Integer);
   end;
 
 function TGridSortHelper.CompareRows(const A, B: TTestRow; const ACol: Integer): Integer;
@@ -215,6 +230,17 @@ begin
   MenuClicked := True;
 end;
 
+procedure TGridSortHelper.OnVmChanged(const APropName: string);
+begin
+  Inc(VmPropHits);
+  LastVmProp := APropName;
+end;
+
+procedure TGridSortHelper.OnTabSelected(Sender: TObject; const AIndex: Integer);
+begin
+  TabSelectedIdx := AIndex;
+end;
+
 var
   Failures: Integer = 0;
   Passed: Integer = 0;
@@ -284,16 +310,37 @@ var
   SW: TVeloxStopwatch;
   FrameProf: TVeloxFrameProfiler;
   Validator: TVeloxValidator;
-  EdNum: TEdit;
-  ValErr: string;
+  EdNum, BoundEdit: TEdit;
+  ValErr, JsonErr, SwapScript, CrashRepStr, TmpDump: string;
   MdView: TVeloxMarkdownView;
+  JsonRoot, JsonBuilt, JsonNode: TVeloxJson;
+  UrlParts1, UrlParts2, UrlBad: TVeloxUrlParts;
+  UpdInfo: TVeloxUpdateInfo;
+  Loc: TVeloxLocalizer;
+  LocLbl: TLabel;
+  DpiPnl: TPanel;
+  Vm: TVeloxViewModel;
+  Binder: TVeloxBinder;
+  ObsStr: TVeloxObservable<string>;
+  ObsBool: TVeloxObservable<Boolean>;
+  Tray: TVeloxTray;
+  BadgeBmp: TBitmap;
+  FlyPos: TPoint;
+  FlyFrm: TForm;
+  InfoBar: TVeloxInfoBar;
+  ProgRing: TVeloxProgressRing;
+  Skel: TVeloxSkeleton;
+  CrashRep: TVeloxCrashReporter;
+  TabStrip: TVeloxTabStrip;
+  TabHitIdx: Integer;
+  TabR, CloseR, AddR: TRect;
   I: Integer;
 begin
   try
-    WriteLn('=== VeloxUI Automated Verification Suite (30 Modules) ===');
+    WriteLn('=== VeloxUI Automated Verification Suite (40 Modules) ===');
 
     // 1. Ring Buffer & Telemetry Primitives
-    WriteLn('[1/30] Testing TVeloxRingBuffer & TVeloxUtils...');
+    WriteLn('[1/40] Testing TVeloxRingBuffer & TVeloxUtils...');
     Ring.Clear(10);
     Check('ring: initial count is 0', Ring.Count = 0);
     Check('ring: initial capacity is 10', Ring.Capacity = 10);
@@ -318,7 +365,7 @@ begin
     Check('utils: UTF-8/UTF-16 sort arrows non-empty', (VELOX_ARROW_ASC <> '') and (VELOX_ARROW_DESC <> ''));
 
     // 2. GDI+ Hardware-Accelerated Vector Engine
-    WriteLn('[2/30] Testing TVeloxGdiPlus Anti-Aliased Primitives...');
+    WriteLn('[2/40] Testing TVeloxGdiPlus Anti-Aliased Primitives...');
     Bmp := TBitmap.Create;
     try
       Bmp.SetSize(240, 120);
@@ -335,13 +382,13 @@ begin
     end;
 
     // 3. DWM & UXTheme Dark Mode Engine
-    WriteLn('[3/30] Testing TVeloxThemeEngine (DWM, UXTheme & Recursive Styling)...');
+    WriteLn('[3/40] Testing TVeloxThemeEngine (DWM, UXTheme & Recursive Styling)...');
     TVeloxThemeEngine.InitializeProcessDarkMode(True);
     Check('theme: InitializeProcessDarkMode (Ordinal 135) succeeds', True);
     Check('theme: DetectSystemTheme returns valid enum', TVeloxThemeEngine.DetectSystemTheme in [vtDark, vtLight]);
 
     // 4. Fluent Control Factories (SearchBox, DarkCheckBox, ComboBox Sync, Modal)
-    WriteLn('[4/30] Testing TVeloxControls (SearchBox, DarkCheckBox, High-DPI ComboBox, Modal)...');
+    WriteLn('[4/40] Testing TVeloxControls (SearchBox, DarkCheckBox, High-DPI ComboBox, Modal)...');
     Frm := TForm.CreateNew(nil);
     try
       Frm.SetBounds(100, 100, 800, 600);
@@ -388,7 +435,7 @@ begin
       end;
 
       // 5. Generic Virtual Grid Controller (TVeloxVirtualGrid<T>)
-      WriteLn('[5/30] Testing TVeloxVirtualGrid<T> (OwnerData, QuickSort, Natural Sort Direction)...');
+      WriteLn('[5/40] Testing TVeloxVirtualGrid<T> (OwnerData, QuickSort, Natural Sort Direction)...');
       Lv := TListView.Create(Frm);
       Lv.Parent := Frm;
       Lv.SetBounds(16, 100, 760, 400);
@@ -436,7 +483,7 @@ begin
     end;
 
     // 6. Async Poller & Hysteresis Threshold Alert Engine
-    WriteLn('[6/30] Testing TVeloxPoller<T> & TVeloxThresholdAlert...');
+    WriteLn('[6/40] Testing TVeloxPoller<T> & TVeloxThresholdAlert...');
     Alert.Configure(75.0, 90.0, 2, 10000, 5.0);
     Check('alert: first warning spike (streak 1/2) does not fire yet', not Alert.Evaluate(80.0, 1000, Sev));
     Check('alert: second sustained warning spike (streak 2/2) fires vsWarning',
@@ -467,7 +514,7 @@ begin
     end;
 
     // 7. Win32 & NT Kernel System Helpers (TVeloxSystem)
-    WriteLn('[7/30] Testing TVeloxSystem (NT Command Line, VersionInfo, GUI Resources, Affinity)...');
+    WriteLn('[7/40] Testing TVeloxSystem (NT Command Line, VersionInfo, GUI Resources, Affinity)...');
     CmdLine := TVeloxSystem.GetProcessCommandLine(GetCurrentProcessId);
     Check('system: GetProcessCommandLine(CurrentPID) via NtQueryInformationProcess(60) non-empty', CmdLine <> '');
     Check('system: GetProcessCommandLine(PID 0) guarded', TVeloxSystem.GetProcessCommandLine(0) = '');
@@ -490,7 +537,7 @@ begin
       not TVeloxSystem.RunTask('   ', False));
 
     // 8. Universal Data Exporter (TVeloxExporter)
-    WriteLn('[8/30] Testing TVeloxExporter (CSV, JSON, Markdown)...');
+    WriteLn('[8/40] Testing TVeloxExporter (CSV, JSON, Markdown)...');
     Helper := TGridSortHelper.Create;
     try
       Check('export: EscapeCsvField quotes commas and quotes',
@@ -511,7 +558,7 @@ begin
     end;
 
     // 9. Declarative Hotkey & Action Registry (TVeloxHotkeyRegistry)
-    WriteLn('[9/30] Testing TVeloxHotkeyRegistry (Key Dispatch & Cheat Sheet)...');
+    WriteLn('[9/40] Testing TVeloxHotkeyRegistry (Key Dispatch & Cheat Sheet)...');
     Helper := TGridSortHelper.Create;
     Hotkeys := TVeloxHotkeyRegistry.Create;
     try
@@ -530,7 +577,7 @@ begin
     end;
 
     // 10. Persistent Config & Window Placement Manager (TVeloxConfig)
-    WriteLn('[10/30] Testing TVeloxConfig (Key/Value, Theme & Multi-Monitor Clamp)...');
+    WriteLn('[10/40] Testing TVeloxConfig (Key/Value, Theme & Multi-Monitor Clamp)...');
     TmpIni := ExtractFilePath(ParamStr(0)) + 'velox_test_cfg.ini';
     Cfg := TVeloxConfig.Create;
     try
@@ -558,7 +605,7 @@ begin
     end;
 
     // 11. Advanced GDI+ Charts (TVeloxCharts: DonutGauge, DualSparkline, HeatGrid)
-    WriteLn('[11/30] Testing TVeloxCharts (DonutGauge, DualSparkline, HeatGrid)...');
+    WriteLn('[11/40] Testing TVeloxCharts (DonutGauge, DualSparkline, HeatGrid)...');
     Bmp := TBitmap.Create;
     try
       Bmp.SetSize(300, 160);
@@ -575,7 +622,7 @@ begin
     end;
 
     // 12. Non-Blocking Floating Toast Banner (TVeloxToast)
-    WriteLn('[12/30] Testing TVeloxToast...');
+    WriteLn('[12/40] Testing TVeloxToast...');
     Frm := TForm.CreateNew(nil);
     try
       Frm.SetBounds(100, 100, 640, 480);
@@ -590,7 +637,7 @@ begin
     end;
 
     // 13. Thread-Safe Publish/Subscribe Event Bus (TVeloxEventBus)
-    WriteLn('[13/30] Testing TVeloxEventBus (Topic & Wildcard Routing)...');
+    WriteLn('[13/40] Testing TVeloxEventBus (Topic & Wildcard Routing)...');
     Helper := TGridSortHelper.Create;
     Bus := TVeloxEventBus.Create;
     try
@@ -610,7 +657,7 @@ begin
     end;
 
     // 14. Reactive Observable & UI Debouncer (TVeloxObservable<T> & TVeloxDebouncer)
-    WriteLn('[14/30] Testing TVeloxObservable<T> & TVeloxDebouncer...');
+    WriteLn('[14/40] Testing TVeloxObservable<T> & TVeloxDebouncer...');
     Helper := TGridSortHelper.Create;
     Frm := TForm.CreateNew(nil);
     ObsInt := TVeloxObservable<Integer>.Create(10);
@@ -641,7 +688,7 @@ begin
     end;
 
     // 15. Generic Flat-to-Hierarchical Tree Flattener (TVeloxTreeBuilder<T>)
-    WriteLn('[15/30] Testing TVeloxTreeBuilder<T> (O(N) Hierarchy & Cycle Protection)...');
+    WriteLn('[15/40] Testing TVeloxTreeBuilder<T> (O(N) Hierarchy & Cycle Protection)...');
     Helper := TGridSortHelper.Create;
     Rows := TList<TTestRow>.Create;
     TreeOut := TList<TTestRow>.Create;
@@ -664,7 +711,7 @@ begin
     end;
 
     // 16. GDI+ Styled Button & Filter Chip Group (TVeloxStyledButton & TVeloxChipGroup)
-    WriteLn('[16/30] Testing TVeloxStyledButton & TVeloxChipGroup...');
+    WriteLn('[16/40] Testing TVeloxStyledButton & TVeloxChipGroup...');
     Helper := TGridSortHelper.Create;
     Frm := TForm.CreateNew(nil);
     try
@@ -683,7 +730,7 @@ begin
     end;
 
     // 17. Fluent Theme-Aware TaskDialog (TVeloxTaskDialog)
-    WriteLn('[17/30] Testing TVeloxTaskDialog (Headless Dialog Builder)...');
+    WriteLn('[17/40] Testing TVeloxTaskDialog (Headless Dialog Builder)...');
     Frm := TForm.CreateNew(nil);
     try
       TaskDlgH := TVeloxTaskDialog.BuildDialog(Frm, 'Confirm Action', 'Terminate Process?',
@@ -702,7 +749,7 @@ begin
     end;
 
     // 18. VS Code / Raycast Fuzzy Command Palette (TVeloxCommandPalette)
-    WriteLn('[18/30] Testing TVeloxCommandPalette (Fuzzy Scoring, Filtering & Execution)...');
+    WriteLn('[18/40] Testing TVeloxCommandPalette (Fuzzy Scoring, Filtering & Execution)...');
     Helper := TGridSortHelper.Create;
     CmdPalette := TVeloxCommandPalette.Create(nil);
     try
@@ -723,7 +770,7 @@ begin
     end;
 
     // 19. 1-Line Windows 11 Desktop Application Shell (TVeloxAppShell)
-    WriteLn('[19/30] Testing TVeloxAppShell (Sidebar, Header Search, Multi-Page Router, Status Bar)...');
+    WriteLn('[19/40] Testing TVeloxAppShell (Sidebar, Header Search, Multi-Page Router, Status Bar)...');
     Helper := TGridSortHelper.Create;
     Frm := TForm.CreateNew(nil);
     try
@@ -749,7 +796,7 @@ begin
     end;
 
     // 20. Structured Ring-Buffer Logger (TVeloxLogger)
-    WriteLn('[20/30] Testing TVeloxLogger (Ring Buffer, JSONL & Text Export)...');
+    WriteLn('[20/40] Testing TVeloxLogger (Ring Buffer, JSONL & Text Export)...');
     Logger := TVeloxLogger.Create;
     try
       Logger.Info('Kernel', 'Initialized NtQueryInformationProcess');
@@ -765,7 +812,7 @@ begin
     end;
 
     // 21. 60 FPS Easing & Smooth Property Tweener (TVeloxAnimator)
-    WriteLn('[21/30] Testing TVeloxAnimator (Easing Curves, LerpInt, LerpColor)...');
+    WriteLn('[21/40] Testing TVeloxAnimator (Easing Curves, LerpInt, LerpColor)...');
     Helper := TGridSortHelper.Create;
     Frm := TForm.CreateNew(nil);
     try
@@ -786,7 +833,7 @@ begin
     end;
 
     // 22. Fluent Pill Toggle Switch & Slider (TVeloxToggleSwitch & TVeloxSlider)
-    WriteLn('[22/30] Testing TVeloxToggleSwitch & TVeloxSlider...');
+    WriteLn('[22/40] Testing TVeloxToggleSwitch & TVeloxSlider...');
     Helper := TGridSortHelper.Create;
     Frm := TForm.CreateNew(nil);
     try
@@ -803,7 +850,7 @@ begin
     end;
 
     // 23. Dark-Mode-Aware Popup Menu Builder (TVeloxPopupMenu)
-    WriteLn('[23/30] Testing TVeloxPopupMenu...');
+    WriteLn('[23/40] Testing TVeloxPopupMenu...');
     Helper := TGridSortHelper.Create;
     Frm := TForm.CreateNew(nil);
     try
@@ -819,7 +866,7 @@ begin
     end;
 
     // 24. Single-Instance Mutex & IPC Bridge (TVeloxSingleInstance)
-    WriteLn('[24/30] Testing TVeloxSingleInstance (Named Mutex Collision Detection)...');
+    WriteLn('[24/40] Testing TVeloxSingleInstance (Named Mutex Collision Detection)...');
     SingleInst1 := TVeloxSingleInstance.Create('Local\VeloxUI.UnitTest.Mutex.99');
     SingleInst2 := TVeloxSingleInstance.Create('Local\VeloxUI.UnitTest.Mutex.99');
     try
@@ -831,7 +878,7 @@ begin
     end;
 
     // 25. Fluent Resizable Splitter & Collapsible Pane (TVeloxSplitter)
-    WriteLn('[25/30] Testing TVeloxSplitter (Min/Max Clamping & Collapse Toggle)...');
+    WriteLn('[25/40] Testing TVeloxSplitter (Min/Max Clamping & Collapse Toggle)...');
     Frm := TForm.CreateNew(nil);
     try
       SplitPnl := TPanel.Create(Frm);
@@ -850,7 +897,7 @@ begin
     end;
 
     // 26. High-Resolution QPC Stopwatch & Frame Profiler (TVeloxStopwatch & TVeloxFrameProfiler)
-    WriteLn('[26/30] Testing TVeloxStopwatch & TVeloxFrameProfiler...');
+    WriteLn('[26/40] Testing TVeloxStopwatch & TVeloxFrameProfiler...');
     SW := TVeloxStopwatch.StartNew;
     Sleep(5);
     SW.Stop;
@@ -866,7 +913,7 @@ begin
     end;
 
     // 27. Inline Table Cell Micro-Bars & Sparklines (TVeloxCellRenderer)
-    WriteLn('[27/30] Testing TVeloxCellRenderer (Inline HeatBar, Sparkline & Status Dot)...');
+    WriteLn('[27/40] Testing TVeloxCellRenderer (Inline HeatBar, Sparkline & Status Dot)...');
     Bmp := TBitmap.Create;
     try
       Bmp.SetSize(220, 36);
@@ -881,7 +928,7 @@ begin
     end;
 
     // 28. Declarative Input Validator (TVeloxValidator)
-    WriteLn('[28/30] Testing TVeloxValidator (Required & IntRange Rules)...');
+    WriteLn('[28/40] Testing TVeloxValidator (Required & IntRange Rules)...');
     Frm := TForm.CreateNew(nil);
     try
       EdNum := TEdit.Create(Frm);
@@ -898,7 +945,7 @@ begin
     end;
 
     // 29. Native GDI+ Markdown View (TVeloxMarkdownView)
-    WriteLn('[29/30] Testing TVeloxMarkdownView (Heading, Bullet & Quote Parsing)...');
+    WriteLn('[29/40] Testing TVeloxMarkdownView (Heading, Bullet & Quote Parsing)...');
     Frm := TForm.CreateNew(nil);
     try
       MdView := TVeloxMarkdownView.CreateView(Frm, Frm, 10, 10, 400, 300, DarkColors);
@@ -912,13 +959,258 @@ begin
     end;
 
     // 30. Control Screenshot & Live Component Showcase Renderer (TVeloxScreenshot)
-    WriteLn('[30/30] Testing TVeloxScreenshot & Generating Component Gallery Showcase PNGs...');
+    WriteLn('[30/40] Testing TVeloxScreenshot & Generating Component Gallery Showcase PNGs...');
     GalleryDarkPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\component_gallery.png');
     GalleryLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\component_gallery_light.png');
     Check('screenshot: RenderComponentShowcase (Dark Mode) saves PNG',
       TVeloxScreenshot.RenderComponentShowcase(GalleryDarkPath, vtDark) and FileExists(GalleryDarkPath));
     Check('screenshot: RenderComponentShowcase (Light Mode) saves PNG',
       TVeloxScreenshot.RenderComponentShowcase(GalleryLightPath, vtLight) and FileExists(GalleryLightPath));
+
+    // 31. Zero-Dependency RFC-8259 JSON Reader & Builder (TVeloxJson)
+    WriteLn('[31/40] Testing TVeloxJson (RFC-8259 Parser, Path Navigation & Builder)...');
+    JsonRoot := TVeloxJson.Parse(
+      '{"app":"VeloxUI","units":40,"active":true,"assets":[{"name":"velox.exe","size":2048}]}',
+      JsonErr);
+    try
+      Check('json: Parse succeeds with empty error', Assigned(JsonRoot) and (JsonErr = ''));
+      JsonNode := JsonRoot.Find('app');
+      Check('json: Find("app") returns "VeloxUI"', Assigned(JsonNode) and (JsonNode.AsString = 'VeloxUI'));
+      JsonNode := JsonRoot.Find('units');
+      Check('json: Find("units") returns 40', Assigned(JsonNode) and (JsonNode.AsInt = 40));
+      JsonNode := JsonRoot.Path('assets[0].name');
+      Check('json: Path("assets[0].name") navigates nested array/object',
+        Assigned(JsonNode) and (JsonNode.AsString = 'velox.exe'));
+    finally
+      JsonRoot.Free;
+    end;
+    JsonBuilt := TVeloxJson.NewObject;
+    try
+      JsonBuilt.PutStr('framework', 'VeloxUI');
+      JsonBuilt.PutNum('version', 3);
+      JsonBuilt.PutBool('zero_dep', True);
+      Check('json: NewObject + PutStr/PutNum/PutBool + Serialize roundtrip',
+        Pos('"framework":"VeloxUI"', JsonBuilt.Serialize(False)) > 0);
+    finally
+      JsonBuilt.Free;
+    end;
+
+    // 32. Zero-Dependency WinHTTP Client (TVeloxHttp)
+    WriteLn('[32/40] Testing TVeloxHttp (WinHTTP URL Parser & Guards)...');
+    UrlParts1 := TVeloxHttp.ParseUrl('https://api.github.com/repos/amafjarkasi/velox-ui/releases/latest');
+    Check('http: ParseUrl parses HTTPS host, port 443, and path',
+      UrlParts1.Valid and UrlParts1.Secure and (UrlParts1.Host = 'api.github.com') and
+      (UrlParts1.Port = 443) and (Pos('/repos/amafjarkasi/velox-ui', UrlParts1.Path) = 1));
+    UrlParts2 := TVeloxHttp.ParseUrl('http://localhost:8080/health');
+    Check('http: ParseUrl parses HTTP custom port 8080',
+      UrlParts2.Valid and (not UrlParts2.Secure) and (UrlParts2.Host = 'localhost') and
+      (UrlParts2.Port = 8080) and (UrlParts2.Path = '/health'));
+    UrlBad := TVeloxHttp.ParseUrl('ftp://invalid');
+    Check('http: ParseUrl rejects non-HTTP scheme', not UrlBad.Valid);
+
+    // 33. GitHub Releases Self-Updater (TVeloxUpdater)
+    WriteLn('[33/40] Testing TVeloxUpdater (SemVer Compare, Release JSON & Swap Script)...');
+    Check('updater: CompareVersions("v1.2.0", "1.10.0") = -1',
+      TVeloxUpdater.CompareVersions('v1.2.0', '1.10.0') = -1);
+    Check('updater: CompareVersions("2.0.0-beta.1", "2.0.0") = -1 (prerelease < release)',
+      TVeloxUpdater.CompareVersions('2.0.0-beta.1', '2.0.0') = -1);
+    Check('updater: CompareVersions("v2.1.0", "2.1.0") = 0',
+      TVeloxUpdater.CompareVersions('v2.1.0', '2.1.0') = 0);
+    UpdInfo := TVeloxUpdater.ParseRelease(
+      '{"tag_name":"v2.4.0","body":"Fast release","html_url":"https://github.com/x/y/releases/v2.4.0",' +
+      '"assets":[{"name":"app-win64.exe","browser_download_url":"https://github.com/x/y/app-win64.exe"}]}',
+      '2.1.0', '.exe');
+    Check('updater: ParseRelease detects newer 2.4.0 and extracts .exe asset URL',
+      UpdInfo.Ok and UpdInfo.Available and (UpdInfo.LatestVersion = '2.4.0') and
+      (UpdInfo.AssetName = 'app-win64.exe'));
+    SwapScript := TVeloxUpdater.BuildSwapScript('C:\tmp\new.exe', 'C:\app\app.exe', 1234);
+    Check('updater: BuildSwapScript generates batch with PID wait and copy',
+      (Pos('1234', SwapScript) > 0) and (Pos('copy /Y', SwapScript) > 0));
+
+    // 34. Runtime i18n Localization Engine (TVeloxLocalizer)
+    WriteLn('[34/40] Testing TVeloxLocalizer (JSON String Tables, Fallback & Live Control Binding)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      Loc := TVeloxLocalizer.Create(Frm);
+      Check('i18n: AddLanguageFromJson loads English and Spanish tables',
+        Loc.AddLanguageFromJson('en', '{"nav.processes":"Processes","status.cpu":"CPU: %d%%","only.en":"Fallback Text"}') and
+        Loc.AddLanguageFromJson('es', '{"nav.processes":"Procesos","status.cpu":"CPU: %d%%"}'));
+      LocLbl := TLabel.Create(Frm);
+      LocLbl.Parent := Frm;
+      Loc.Bind(LocLbl, 'nav.processes');
+      Check('i18n: Bind sets initial English caption "Processes"', LocLbl.Caption = 'Processes');
+      Check('i18n: SetLanguage("es") live-updates bound label to "Procesos"',
+        Loc.SetLanguage('es') and (LocLbl.Caption = 'Procesos'));
+      Check('i18n: missing key in "es" falls back to "en" table',
+        Loc.Tr('only.en') = 'Fallback Text');
+      Check('i18n: TrF formats arguments accurately',
+        Loc.TrF('status.cpu', [85]) = 'CPU: 85%');
+    finally
+      Frm.Free;
+    end;
+
+    // 35. Per-Monitor v2 High-DPI Scaling Helper (TVeloxDpi)
+    WriteLn('[35/40] Testing TVeloxDpi (System DPI, Scale/Unscale & Control Tree Rescaling)...');
+    Check('dpi: GetSystemDpi >= 96', TVeloxDpi.GetSystemDpi >= 96);
+    Check('dpi: GetScaleFactor(144) = 1.5', Abs(TVeloxDpi.GetScaleFactor(144) - 1.5) < 0.001);
+    Check('dpi: Scale(100, 144) = 150 and Unscale(150, 144) = 100',
+      (TVeloxDpi.Scale(100, 144) = 150) and (TVeloxDpi.Unscale(150, 144) = 100));
+    Frm := TForm.CreateNew(nil);
+    try
+      DpiPnl := TPanel.Create(Frm);
+      DpiPnl.Parent := Frm;
+      DpiPnl.SetBounds(20, 40, 200, 100);
+      TVeloxDpi.ScaleControlTree(Frm, 96, 144);
+      Check('dpi: ScaleControlTree(96 -> 144) scales child bounds by 1.5x',
+        (DpiPnl.Left = 30) and (DpiPnl.Top = 60) and (DpiPnl.Width = 300) and (DpiPnl.Height = 150));
+    finally
+      Frm.Free;
+    end;
+
+    // 36. Two-Way MVVM ViewModel & Control Binder (TVeloxViewModel & TVeloxBinder)
+    WriteLn('[36/40] Testing TVeloxViewModel & TVeloxBinder (Batching & Two-Way Data Binding)...');
+    Helper := TGridSortHelper.Create;
+    Frm := TForm.CreateNew(nil);
+    Vm := TVeloxViewModel.Create;
+    ObsStr := TVeloxObservable<string>.Create('initial');
+    ObsBool := TVeloxObservable<Boolean>.Create(False);
+    try
+      Vm.Subscribe(Helper.OnVmChanged);
+      Vm.BeginUpdate;
+      Vm.RaisePropertyChanged('FilterText');
+      Vm.RaisePropertyChanged('FilterText'); // Duplicate coalesced
+      Vm.RaisePropertyChanged('SortCol');
+      Check('viewmodel: BeginUpdate defers notifications until EndUpdate', Helper.VmPropHits = 0);
+      Vm.EndUpdate;
+      Check('viewmodel: EndUpdate dispatches 2 unique coalesced properties and marks IsDirty',
+        (Helper.VmPropHits = 2) and Vm.IsDirty and (Helper.LastVmProp = 'SortCol'));
+      Vm.ClearDirty;
+      Check('viewmodel: ClearDirty resets IsDirty flag', not Vm.IsDirty);
+
+      Binder := TVeloxBinder.Create(Frm);
+      BoundEdit := TEdit.Create(Frm);
+      BoundEdit.Parent := Frm;
+      Binder.BindEdit(BoundEdit, ObsStr);
+      Check('binder: BindEdit initializes TEdit.Text from observable', BoundEdit.Text = 'initial');
+      ObsStr.Value := 'from_vm';
+      Check('binder: updating observable updates TEdit.Text', BoundEdit.Text = 'from_vm');
+      BoundEdit.Text := 'from_ui';
+      if Assigned(BoundEdit.OnChange) then BoundEdit.OnChange(BoundEdit);
+      Check('binder: editing TEdit updates observable Value two-way', ObsStr.Value = 'from_ui');
+
+      ToggleSw := TVeloxToggleSwitch.CreateSwitch(Frm, Frm, 10, 40, 180, 'Dark Mode', DarkColors, False);
+      Binder.BindToggle(ToggleSw, ObsBool);
+      ToggleSw.Checked := True;
+      Check('binder: BindToggle syncs TVeloxToggleSwitch -> observable', ObsBool.Value = True);
+    finally
+      ObsBool.Free;
+      ObsStr.Free;
+      Vm.Free;
+      Frm.Free;
+      Helper.Free;
+    end;
+
+    // 37. Themed System Tray, Dynamic Badge & Flyout (TVeloxTray)
+    WriteLn('[37/40] Testing TVeloxTray (GDI+ Badge Bitmap, Flyout Positioning & Builder)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      Tray := TVeloxTray.CreateTray(Frm, 'VeloxUI Monitor', DarkColors);
+      BadgeBmp := TVeloxTray.RenderBadgeBitmap('84', DarkColors, vsWarning);
+      try
+        Check('tray: RenderBadgeBitmap creates 16x16 GDI+ badge bitmap',
+          Assigned(BadgeBmp) and (BadgeBmp.Width = 16) and (BadgeBmp.Height = 16));
+      finally
+        BadgeBmp.Free;
+      end;
+      FlyPos := TVeloxTray.CalcFlyoutPos(Rect(0, 0, 1920, 1040), 320, 220, 12);
+      Check('tray: CalcFlyoutPos anchors card to bottom-right work area with margin',
+        (FlyPos.X = 1920 - 320 - 12) and (FlyPos.Y = 1040 - 220 - 12));
+      FlyFrm := Tray.BuildFlyout('Velox Telemetry', ['CPU: 14.2%', 'RAM: 8.4 GB']);
+      Check('tray: BuildFlyout creates borderless themed flyout form',
+        Assigned(FlyFrm) and (FlyFrm.BorderStyle = bsNone));
+    finally
+      Frm.Free;
+    end;
+
+    // 38. WinUI Feedback Controls (TVeloxInfoBar, TVeloxProgressRing, TVeloxSkeleton)
+    WriteLn('[38/40] Testing TVeloxInfoBar, TVeloxProgressRing & TVeloxSkeleton...');
+    Frm := TForm.CreateNew(nil);
+    try
+      InfoBar := TVeloxInfoBar.CreateBar(Frm, Frm, 16, 16, 420,
+        'Update Ready', 'Restart to apply v2.4.0', vsWarning, DarkColors, True);
+      CloseR := InfoBar.CloseRect;
+      Check('feedback: TVeloxInfoBar IsCloseHit detects close button coordinates',
+        InfoBar.IsCloseHit(CloseR.Left + 2, CloseR.Top + 2));
+      InfoBar.Dismiss;
+      Check('feedback: TVeloxInfoBar.Dismiss hides banner', not InfoBar.Visible);
+
+      ProgRing := TVeloxProgressRing.CreateRing(Frm, Frm, 16, 70, 48, DarkColors);
+      ProgRing.Percent := 65.0;
+      ProgRing.Step;
+      Check('feedback: TVeloxProgressRing advances phase on Step', ProgRing.Phase = 1);
+
+      Skel := TVeloxSkeleton.CreateSkeleton(Frm, Frm, 80, 70, 240, 64, 3, DarkColors);
+      Skel.Step;
+      Check('feedback: TVeloxSkeleton shimmer advances Offset on Step',
+        (Skel.LineCount = 3) and (Skel.Offset > 0));
+    finally
+      Frm.Free;
+    end;
+
+    // 39. Global Crash Reporter & MiniDump Writer (TVeloxCrashReporter)
+    WriteLn('[39/40] Testing TVeloxCrashReporter (Report Builder, StackTrace & MiniDump)...');
+    CrashRep := TVeloxCrashReporter.Create('VeloxTest', '2.4.0', ExtractFilePath(ParamStr(0)), DarkColors);
+    try
+      CrashRep.ShowDialog := False;
+      CrashRep.Install;
+      Check('crash: Install hooks Application.OnException', CrashRep.Installed);
+      CrashRep.Uninstall;
+      Check('crash: Uninstall restores previous handler', not CrashRep.Installed);
+      CrashRepStr := TVeloxCrashReporter.BuildReport(
+        'VeloxTest', '2.4.0', 'EAccessViolation', 'Invalid read at 0x00', '  $00401000', '[INFO] Boot ok');
+      Check('crash: BuildReport includes app version, exception class, stack & log',
+        (Pos('VeloxTest', CrashRepStr) > 0) and (Pos('EAccessViolation', CrashRepStr) > 0) and
+        (Pos('[INFO] Boot ok', CrashRepStr) > 0));
+      Check('crash: CaptureStackTrace returns non-empty frame list',
+        TVeloxCrashReporter.CaptureStackTrace <> '');
+      TmpDump := ExtractFilePath(ParamStr(0)) + 'velox_test_crash.dmp';
+      Check('crash: WriteMiniDump writes valid minidump via dbghelp.dll',
+        TVeloxCrashReporter.WriteMiniDump(TmpDump) and FileExists(TmpDump));
+      if FileExists(TmpDump) then SysUtils.DeleteFile(TmpDump);
+    finally
+      CrashRep.Free;
+    end;
+
+    // 40. Edge / Windows Terminal Fluent Tab Strip (TVeloxTabStrip)
+    WriteLn('[40/40] Testing TVeloxTabStrip (Add, Select, HitTest, Reorder & Close)...');
+    Helper := TGridSortHelper.Create;
+    Frm := TForm.CreateNew(nil);
+    try
+      TabStrip := TVeloxTabStrip.CreateStrip(Frm, Frm, 0, 0, 600, DarkColors, 36);
+      TabStrip.OnSelectChange := Helper.OnTabSelected;
+      TabStrip.AddTab('Processes', True, 1);
+      TabStrip.AddTab('Performance', True, 2);
+      TabStrip.AddTab('Services', False, 3);
+      Check('tabs: 3 tabs added and first tab auto-selected',
+        (TabStrip.TabCount = 3) and (TabStrip.SelectedIndex = 0));
+      TabR := TabStrip.TabRect(1);
+      Check('tabs: HitTest identifies tab body as vthTab',
+        (TabStrip.HitTest(TabR.Left + 16, TabR.Top + 10, TabHitIdx) = vthTab) and (TabHitIdx = 1));
+      CloseR := TabStrip.CloseRect(1);
+      Check('tabs: HitTest identifies close button on closable tab as vthClose',
+        (TabStrip.HitTest(CloseR.Left + 4, CloseR.Top + 4, TabHitIdx) = vthClose) and (TabHitIdx = 1));
+      AddR := TabStrip.AddButtonRect;
+      Check('tabs: HitTest identifies trailing + button as vthAdd',
+        TabStrip.HitTest(AddR.Left + 6, AddR.Top + 6, TabHitIdx) = vthAdd);
+      TabStrip.MoveTab(0, 2);
+      Check('tabs: MoveTab(0, 2) reorders "Processes" to index 2 and tracks selection',
+        (TabStrip.TabCaption(2) = 'Processes') and (TabStrip.SelectedIndex = 2));
+      TabStrip.RemoveTab(0);
+      Check('tabs: RemoveTab decreases TabCount to 2', TabStrip.TabCount = 2);
+    finally
+      Frm.Free;
+      Helper.Free;
+    end;
 
   except
     on E: Exception do
