@@ -285,7 +285,6 @@ begin
 
   FLabel := TLabel.Create(Self);
   FLabel.Parent := AParent;
-  FLabel.SetBounds(ALeft + 24, ATop + 1, AWidth - 24, 18);
   FLabel.Caption := ACaption;
   FLabel.Font.Name := 'Segoe UI';
   FLabel.Font.Size := 9;
@@ -294,6 +293,7 @@ begin
   FLabel.Cursor := crHandPoint;
   FLabel.Tag := 3; // Sidebar text tag
   FLabel.OnClick := LabelClick;
+  FLabel.SetBounds(ALeft + 24, ATop + 2, AWidth - 24, 16);
 end;
 
 procedure TVeloxDarkCheckBox.LabelClick(Sender: TObject);

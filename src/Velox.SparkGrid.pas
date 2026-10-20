@@ -95,14 +95,13 @@ begin
     ACanvas.Font.Size := 8;
     ACanvas.Font.Style := [fsBold];
     ACanvas.Font.Color := AColors.TextPrimary;
-    TW := ACanvas.TextWidth(AText);
-    TH := ACanvas.TextHeight(AText);
-    TextY := ACellRect.Top + ((ACellRect.Bottom - ACellRect.Top) - TH) div 2;
+    FillR := Rect(BarR.Left + 6, BarR.Top, BarR.Right - 6, BarR.Bottom);
     if ARightAlignText then
-      TextX := BarR.Right - TW - 6
+      DrawText(ACanvas.Handle, PChar(AText), Length(AText), FillR,
+        DT_SINGLELINE or DT_VCENTER or DT_RIGHT or DT_NOPREFIX)
     else
-      TextX := BarR.Left + 6;
-    ACanvas.TextOut(TextX, TextY, AText);
+      DrawText(ACanvas.Handle, PChar(AText), Length(AText), FillR,
+        DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOPREFIX);
   end;
 end;
 
@@ -138,8 +137,9 @@ begin
     ACanvas.Font.Size := 9;
     ACanvas.Font.Style := [];
     ACanvas.Font.Color := AColors.TextPrimary;
-    TH := ACanvas.TextHeight(AText);
-    ACanvas.TextOut(ACellRect.Left + 20, MidY - (TH div 2), AText);
+    DotR := Rect(ACellRect.Left + 20, ACellRect.Top, ACellRect.Right - 4, ACellRect.Bottom);
+    DrawText(ACanvas.Handle, PChar(AText), Length(AText), DotR,
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOPREFIX);
   end;
 end;
 

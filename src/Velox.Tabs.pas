@@ -391,8 +391,8 @@ end;
 
 procedure TVeloxTabStrip.Paint;
 var
-  I, TW, TH: Integer;
-  R, CR, AR: TRect;
+  I: Integer;
+  R, CR, AR, TextR: TRect;
   Fill, Bord, TextCol: TColor;
   Cap: string;
 begin
@@ -426,21 +426,25 @@ begin
     Canvas.Brush.Style := bsClear;
     Canvas.Font.Color := TextCol;
     if FTabs[I].Closable then
-      Cap := TruncateCaption(FTabs[I].Caption, (R.Right - R.Left - 44) div 7)
+    begin
+      Cap := TruncateCaption(FTabs[I].Caption, (R.Right - R.Left - 44) div 7);
+      TextR := Rect(R.Left + 12, R.Top, R.Right - 28, R.Bottom);
+    end
     else
+    begin
       Cap := TruncateCaption(FTabs[I].Caption, (R.Right - R.Left - 24) div 7);
-    TH := Canvas.TextHeight(Cap);
-    Canvas.TextOut(R.Left + 12, R.Top + ((R.Bottom - R.Top) - TH) div 2, Cap);
+      TextR := Rect(R.Left + 12, R.Top, R.Right - 12, R.Bottom);
+    end;
+    DrawText(Canvas.Handle, PChar(Cap), Length(Cap), TextR,
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOPREFIX);
 
     if FTabs[I].Closable then
     begin
       CR := CloseRect(I);
       Canvas.Font.Style := [];
       Canvas.Font.Color := FColors.TextSecondary;
-      TW := Canvas.TextWidth('x');
-      TH := Canvas.TextHeight('x');
-      Canvas.TextOut(CR.Left + ((CR.Right - CR.Left) - TW) div 2,
-        CR.Top + ((CR.Bottom - CR.Top) - TH) div 2, 'x');
+      DrawText(Canvas.Handle, 'x', 1, CR,
+        DT_SINGLELINE or DT_VCENTER or DT_CENTER or DT_NOPREFIX);
     end;
   end;
 
@@ -452,10 +456,8 @@ begin
     Canvas.Font.Style := [fsBold];
     Canvas.Font.Size := 11;
     Canvas.Font.Color := FColors.Accent;
-    TW := Canvas.TextWidth('+');
-    TH := Canvas.TextHeight('+');
-    Canvas.TextOut(AR.Left + ((AR.Right - AR.Left) - TW) div 2,
-      AR.Top + ((AR.Bottom - AR.Top) - TH) div 2, '+');
+    DrawText(Canvas.Handle, '+', 1, AR,
+      DT_SINGLELINE or DT_VCENTER or DT_CENTER or DT_NOPREFIX);
   end;
 end;
 

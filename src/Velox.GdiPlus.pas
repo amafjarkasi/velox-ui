@@ -265,17 +265,15 @@ end;
 class procedure TVeloxGdiPlus.DrawBadge(const ACanvas: TCanvas; const ARect: TRect;
   const AText: string; const ABackColor, ATextColor: TColor);
 var
-  TW, TH, TX, TY: Integer;
+  R: TRect;
 begin
   DrawCard(ACanvas, ARect, ABackColor, ABackColor, (ARect.Bottom - ARect.Top) div 2);
   ACanvas.Brush.Style := bsClear;
   ACanvas.Font.Style := [fsBold];
   ACanvas.Font.Color := ATextColor;
-  TW := ACanvas.TextWidth(AText);
-  TH := ACanvas.TextHeight(AText);
-  TX := ARect.Left + ((ARect.Right - ARect.Left) - TW) div 2;
-  TY := ARect.Top + ((ARect.Bottom - ARect.Top) - TH) div 2;
-  ACanvas.TextOut(TX, TY, AText);
+  R := ARect;
+  DrawText(ACanvas.Handle, PChar(AText), Length(AText), R,
+    DT_SINGLELINE or DT_VCENTER or DT_CENTER or DT_NOPREFIX);
 end;
 
 class procedure TVeloxGdiPlus.DrawSparkline(const ACanvas: TCanvas; const ARect: TRect;

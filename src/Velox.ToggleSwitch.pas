@@ -162,9 +162,9 @@ const
   PillH = 22;
   ThumbD = 14;
 var
-  PillR, ThumbR: TRect;
+  PillR, ThumbR, TextR: TRect;
   PillFill, PillBorder, ThumbCol: TColor;
-  ThumbX, ThumbY, TextY: Integer;
+  ThumbX, ThumbY: Integer;
 begin
   Canvas.Brush.Style := bsSolid;
   if Assigned(Parent) then
@@ -205,8 +205,9 @@ begin
     Canvas.Font.Size := 9;
     Canvas.Font.Style := [];
     Canvas.Font.Color := FColors.TextPrimary;
-    TextY := (Height - Canvas.TextHeight(FCaption)) div 2;
-    Canvas.TextOut(PillW + 10, TextY, FCaption);
+    TextR := Rect(PillW + 10, 0, Width, Height);
+    DrawText(Canvas.Handle, PChar(FCaption), Length(FCaption), TextR,
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOPREFIX);
   end;
 end;
 

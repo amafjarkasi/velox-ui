@@ -7,7 +7,7 @@
   <a href="#-getting-started--installation"><img src="https://img.shields.io/badge/Compilers-Delphi%20VCL%20%7C%20Free%20Pascal%203.2.2%20LCL-38bdf8?style=for-the-badge" alt="Compilers" /></a>
   <a href="#-before-vs-after-85-less-boilerplate"><img src="https://img.shields.io/badge/Boilerplate%20Reduction--85%25%20LOC-10b981?style=for-the-badge" alt="Boilerplate Reduction" /></a>
   <a href="#-automated-verification-suite-175175-passing"><img src="https://img.shields.io/badge/Tests-175%2F175%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
-  <a href="#-12-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win11%20Fluent-DWM%20Mica%20%7C%20GDI%2B%20%7C%20High--DPI-f59e0b?style=for-the-badge" alt="Win11 Fluent" /></a>
+  <a href="#-15-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win11%20Fluent-DWM%20Mica%20%7C%20GDI%2B%20%7C%20High--DPI-f59e0b?style=for-the-badge" alt="Win11 Fluent" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f43f5e?style=for-the-badge" alt="License" /></a>
 </p>
 
@@ -19,7 +19,7 @@
 
 ## 📸 Live GDI+ Component Showcase (`Dark` & `Light` Themes)
 
-> Generated programmatically via [`TVeloxScreenshot.RenderComponentShowcase`](src/Velox.Screenshot.pas) using real hardware-accelerated `VeloxUI` GDI+ primitives (`TVeloxAppShell`, `TVeloxGdiPlus`, `TVeloxCharts.DrawDonutGauge`, `DrawDualSparkline`, `DrawHeatGrid`, `TVeloxToggleSwitch`, `TVeloxChipGroup`, `TVeloxCellRenderer.DrawInlineBar`, and `TVeloxToast`).
+> Generated programmatically via [`TVeloxScreenshot.RenderComponentShowcase`](src/Velox.Screenshot.pas) using real hardware-accelerated `VeloxUI` GDI+ primitives ([`TVeloxAppShell`](src/Velox.AppShell.pas), [`TVeloxTabStrip`](src/Velox.Tabs.pas), [`TVeloxSearchBox`](src/Velox.Controls.pas), [`TVeloxToggleSwitch`](src/Velox.ToggleSwitch.pas), [`TVeloxChipGroup`](src/Velox.StyledButton.pas), [`TVeloxCharts`](src/Velox.Charts.pas), [`TVeloxSparkGrid`](src/Velox.SparkGrid.pas), and [`TVeloxToast`](src/Velox.Toast.pas)). All controls feature pixel-perfect vertical and horizontal text centering.
 
 ### Windows 11 Fluent Dark Mode (`vtDark`)
 <p align="center">
@@ -130,35 +130,39 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 
 ## 🏗 Compact Architecture Diagrams
 
-### 1. High-Level Layer Flow
+### 1. High-Level Layer Flow (40 Modules)
 
 ```mermaid
 flowchart LR
-    OS["Win32 / NT Kernel / DWM"] -->|"Syscalls & QPC"| SYS["Velox.System, Velox.Async & Velox.Profiler"]
-    SYS -->|"EventBus & Observable<T>"| VM["Velox.Reactive, Velox.TreeBuilder<T> & Velox.Logger"]
-    VM -->|"OwnerData"| GRID["Velox.VirtualGrid<T>, Velox.SparkGrid & Velox.Export"]
-    THEME["Velox.Theme, Velox.GdiPlus, Velox.Charts & Velox.Animation"] --> SHELL["Velox.AppShell & Velox.Controls"]
+    OS["Win32 / NT Kernel / WinHTTP"] -->|"Syscalls, QPC & WinHTTP"| SYS["Velox.System, Velox.Http, Velox.Async & Velox.Profiler"]
+    SYS -->|"EventBus, JSON & Observable<T>"| VM["Velox.ViewModel, Velox.Json, Velox.Reactive & Velox.Logger"]
+    VM -->|"Data Binding & i18n"| BIND["Velox.Localization, Velox.Validator & Velox.TreeBuilder<T>"]
+    BIND -->|"OwnerData & Cells"| GRID["Velox.VirtualGrid<T>, Velox.SparkGrid & Velox.Export"]
+    THEME["Velox.Theme, Velox.Dpi, Velox.GdiPlus & Velox.Animation"] --> SHELL["Velox.AppShell, Velox.Tabs & Velox.Controls"]
     GRID --> SHELL
+    EXT["Velox.Updater, Velox.Tray & Velox.CrashReporter"] --> SHELL
 ```
 
-### 2. Win11 Dark Mode & GDI+ Rendering Pipeline
+### 2. Win11 Dark Mode, High-DPI & GDI+ Pipeline
 
 ```mermaid
 flowchart TD
     DWM["dwmapi.dll\nDark Titlebar (20)\nMica Backdrop (38)"] --> TE["Velox.ThemeEngine"]
     UX["uxtheme.dll\nOrdinals 135 & 133\nDarkMode_Explorer"] --> TE
-    GP["gdiplus.dll\nSmoothingModeAntiAlias\nCards, Gauges & SparkGrid"] --> GE["Velox.GdiPlus, Velox.Charts & Velox.Screenshot"]
+    DPI["user32.dll\nPerMonitorAwareV2\nDynamic Scaling"] --> DPE["Velox.Dpi"]
+    GP["gdiplus.dll\nAnti-Aliased Vector\nCards, Gauges & Tabs"] --> GE["Velox.GdiPlus, Velox.Charts, Velox.Tabs & Velox.Feedback"]
+    NET["winhttp.dll & dbghelp.dll\nZero-Dependency Win32"] --> NE["Velox.Http, Velox.Updater & Velox.CrashReporter"]
 ```
 
 ---
 
-## 🧠 12 Hard-Won Win32 / VCL / LCL Gotchas Solved
+## 🧠 15 Hard-Won Win32 / VCL / LCL Gotchas Solved
 
 | # | The Win32 / Delphi / Lazarus Trap | Root Cause | How **VeloxUI** Solves It Automatically |
 | :---: | :--- | :--- | :--- |
 | **1** | **`TComboBox` ignores `.Height`** and renders too tall or too short next to `TButton` at High-DPI | Win32 `ComboBox` computes its outer height from `CB_SETITEMHEIGHT ($0151) + 2*SM_CYEDGE` instead of `WM_SIZE` | [`TVeloxControls.SyncComboBoxHeight`](src/Velox.Controls.pas) measures the reference button via `GetWindowRect` and runs a 2-pass `CB_SETITEMHEIGHT` feedback loop |
-| **2** | **`TEdit` placeholder & text are pinned to the top-left border** with no vertical centering | Standard Win32 single-line edit controls do not support vertical internal padding | [`TVeloxSearchBox`](src/Velox.Controls.pas) wraps a borderless `bsNone` `TEdit` at `Top = (Height - 16) div 2` inside a custom-painted `TPanel` with `10px` left margin |
-| **3** | **`TCheckBox` caption renders black-on-dark** and is invisible on dark panels | Windows `UXTheme` overrides `TCheckBox` text color when themes are enabled | [`TVeloxDarkCheckBox`](src/Velox.Controls.pas) and [`TVeloxToggleSwitch`](src/Velox.ToggleSwitch.pas) decouple native caption rendering |
+| **2** | **`TEdit` placeholder & text are pinned to the top-left border** with no vertical centering | Standard Win32 single-line edit controls do not support vertical internal padding | [`TVeloxSearchBox`](src/Velox.Controls.pas) wraps a borderless `bsNone` `TEdit` at exact vertical center inside a custom-painted `TPanel` with `10px` left margin |
+| **3** | **`TCheckBox` caption renders black-on-dark** and is invisible on dark panels | Windows `UXTheme` overrides `TCheckBox` text color when themes are enabled | [`TVeloxDarkCheckBox`](src/Velox.Controls.pas) and [`TVeloxToggleSwitch`](src/Velox.ToggleSwitch.pas) decouple native caption rendering with vertical centering |
 | **4** | **`TListView` flashes white on update** and loses selected row / scroll position | Assigning `Items.Count` unconditionally triggers `WM_ERASEBKGND` and resets viewport state | [`TVeloxVirtualGrid<T>`](src/Velox.VirtualGrid.pas) enables `LVS_EX_DOUBLEBUFFER ($10000)` and only updates `Items.Count` when the count changes, calling `Invalidate` otherwise |
 | **5** | **`TListView` and `TMemo` show bright white scrollbars** in dark mode | Win32 common controls default to the light `"Explorer"` theme unless opted in via undocumented `uxtheme.dll` ordinals | [`TVeloxThemeEngine`](src/Velox.Theme.pas) invokes `uxtheme.dll` Ordinal `135` (`SetPreferredAppMode`), Ordinal `133` (`AllowDarkModeForWindow`), and `SetWindowTheme('DarkMode_Explorer', nil)` |
 | **6** | **Compile Error on `Rect(0, 0, W, H)`** (`Incompatible types: got "RECT" expected "TRect"`) | Putting `Windows` after `Types` in `uses` causes the `Windows.RECT` struct to shadow `Types.Rect()` function | All VeloxUI units enforce `Windows` **before** `Types` in `uses` |
@@ -168,6 +172,9 @@ flowchart TD
 | **10** | **FPC 3.2.2 `TThread.Queue` incompatibility** with anonymous closures | FPC 3.2.2 `TThread.Queue` expects a `TThreadMethod` (`procedure of object`) | [`TVeloxWorkerThread<T>`](src/Velox.Async.pas) uses a typed `FPendingData: T` field and `Queue(SyncDeliver)` method |
 | **11** | **Corrupted `▲`/`▼` sort arrows (Mojibake)** between Delphi and Lazarus | Lazarus LCL strings are UTF-8 while Delphi VCL strings are UTF-16 | [`Velox.Types.pas`](src/Velox.Types.pas) defines `VELOX_ARROW_ASC` / `VELOX_ARROW_DESC` using `#$E2#$96#$B2` on FPC and `#$25B2` on Delphi |
 | **12** | **`OpenProcess(PROCESS_VM_READ)` fails with Access Denied** when reading process command lines | Reading another process's PEB directly requires `PROCESS_VM_READ` | [`TVeloxSystem.GetProcessCommandLine`](src/Velox.System.pas) queries `NtQueryInformationProcess` Class `60` (`ProcessCommandLineInformation`), which only requires `PROCESS_QUERY_LIMITED_INFORMATION ($1000)` |
+| **13** | **Indy / OpenSSL DLL Hell for HTTPS & REST** on client machines | Distributing `libeay32.dll` / `ssleay32.dll` causes version mismatches and anti-virus flags | [`Velox.Http.pas`](src/Velox.Http.pas) calls Win32 `winhttp.dll` directly: OS TLS certificates and system proxy are automatic with zero external DLLs |
+| **14** | **Per-Monitor v2 High-DPI (`WM_DPICHANGED`) Font & Layout Desync** | Moving forms across monitors with different scaling scales child control bounds but leaves fonts or anchored children clipped | [`Velox.Dpi.pas`](src/Velox.Dpi.pas) provides `RescaleForm` + `ScaleControlTree` using `TControlAccess` to rescale custom fonts via `MulDiv` without triggering recursive `ParentFont` resets |
+| **15** | **Unhandled Exception Crashes with Blank Error Dialogs** | Standard `ShowException` shows a brief message and loses the call stack and recent telemetry history | [`Velox.CrashReporter.pas`](src/Velox.CrashReporter.pas) captures stack frames via `BackTraceStrFunc`, flushes `TVeloxLogger` ring buffers, writes a native `.dmp` minidump via `dbghelp.dll`, and renders a dark-mode modal |
 
 ---
 

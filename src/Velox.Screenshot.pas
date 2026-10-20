@@ -114,6 +114,15 @@ begin
   end;
 end;
 
+procedure DrawShowcaseText(const ACanvas: TCanvas; const ARect: TRect;
+  const AText: string; const AFlags: Cardinal = DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+var
+  R: TRect;
+begin
+  R := ARect;
+  Windows.DrawText(ACanvas.Handle, PChar(AText), Length(AText), R, AFlags or DT_NOPREFIX);
+end;
+
 class function TVeloxScreenshot.RenderComponentShowcase(const AFilePath: string;
   const ATheme: TVeloxTheme): Boolean;
 const
@@ -125,6 +134,7 @@ var
   Colors: TVeloxThemeColors;
   SparkA, SparkB, HeatVals: TSingleDynArray;
   I, RowY: Integer;
+  R: TRect;
 begin
   Colors := TVeloxUtils.GetThemeColors(ATheme);
   Bmp := TBitmap.Create;
@@ -151,43 +161,45 @@ begin
     C.Font.Color := Colors.Accent;
     C.TextOut(20, 44, 'LIVE COMPONENT GALLERY');
 
-    // Sidebar Navigation Buttons
+    // Sidebar Navigation Buttons (Centered Vertically)
     TVeloxGdiPlus.DrawCard(C, Rect(14, 76, 196, 110),
       TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.30), Colors.Accent, 6);
     C.Brush.Style := bsClear;
     C.Font.Size := 9;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextPrimary;
-    C.TextOut(28, 85, 'Overview & Telemetry');
+    DrawShowcaseText(C, Rect(28, 76, 196, 110), 'Overview & Telemetry', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     TVeloxGdiPlus.DrawCard(C, Rect(14, 118, 196, 152), Colors.SidebarBg, Colors.Border, 6);
     C.Brush.Style := bsClear;
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(28, 127, 'Virtual SparkGrid (O(1))');
+    DrawShowcaseText(C, Rect(28, 118, 196, 152), 'Virtual SparkGrid (O(1))', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     TVeloxGdiPlus.DrawCard(C, Rect(14, 160, 196, 194), Colors.SidebarBg, Colors.Border, 6);
     C.Brush.Style := bsClear;
-    C.TextOut(28, 169, 'Command Palette (Ctrl+K)');
+    DrawShowcaseText(C, Rect(28, 160, 196, 194), 'Command Palette (Ctrl+K)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // Sidebar Toggle Switch Preview
+    // Sidebar Toggle Switches Preview (Pill & Label Vertically Centered to Each Other)
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(18, 224, 'FLUENT TOGGLE SWITCHES');
+    C.TextOut(18, 222, 'FLUENT TOGGLE SWITCHES');
 
-    TVeloxGdiPlus.DrawCard(C, Rect(18, 248, 60, 270), Colors.Accent, Colors.Accent, 11);
-    TVeloxGdiPlus.DrawCard(C, Rect(42, 252, 56, 266), Colors.Background, Colors.Background, 7);
+    // Toggle 1: Active
+    TVeloxGdiPlus.DrawCard(C, Rect(18, 246, 60, 268), Colors.Accent, Colors.Accent, 11);
+    TVeloxGdiPlus.DrawCard(C, Rect(42, 250, 56, 264), Colors.Background, Colors.Background, 7);
     C.Brush.Style := bsClear;
     C.Font.Size := 9;
     C.Font.Style := [];
     C.Font.Color := Colors.SidebarText;
-    C.TextOut(68, 250, 'Win11 Mica Backdrop');
+    DrawShowcaseText(C, Rect(68, 246, 204, 268), 'Win11 Mica Backdrop', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(18, 282, 60, 304), Colors.Accent, Colors.Accent, 11);
-    TVeloxGdiPlus.DrawCard(C, Rect(42, 286, 56, 300), Colors.Background, Colors.Background, 7);
+    // Toggle 2: Active
+    TVeloxGdiPlus.DrawCard(C, Rect(18, 280, 60, 302), Colors.Accent, Colors.Accent, 11);
+    TVeloxGdiPlus.DrawCard(C, Rect(42, 284, 56, 298), Colors.Background, Colors.Background, 7);
     C.Brush.Style := bsClear;
-    C.TextOut(68, 284, 'Dark Scrollbars (135)');
+    DrawShowcaseText(C, Rect(68, 280, 204, 302), 'Dark Scrollbars (135)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     // Top Header Bar
     C.Brush.Style := bsSolid;
@@ -197,33 +209,33 @@ begin
     C.Font.Size := 13;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextPrimary;
-    C.TextOut(230, 16, 'VeloxUI Live GDI+ Component Showcase');
+    DrawShowcaseText(C, Rect(230, 0, 570, 56), 'VeloxUI Live GDI+ Component Showcase', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // Centered SearchBox in Header
-    TVeloxGdiPlus.DrawCard(C, Rect(580, 14, 820, 42), Colors.SurfaceCard, Colors.Accent, 6);
+    // Centered SearchBox in Header (Card at 14..42 -> Text Centered in 14..42)
+    TVeloxGdiPlus.DrawCard(C, Rect(576, 14, 804, 42), Colors.SurfaceCard, Colors.Accent, 6);
     C.Brush.Style := bsClear;
     C.Font.Size := 9;
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(592, 20, 'Search processes... (Ctrl+F)');
+    DrawShowcaseText(C, Rect(590, 14, 796, 42), 'Search processes... (Ctrl+F)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // Segmented Filter Chips in Header
-    TVeloxGdiPlus.DrawCard(C, Rect(836, 14, 896, 42),
+    // Segmented Filter Chips in Header (Each Chip Centered Horizontally and Vertically)
+    TVeloxGdiPlus.DrawCard(C, Rect(816, 14, 876, 42),
       TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.32), Colors.Accent, 14);
     C.Brush.Style := bsClear;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextPrimary;
-    C.TextOut(856, 20, 'All');
+    DrawShowcaseText(C, Rect(816, 14, 876, 42), 'All', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(904, 14, 998, 42), Colors.SurfaceCard, Colors.Border, 14);
+    TVeloxGdiPlus.DrawCard(C, Rect(884, 14, 984, 42), Colors.SurfaceCard, Colors.Border, 14);
     C.Brush.Style := bsClear;
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(918, 20, 'Heavy RAM');
+    DrawShowcaseText(C, Rect(884, 14, 984, 42), 'Heavy RAM', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(1006, 14, 1100, 42), Colors.SurfaceCard, Colors.Border, 14);
+    TVeloxGdiPlus.DrawCard(C, Rect(992, 14, 1096, 42), Colors.SurfaceCard, Colors.Border, 14);
     C.Brush.Style := bsClear;
-    C.TextOut(1020, 20, 'Active CPU');
+    DrawShowcaseText(C, Rect(992, 14, 1096, 42), 'Active CPU', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // Prepare Telemetry Series
     SetLength(SparkA, 16);
@@ -235,71 +247,96 @@ begin
     end;
 
     // 2. Top Row Cards: KPI Metric Card + Donut Gauge Card + Dual Sparkline + HeatGrid
-    TVeloxGdiPlus.DrawCard(C, Rect(228, 72, 478, 212), Colors.SurfaceCard, Colors.Border, 8);
+    TVeloxGdiPlus.DrawCard(C, Rect(228, 70, 478, 206), Colors.SurfaceCard, Colors.Border, 8);
     C.Brush.Style := bsClear;
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(244, 84, 'CPU UTILIZATION');
+    C.TextOut(244, 82, 'CPU UTILIZATION');
     C.Font.Size := 22;
     C.Font.Color := Colors.TextPrimary;
-    C.TextOut(244, 102, '42.8%');
+    C.TextOut(244, 98, '42.8%');
     C.Font.Size := 8;
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(244, 146, '8 P-Cores / 16 Threads @ 5.1 GHz');
-    TVeloxGdiPlus.DrawSparkline(C, Rect(364, 84, 464, 140), SparkA, Colors.Accent,
+    C.TextOut(244, 142, '8 P-Cores / 16 Threads @ 5.1 GHz');
+    TVeloxGdiPlus.DrawSparkline(C, Rect(364, 82, 464, 138), SparkA, Colors.Accent,
       TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.28));
-    TVeloxGdiPlus.DrawProgressBar(C, Rect(244, 184, 462, 194), 42.8, Colors.Border, Colors.Accent);
+    TVeloxGdiPlus.DrawProgressBar(C, Rect(244, 178, 462, 188), 42.8, Colors.Border, Colors.Accent);
 
     // Donut Gauge Card
-    TVeloxGdiPlus.DrawCard(C, Rect(492, 72, 672, 212), Colors.SurfaceCard, Colors.Border, 8);
-    TVeloxCharts.DrawDonutGauge(C, Rect(512, 82, 652, 202), 68.4, '68.4%', 'RAM Load', Colors, Colors.Success, 9.0);
+    TVeloxGdiPlus.DrawCard(C, Rect(492, 70, 672, 206), Colors.SurfaceCard, Colors.Border, 8);
+    TVeloxCharts.DrawDonutGauge(C, Rect(512, 78, 652, 198), 68.4, '68.4%', 'RAM Load', Colors, Colors.Success, 9.0);
 
     // Dual Sparkline Card
-    TVeloxGdiPlus.DrawCard(C, Rect(686, 72, 896, 212), Colors.SurfaceCard, Colors.Border, 8);
+    TVeloxGdiPlus.DrawCard(C, Rect(686, 70, 896, 206), Colors.SurfaceCard, Colors.Border, 8);
     C.Brush.Style := bsClear;
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(700, 84, 'DUAL SPARKLINE (RX / TX)');
+    C.TextOut(700, 82, 'DUAL SPARKLINE (RX / TX)');
     C.Font.Size := 13;
     C.Font.Color := Colors.TextPrimary;
-    C.TextOut(700, 102, '148.2 MB/s');
-    TVeloxCharts.DrawDualSparkline(C, Rect(700, 132, 882, 198),
+    C.TextOut(700, 100, '148.2 MB/s');
+    TVeloxCharts.DrawDualSparkline(C, Rect(700, 128, 882, 194),
       SparkA, SparkB, Colors.Accent, Colors.Success, Colors.SurfaceCard);
 
     // Per-Core HeatGrid Card
-    TVeloxGdiPlus.DrawCard(C, Rect(910, 72, 1102, 212), Colors.SurfaceCard, Colors.Border, 8);
+    TVeloxGdiPlus.DrawCard(C, Rect(910, 70, 1102, 206), Colors.SurfaceCard, Colors.Border, 8);
     C.Brush.Style := bsClear;
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(924, 84, 'CORE HEATGRID (8 CORES)');
+    C.TextOut(924, 82, 'CORE HEATGRID (8 CORES)');
     SetLength(HeatVals, 8);
     HeatVals[0] := 92.0; HeatVals[1] := 74.0; HeatVals[2] := 45.0; HeatVals[3] := 28.0;
     HeatVals[4] := 64.0; HeatVals[5] := 19.0; HeatVals[6] := 88.0; HeatVals[7] := 35.0;
-    TVeloxCharts.DrawHeatGrid(C, Rect(924, 106, 1088, 198), HeatVals, Colors, 4);
+    TVeloxCharts.DrawHeatGrid(C, Rect(924, 104, 1088, 194), HeatVals, Colors, 4);
 
-    // 3. Bottom Virtual SparkGrid Table Preview
-    TVeloxGdiPlus.DrawCard(C, Rect(228, 228, 1102, 572), Colors.SurfaceCard, Colors.Border, 8);
-    C.Brush.Style := bsSolid;
-    C.Brush.Color := Colors.Surface;
-    C.FillRect(Rect(230, 230, 1100, 264));
-
-    C.Brush.Style := bsClear;
+    // 3. Fluent Tab Strip Bar (TVeloxTabStrip Preview)
+    // Tab 1: Selected
+    TVeloxGdiPlus.DrawCard(C, Rect(228, 218, 332, 248),
+      TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.22), Colors.Accent, 6);
     C.Font.Size := 9;
     C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(228, 218, 332, 248), 'Processes', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Tab 2: Normal
+    TVeloxGdiPlus.DrawCard(C, Rect(338, 218, 436, 248), Colors.SurfaceCard, Colors.Border, 6);
+    C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(244, 239, 'PROCESS NAME');
-    C.TextOut(460, 239, 'STATUS');
-    C.TextOut(590, 239, 'CPU HEATBAR');
-    C.TextOut(770, 239, 'WORKING SET (RAM) ' + VELOX_ARROW_DESC);
-    C.TextOut(960, 239, 'LIVE TREND');
+    DrawShowcaseText(C, Rect(338, 218, 436, 248), 'Services', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Tab 3: Normal
+    TVeloxGdiPlus.DrawCard(C, Rect(442, 218, 552, 248), Colors.SurfaceCard, Colors.Border, 6);
+    DrawShowcaseText(C, Rect(442, 218, 552, 248), 'Performance', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Tab 4: Add Button '+'
+    TVeloxGdiPlus.DrawCard(C, Rect(558, 218, 588, 248), Colors.SurfaceCard, Colors.Border, 6);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(558, 218, 588, 248), '+', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // 4. Bottom Virtual SparkGrid Table Preview (Cards + Column Headers)
+    TVeloxGdiPlus.DrawCard(C, Rect(228, 254, 1102, 574), Colors.SurfaceCard, Colors.Border, 8);
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Surface;
+    C.FillRect(Rect(230, 256, 1100, 288));
+
+    C.Brush.Style := bsClear;
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(244, 256, 450, 288), 'PROCESS NAME', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(454, 256, 574, 288), 'STATUS', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(584, 256, 750, 288), 'CPU HEATBAR', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(764, 256, 944, 288), 'WORKING SET (RAM) ' + VELOX_ARROW_DESC, DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(956, 256, 1086, 288), 'LIVE TREND', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     for I := 0 to 5 do
     begin
-      RowY := 270 + I * 44;
+      RowY := 294 + I * 44;
       if I = 1 then
       begin
         C.Brush.Style := bsSolid;
@@ -312,13 +349,14 @@ begin
       C.Font.Size := 9;
       C.Font.Style := [fsBold];
       C.Font.Color := Colors.TextPrimary;
+      R := Rect(244, RowY, 440, RowY + 40);
       case I of
-        0: C.TextOut(244, RowY + 11, 'novamonitor.exe');
-        1: C.TextOut(244, RowY + 11, '   ' + VELOX_TREE_BRANCH + 'velox-worker.exe');
-        2: C.TextOut(244, RowY + 11, 'pwsh.exe');
-        3: C.TextOut(244, RowY + 11, 'lazarus.exe');
-        4: C.TextOut(244, RowY + 11, 'dwm.exe');
-        5: C.TextOut(244, RowY + 11, 'svchost.exe');
+        0: DrawShowcaseText(C, R, 'novamonitor.exe', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+        1: DrawShowcaseText(C, R, '   ' + VELOX_TREE_BRANCH + 'velox-worker.exe', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+        2: DrawShowcaseText(C, R, 'pwsh.exe', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+        3: DrawShowcaseText(C, R, 'lazarus.exe', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+        4: DrawShowcaseText(C, R, 'dwm.exe', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+        5: DrawShowcaseText(C, R, 'svchost.exe', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
       end;
 
       if I = 3 then
@@ -337,18 +375,18 @@ begin
         SparkA, Colors, Colors.Accent);
     end;
 
-    // 4. Floating Non-Blocking Toast Notification Preview (Bottom-Right)
-    TVeloxGdiPlus.DrawCard(C, Rect(740, 500, 1086, 560), Colors.Surface, Colors.Warning, 8);
-    TVeloxGdiPlus.DrawCard(C, Rect(748, 510, 753, 550), Colors.Warning, Colors.Warning, 2);
+    // 5. Floating Non-Blocking Toast Notification Preview (Bottom-Right, Centered Vertically)
+    TVeloxGdiPlus.DrawCard(C, Rect(740, 506, 1086, 564), Colors.Surface, Colors.Warning, 8);
+    TVeloxGdiPlus.DrawCard(C, Rect(748, 516, 753, 554), Colors.Warning, Colors.Warning, 2);
     C.Brush.Style := bsClear;
     C.Font.Size := 9;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextPrimary;
-    C.TextOut(764, 510, 'TVeloxToast — Sustained Threshold Alert');
+    DrawShowcaseText(C, Rect(764, 514, 1076, 534), 'TVeloxToast — Sustained Threshold Alert', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
     C.Font.Size := 8;
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(764, 530, 'Render latency: 0.12 ms | 100% Zero-Flicker GDI+');
+    DrawShowcaseText(C, Rect(764, 536, 1076, 554), 'Render latency: 0.12 ms | 100% Zero-Flicker GDI+', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     Result := SaveBitmapToPng(Bmp, AFilePath);
   finally

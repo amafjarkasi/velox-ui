@@ -248,10 +248,8 @@ begin
   else
     Canvas.Font.Style := [];
   Canvas.Font.Color := TextCol;
-
-  TW := Canvas.TextWidth(FCaption);
-  TH := Canvas.TextHeight(FCaption);
-  Canvas.TextOut((Width - TW) div 2, (Height - TH) div 2, FCaption);
+  DrawText(Canvas.Handle, PChar(FCaption), Length(FCaption), R,
+    DT_SINGLELINE or DT_VCENTER or DT_CENTER or DT_NOPREFIX);
 end;
 
 { TVeloxChipGroup }
