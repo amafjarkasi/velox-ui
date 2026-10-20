@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="resources/logo.svg" alt="VeloxUI Logo" width="540" />
+  <img src="resources/logo.svg" alt="VeloxUI Logo" width="100%" />
 </p>
 
 <p align="center">

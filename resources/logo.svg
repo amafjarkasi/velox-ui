@@ -1,33 +1,114 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 140" width="680" height="140">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300" width="100%" height="100%" fill="none">
   <defs>
-    <linearGradient id="vCyan" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="100%" stop-color="#0284C7" />
+    <!-- Background Vignette -->
+    <radialGradient id="ambientGlow" cx="24%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.16"/>
+      <stop offset="45%" stop-color="#6366f1" stop-opacity="0.10"/>
+      <stop offset="75%" stop-color="#a855f7" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#030712" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="bgFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0c14"/>
+      <stop offset="50%" stop-color="#06080e"/>
+      <stop offset="100%" stop-color="#030407"/>
     </linearGradient>
-    <linearGradient id="vIndigo" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#818CF8" />
-      <stop offset="100%" stop-color="#4F46E5" />
+
+    <!-- Clean Geometric "V" Monogram Gradients -->
+    <linearGradient id="vLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
     </linearGradient>
+
+    <linearGradient id="vRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="55%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+
+    <linearGradient id="vSpark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+
+    <!-- Soft Glow Filter -->
+    <filter id="coreGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
 
-  <!-- Minimalist Geometric 'V' Mark -->
-  <g transform="translate(24, 18)">
-    <rect x="0" y="0" width="104" height="104" rx="22" fill="#0F172A" stroke="#1E293B" stroke-width="2" />
-    <!-- Left Cyan Wing -->
-    <polygon points="24,26 44,26 58,78 46,82" fill="url(#vCyan)" />
-    <!-- Right Indigo Wing -->
-    <polygon points="80,26 60,26 46,82 58,82" fill="url(#vIndigo)" />
-    <!-- Center Emerald Spark -->
-    <polygon points="47,26 57,26 52,48" fill="#10B981" />
+  <!-- Container Box -->
+  <rect width="1000" height="300" rx="20" fill="url(#bgFill)" stroke="#1e2230" stroke-width="1.2"/>
+  <rect width="1000" height="300" rx="20" fill="url(#ambientGlow)"/>
+
+  <!-- ==================== ICON MARK (Pure Geometric "V") ==================== -->
+  <g transform="translate(110, 65)">
+    <!-- Ambient Halo behind Icon -->
+    <circle cx="85" cy="85" r="95" fill="#38bdf8" fill-opacity="0.08" filter="url(#coreGlow)"/>
+
+    <!-- Concentric Technical Aperture Rings -->
+    <circle cx="85" cy="85" r="82" stroke="#334155" stroke-width="1" stroke-dasharray="2 6" opacity="0.6"/>
+    <circle cx="85" cy="85" r="70" stroke="#1e293b" stroke-width="1.5" opacity="0.8"/>
+
+    <!-- Precision Coordinate Ticks -->
+    <line x1="85" y1="2" x2="85" y2="10" stroke="#38bdf8" stroke-width="1.5" opacity="0.7"/>
+    <line x1="85" y1="160" x2="85" y2="168" stroke="#38bdf8" stroke-width="1.5" opacity="0.7"/>
+    <line x1="2" y1="85" x2="10" y2="85" stroke="#38bdf8" stroke-width="1.5" opacity="0.7"/>
+    <line x1="160" y1="85" x2="168" y2="85" stroke="#38bdf8" stroke-width="1.5" opacity="0.7"/>
+
+    <!-- Architectural "V" Monogram -->
+    <!-- Left Diagonal Wing -->
+    <path d="M 38 42 C 36.5 38.5 39 35 43 35 L 61 35 C 64.5 35 67.5 37 69 40.2 L 94 102 L 79 133 C 77.2 136.5 72.5 136.5 70.8 133 Z"
+          fill="url(#vLeft)"/>
+
+    <!-- Right Diagonal Traverse Blade -->
+    <path d="M 109 35 L 127 35 C 131 35 133.5 38.5 132 42 L 93 133 C 91.5 136.2 88.5 138 85 138 L 77 138 C 73.5 138 71 134.5 72.5 131 L 101 39.8 C 102.5 36.8 105.5 35 109 35 Z"
+          fill="url(#vRight)"/>
+
+    <!-- Center Velocity Diamond Spark -->
+    <polygon points="85,32 93,48 85,64 77,48" fill="url(#vSpark)"/>
   </g>
 
-  <!-- Clean Wordmark & Tagline -->
-  <g transform="translate(152, 0)">
-    <text x="0" y="74" font-family="'Segoe UI', Inter, -apple-system, sans-serif" font-size="54" font-weight="800" fill="#F8FAFC" letter-spacing="-1">
-      Velox<tspan fill="#38BDF8">UI</tspan>
+  <!-- ==================== TYPOGRAPHY & BRAND IDENTITY ==================== -->
+  <g transform="translate(340, 95)">
+    <!-- Brand Title -->
+    <text x="0" y="55" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif">
+      <tspan font-size="56" font-weight="800" letter-spacing="4" fill="url(#textGrad)">VELOX</tspan>
+      <tspan dx="10" font-size="56" font-weight="300" letter-spacing="6" fill="#38bdf8">UI</tspan>
     </text>
-    <text x="2" y="106" font-family="'Segoe UI', Inter, -apple-system, sans-serif" font-size="15" font-weight="500" fill="#94A3B8" letter-spacing="0.2">
-      Fluent Dark Mode &amp; MVVM Micro-Framework for Delphi &amp; Lazarus
+
+    <!-- Subtitle / Meta Hierarchy -->
+    <text x="3" y="92" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif"
+          font-size="12" font-weight="600" letter-spacing="4" fill="#94a3b8">
+      FLUENT DESKTOP &amp; MVVM ENGINE <tspan fill="#38bdf8">•</tspan> DELPHI &amp; FREE PASCAL
     </text>
+
+    <!-- Spec Pill Tags (Clean Minimalist Chips) -->
+    <g transform="translate(3, 118)">
+      <!-- Pill 1: 30 Units -->
+      <rect x="0" y="0" width="90" height="22" rx="11" fill="#111827" stroke="#1f293d" stroke-width="1"/>
+      <text x="45" y="15" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#94a3b8" text-anchor="middle" letter-spacing="1">30 UNITS</text>
+
+      <!-- Pill 2: Win11 Fluent -->
+      <rect x="100" y="0" width="116" height="22" rx="11" fill="#111827" stroke="#1f293d" stroke-width="1"/>
+      <text x="158" y="15" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#38bdf8" text-anchor="middle" letter-spacing="1">WIN11 FLUENT</text>
+
+      <!-- Pill 3: GDI+ Vector -->
+      <rect x="226" y="0" width="112" height="22" rx="11" fill="#111827" stroke="#1f293d" stroke-width="1"/>
+      <text x="282" y="15" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#34d399" text-anchor="middle" letter-spacing="1">GDI+ VECTOR</text>
+
+      <!-- Pill 4: Zero Dependency -->
+      <rect x="348" y="0" width="106" height="22" rx="11" fill="#111827" stroke="#1f293d" stroke-width="1"/>
+      <text x="401" y="15" font-family="'Segoe UI', sans-serif" font-size="10.5" font-weight="700" fill="#a78bfa" text-anchor="middle" letter-spacing="1">0DEPS MVVM</text>
+    </g>
   </g>
 </svg>
