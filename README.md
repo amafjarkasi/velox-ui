@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="resources/logo.svg" alt="VeloxUI Hero Banner" width="100%" />
+  <img src="resources/logo.svg" alt="VeloxUI Logo" width="540" />
 </p>
 
 <p align="center">
@@ -9,10 +9,6 @@
   <a href="#-automated-verification-suite-100100-passing"><img src="https://img.shields.io/badge/Tests-100%2F100%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
   <a href="#-12-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win11%20Fluent-DWM%20Mica%20%7C%20GDI%2B%20%7C%20High--DPI-f59e0b?style=for-the-badge" alt="Win11 Fluent" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f43f5e?style=for-the-badge" alt="License" /></a>
-</p>
-
-<p align="center">
-  <img src="resources/velox_icon.jpg" alt="VeloxUI Emblem" width="110" style="border-radius: 20px;" />
 </p>
 
 <p align="center">
