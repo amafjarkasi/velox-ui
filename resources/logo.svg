@@ -51,9 +51,9 @@
 
     <!-- Technical Specification Badges -->
     <g transform="translate(2, 94)">
-      <!-- Badge 1: 40 Units -->
+      <!-- Badge 1: 50 Units -->
       <rect x="0" y="0" width="126" height="22" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
-      <text x="63" y="15" font-family="'Segoe UI', -apple-system, sans-serif" font-size="10" font-weight="700" fill="#c9d1d9" text-anchor="middle" letter-spacing="1">40 ZERO-DEP UNITS</text>
+      <text x="63" y="15" font-family="'Segoe UI', -apple-system, sans-serif" font-size="10" font-weight="700" fill="#c9d1d9" text-anchor="middle" letter-spacing="1">50 ZERO-DEP UNITS</text>
 
       <!-- Badge 2: Compilers -->
       <rect x="136" y="0" width="138" height="22" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1"/>
