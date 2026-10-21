@@ -67,6 +67,23 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 
 ---
 
+## 🌟 The 10 Most Impactful Features of VeloxUI
+
+| # | Flagship Feature | Key Modules | Practical Breakthrough & UX Impact |
+| :---: | :--- | :--- | :--- |
+| **1** | **Windows 11 Fluent Dark Mode & Mica Engine** | [`Velox.Theme`](src/Velox.Theme.pas), [`Velox.Types`](src/Velox.Types.pas) | True OS DWM Mica/Acrylic backdrops (`Attr 38`), dark titlebars, undocumented `uxtheme.dll` dark scrollbars (`DarkMode_Explorer`), and runtime palettes (`vtDark`, `vtLight`, `vctMidnight`, `vctNord`, `vctHighContrast`). |
+| **2** | **1-Line Desktop Application Shell** | [`Velox.AppShell`](src/Velox.AppShell.pas) | Full Windows 11 desktop application shell with collapsible sidebar navigation, vertically centered header search edit, multi-page router, and status bar in a single call. |
+| **3** | **Anti-Aliased GDI+ Vector Suite** | [`Velox.GdiPlus`](src/Velox.GdiPlus.pas), [`Velox.Charts`](src/Velox.Charts.pas) | Sub-pixel antialiased custom cards, donut gauges, dual-series sparklines, heatmaps, soft alpha glowing focus rings (`DrawGlowBorder`), and ambient elevation drop shadows (`DrawDropShadow`). |
+| **4** | **High-Frequency Virtual Grid & SparkGrid** | [`Velox.VirtualGrid`](src/Velox.VirtualGrid.pas), [`Velox.SparkGrid`](src/Velox.SparkGrid.pas) | Zero-allocation `OwnerData` virtual list view with double-buffering, generic QuickSort, natural sort direction tracking (`▲`/`▼`), and inline micro-heatbars, sparklines, and status dot cells. |
+| **5** | **VS Code / Raycast Fuzzy Command Palette** | [`Velox.CommandPalette`](src/Velox.CommandPalette.pas) | Word-boundary bonus fuzzy matcher, dark-mode overlay, categorized action groups, shortcut hints, and instant keyboard navigation (`Ctrl+K`). |
+| **6** | **Live Transactional Property Inspector Studio** | [`Velox.InspectorStudio`](src/Velox.InspectorStudio.pas), [`Velox.Undo`](src/Velox.Undo.pas) | Two-column categorized typed editors (strings, booleans, integers, colors) with real-time dirty tracking and multi-level Undo/Redo rollback transactions (`Apply` / `Discard`). |
+| **7** | **Interactive JSON Document & Hierarchy Explorer** | [`Velox.JsonTreeViewer`](src/Velox.JsonTreeViewer.pas), [`Velox.Json`](src/Velox.Json.pas) | RFC-8259 DOM parser + O(N) hierarchical tree builder + live breadcrumb navigation with color-coded type badges (`[obj]`, `[arr]`, `[str]`, `[num]`, `[bool]`, `[null]`). |
+| **8** | **Side-by-Side & Unified Diff Visualizer** | [`Velox.DiffInspector`](src/Velox.DiffInspector.pas), [`Velox.Diff`](src/Velox.Diff.pas) | Myers LCS line diff engine with Levenshtein distance, similarity percentage, addition/deletion line counters, and one-click switching between Side-by-Side and Unified views. |
+| **9** | **Windows 11 `Win+V` Clipboard Palette** | [`Velox.ClipboardPalette`](src/Velox.ClipboardPalette.pas), [`Velox.Clipboard`](src/Velox.Clipboard.pas) | Event-driven clipboard listener using `AddClipboardFormatListener` / `WM_CLIPBOARDUPDATE` with pin toggling (`★`), instant fuzzy search, MRU deduplication, and JSON history persistence. |
+| **10** | **Zero-Dependency Native Security Core** | [`Velox.Crypto`](src/Velox.Crypto.pas), [`Velox.AuditSecurityLog`](src/Velox.AuditSecurityLog.pas) | Native Windows CNG BCrypt hardware SHA-256, SHA-1, MD5, CRC32, Base64, non-blocking `ReadDirectoryChangesW` file watcher, and real-time chronological audit timeline. |
+
+---
+
 ## ⚡ Before vs. After: 85% Less Boilerplate
 
 | Task | Raw Win32 / VCL / LCL Boilerplate | With **VeloxUI** |
@@ -335,8 +352,15 @@ git clone https://github.com/amafjarkasi/velox-ui.git
 - **Lazarus**: In **Project → Project Options → Compiler Options → Paths**, add `..\velox-ui\src` to **Other unit files (`-Fu`)**.
 - **Delphi**: In **Project → Options → Delphi Compiler → Search path**, add `..\velox-ui\src`.
 
-### 3. Check Out the Complete Quick-Start Example
-See [`examples/QuickStartDashboard.pas`](examples/QuickStartDashboard.pas) for a complete, ready-to-run Windows 11 Dark Mode telemetry dashboard.
+### 3. Run the Master Showcase Studio (All 10 Flagship Features)
+Compile and launch the full interactive studio demonstrating all 10 flagship features in one unified Windows 11 application:
+```powershell
+lazbuild -B examples\MasterStudio.lpi
+.\examples\bin\MasterStudio.exe
+```
+
+### 4. Check Out the Complete Quick-Start Example
+See [`examples/QuickStartDashboard.pas`](examples/QuickStartDashboard.pas) for a minimal telemetry dashboard reference.
 
 ---
 
