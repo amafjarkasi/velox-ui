@@ -181,10 +181,14 @@ end;
 
 procedure TVeloxRating.Paint;
 var
-  I, X, Y: Integer;
+  I, X, Step: Integer;
   DisplayRate: Single;
-  StarGlyph, LabelStr: string;
-  StarR, LabelR, LocalR: TRect;
+  LabelStr: string;
+  LabelR, LocalR: TRect;
+  StarPts: array[0..9] of TPoint;
+  Cx, Cy: Integer;
+  Radius, InnerRadius: Double;
+  Angle, R: Double;
 begin
   // Background
   Canvas.Brush.Color := FColors.Background;
@@ -196,29 +200,40 @@ begin
     DisplayRate := FRating;
 
   X := 4;
-  Y := (Height - FStarSize) div 2;
-
-  Canvas.Font.Name := 'Segoe UI';
-  Canvas.Font.Size := FStarSize - 4;
+  Cy := Height div 2;
+  Radius := FStarSize * 0.48;
+  InnerRadius := Radius * 0.45;
 
   for I := 1 to FMaxRating do
   begin
-    StarR := Rect(X, Y, X + FStarSize, Y + FStarSize);
+    Cx := X + (FStarSize div 2);
+
+    for Step := 0 to 9 do
+    begin
+      if (Step mod 2) = 0 then
+        R := Radius
+      else
+        R := InnerRadius;
+      Angle := (Step * 36 - 90) * (PI / 180.0);
+      StarPts[Step].X := Cx + Round(R * Cos(Angle));
+      StarPts[Step].Y := Cy + Round(R * Sin(Angle));
+    end;
 
     if DisplayRate >= I then
     begin
-      Canvas.Font.Color := FStarColor;
-      StarGlyph := '*'; // Solid star symbol
+      Canvas.Brush.Style := bsSolid;
+      Canvas.Brush.Color := FStarColor;
+      Canvas.Pen.Color := FStarColor;
     end
     else
     begin
-      Canvas.Font.Color := FEmptyColor;
-      StarGlyph := '-'; // Empty star indicator
+      Canvas.Brush.Style := bsSolid;
+      Canvas.Brush.Color := FEmptyColor;
+      Canvas.Pen.Color := FEmptyColor;
     end;
 
-    LocalR := StarR;
-    DrawText(Canvas.Handle, PChar(StarGlyph), Length(StarGlyph), LocalR,
-      DT_SINGLELINE or DT_CENTER or DT_VCENTER);
+    Canvas.Pen.Width := 1;
+    Canvas.Polygon(StarPts);
 
     Inc(X, FStarSize + FStarSpacing);
   end;
@@ -226,6 +241,8 @@ begin
   // Rating label on right (e.g. "4.0 / 5", exact vertical center)
   if FShowLabel then
   begin
+    Canvas.Brush.Style := bsClear;
+    Canvas.Font.Name := 'Segoe UI';
     Canvas.Font.Size := 9;
     Canvas.Font.Style := [fsBold];
     Canvas.Font.Color := FColors.TextPrimary;
