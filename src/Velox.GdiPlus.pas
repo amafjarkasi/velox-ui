@@ -56,6 +56,18 @@ type
       const AValues: TSingleDynArray; const ALineColor, AFillColor: TColor); static;
 
     /// <summary>
+    /// Draws a soft translucent glowing focus ring around a rounded rect
+    /// </summary>
+    class procedure DrawGlowBorder(const ACanvas: TCanvas; const ARect: TRect;
+      const AGlowColor: TColor; const ARadius: Integer = 8; const AGlowSpread: Integer = 3); static;
+
+    /// <summary>
+    /// Draws an ambient soft drop shadow beneath a floating card or modal
+    /// </summary>
+    class procedure DrawDropShadow(const ACanvas: TCanvas; const ARect: TRect;
+      const ARadius: Integer = 8; const AOffset: Integer = 4); static;
+
+    /// <summary>
     /// Complete one-call KPI Metric Card renderer with automatic primary font
     /// collision avoidance against the upper-right sparkline, secondary caption,
     /// and bottom progress bar. Pass AHistory = nil to omit the sparkline.
@@ -238,6 +250,106 @@ begin
   ACanvas.Pen.Style := psSolid;
   ACanvas.Pen.Color := ABorderColor;
   ACanvas.RoundRect(ARect.Left, ARect.Top, ARect.Right, ARect.Bottom, ARadius * 2, ARadius * 2);
+end;
+
+class procedure TVeloxGdiPlus.DrawGlowBorder(const ACanvas: TCanvas; const ARect: TRect;
+  const AGlowColor: TColor; const ARadius: Integer; const AGlowSpread: Integer);
+var
+  G: TGpGraphics;
+  Path: TGpPath;
+  Pen: TGpPen;
+  I, Spread: Integer;
+  Alpha: Byte;
+  R: TRect;
+  W, H: Single;
+begin
+  if (ARect.Right <= ARect.Left) or (ARect.Bottom <= ARect.Top) then Exit;
+  Spread := AGlowSpread;
+  if Spread <= 0 then Exit;
+  if Spread > 8 then Spread := 8;
+
+  if InitGdiPlus and (GdipCreateFromHDC(ACanvas.Handle, G) = 0) then
+  begin
+    try
+      GdipSetSmoothingMode(G, SmoothingModeAntiAlias);
+      for I := Spread downto 1 do
+      begin
+        Alpha := Round(40 / I);
+        if GdipCreatePen1(ColorToARGB(AGlowColor, Alpha), I * 1.5, UnitPixel, Pen) = 0 then
+        begin
+          try
+            R := ARect;
+            InflateRect(R, I, I);
+            W := (R.Right - R.Left) - 1.0;
+            H := (R.Bottom - R.Top) - 1.0;
+            Path := BuildRoundedPath(R.Left + 0.5, R.Top + 0.5, W, H, ARadius + I);
+            if Path <> nil then
+            begin
+              try
+                GdipDrawPath(G, Pen, Path);
+              finally
+                GdipDeletePath(Path);
+              end;
+            end;
+          finally
+            GdipDeletePen(Pen);
+          end;
+        end;
+      end;
+    finally
+      GdipDeleteGraphics(G);
+    end;
+  end;
+end;
+
+class procedure TVeloxGdiPlus.DrawDropShadow(const ACanvas: TCanvas; const ARect: TRect;
+  const ARadius: Integer; const AOffset: Integer);
+var
+  G: TGpGraphics;
+  Path: TGpPath;
+  Pen: TGpPen;
+  I, Offset: Integer;
+  Alpha: Byte;
+  R: TRect;
+  W, H: Single;
+begin
+  if (ARect.Right <= ARect.Left) or (ARect.Bottom <= ARect.Top) then Exit;
+  Offset := AOffset;
+  if Offset <= 0 then Exit;
+  if Offset > 8 then Offset := 8;
+
+  if InitGdiPlus and (GdipCreateFromHDC(ACanvas.Handle, G) = 0) then
+  begin
+    try
+      GdipSetSmoothingMode(G, SmoothingModeAntiAlias);
+      for I := Offset downto 1 do
+      begin
+        Alpha := Round(24 / I);
+        if GdipCreatePen1(ColorToARGB($000000, Alpha), I * 2.0, UnitPixel, Pen) = 0 then
+        begin
+          try
+            R := ARect;
+            OffsetRect(R, 0, I);
+            W := (R.Right - R.Left) - 1.0;
+            H := (R.Bottom - R.Top) - 1.0;
+            Path := BuildRoundedPath(R.Left + 0.5, R.Top + 0.5, W, H, ARadius);
+            if Path <> nil then
+            begin
+              try
+                GdipDrawPath(G, Pen, Path);
+              finally
+                GdipDeletePath(Path);
+              end;
+            end;
+          finally
+            GdipDeletePen(Pen);
+          end;
+        end;
+      end;
+    finally
+      GdipDeleteGraphics(G);
+    end;
+  end;
 end;
 
 class procedure TVeloxGdiPlus.DrawProgressBar(const ACanvas: TCanvas; const ARect: TRect;
