@@ -325,7 +325,7 @@ var
   ProcMask, SysMask: NativeUInt;
   GdiCnt, UserCnt: Cardinal;
   VerInfo: TVeloxFileVersionInfo;
-  CmdLine, SysRoot, CsvStr, JsonStr, MdStr, CheatStr, TmpIni, GalleryDarkPath, GalleryLightPath: string;
+  CmdLine, SysRoot, CsvStr, JsonStr, MdStr, CheatStr, TmpIni, GalleryDarkPath, GalleryLightPath, StudioDarkPath, StudioLightPath: string;
   Hotkeys: TVeloxHotkeyRegistry;
   TestKey: Word;
   Cfg: TVeloxConfig;
@@ -1043,10 +1043,16 @@ begin
     WriteLn('[30/65] Testing TVeloxScreenshot & Generating Component Gallery Showcase PNGs...');
     GalleryDarkPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\component_gallery.png');
     GalleryLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\component_gallery_light.png');
+    StudioDarkPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\components_studio.png');
+    StudioLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\components_studio_light.png');
     Check('screenshot: RenderComponentShowcase (Dark Mode) saves PNG',
       TVeloxScreenshot.RenderComponentShowcase(GalleryDarkPath, vtDark) and FileExists(GalleryDarkPath));
     Check('screenshot: RenderComponentShowcase (Light Mode) saves PNG',
       TVeloxScreenshot.RenderComponentShowcase(GalleryLightPath, vtLight) and FileExists(GalleryLightPath));
+    Check('screenshot: RenderStudioShowcase (Dark Mode) saves PNG',
+      TVeloxScreenshot.RenderStudioShowcase(StudioDarkPath, vtDark) and FileExists(StudioDarkPath));
+    Check('screenshot: RenderStudioShowcase (Light Mode) saves PNG',
+      TVeloxScreenshot.RenderStudioShowcase(StudioLightPath, vtLight) and FileExists(StudioLightPath));
 
     // 31. Zero-Dependency RFC-8259 JSON Reader & Builder (TVeloxJson)
     WriteLn('[31/65] Testing TVeloxJson (RFC-8259 Parser, Path Navigation & Builder)...');

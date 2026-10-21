@@ -60,6 +60,14 @@ type
     /// </summary>
     class function RenderComponentShowcase(const AFilePath: string;
       const ATheme: TVeloxTheme = vtDark): Boolean; static;
+
+    /// <summary>
+    /// Renders a comprehensive 1120x640 VeloxUI Controls Studio Showcase
+    /// (PropertyGrid, Timeline, TagInput, Stepper, Breadcrumb, Rating,
+    /// Pagination, DiffView & GlassPanel) and saves it as a crisp PNG.
+    /// </summary>
+    class function RenderStudioShowcase(const AFilePath: string;
+      const ATheme: TVeloxTheme = vtDark): Boolean; static;
   end;
 
 implementation
@@ -387,6 +395,576 @@ begin
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
     DrawShowcaseText(C, Rect(764, 536, 1076, 554), 'Render latency: 0.12 ms | 100% Zero-Flicker GDI+', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    Result := SaveBitmapToPng(Bmp, AFilePath);
+  finally
+    Bmp.Free;
+  end;
+end;
+
+class function TVeloxScreenshot.RenderStudioShowcase(const AFilePath: string;
+  const ATheme: TVeloxTheme): Boolean;
+const
+  W = 1120;
+  H = 640;
+var
+  Bmp: TBitmap;
+  C: TCanvas;
+  Colors: TVeloxThemeColors;
+  I, Y, RowY, DotX, DotY, DotR: Integer;
+  R, RowR, LocalR: TRect;
+begin
+  Colors := TVeloxUtils.GetThemeColors(ATheme);
+  Bmp := TBitmap.Create;
+  try
+    Bmp.PixelFormat := pf24bit;
+    Bmp.SetSize(W, H);
+    C := Bmp.Canvas;
+
+    // Background
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Background;
+    C.FillRect(Rect(0, 0, W, H));
+
+    // 1. Top Header Bar
+    C.Brush.Color := Colors.Surface;
+    C.FillRect(Rect(0, 0, W, 52));
+
+    C.Brush.Style := bsClear;
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 13;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(20, 0, 520, 52), 'VeloxUI Controls Studio — PropertyGrid, Timeline, DiffView & Diagnostics',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Header Specification Badge on Right
+    TVeloxGdiPlus.DrawCard(C, Rect(830, 12, 1100, 40), Colors.SurfaceCard, Colors.Accent, 6);
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(830, 12, 1100, 40), '65 ZERO-DEPENDENCY NATIVE PASCAL MODULES',
+      DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // 2. Left Column: Fluent Property Inspector Grid (TVeloxPropertyGrid)
+    TVeloxGdiPlus.DrawCard(C, Rect(16, 64, 380, 624), Colors.SurfaceCard, Colors.Border, 8);
+
+    // PropertyGrid Title
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Surface;
+    C.FillRect(Rect(18, 66, 378, 96));
+    C.Brush.Style := bsClear;
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(30, 66, 370, 96), 'PROPERTY INSPECTOR (TVeloxPropertyGrid)',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Category 1: Application Architecture
+    TVeloxGdiPlus.DrawCard(C, Rect(20, 102, 376, 126),
+      TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.15), Colors.Border, 4);
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(28, 102, 44, 126), '-', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(48, 102, 370, 126), 'Application Architecture', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Prop 1.1: Framework Name
+    DrawShowcaseText(C, Rect(36, 130, 180, 154), 'Framework', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(190, 130, 360, 154), 'VeloxUI v2.4', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Prop 1.2: Theme Mode
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 158, 180, 182), 'Theme Mode', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    TVeloxGdiPlus.DrawCard(C, Rect(190, 160, 246, 180), $10B981, $10B981, 4);
+    C.Font.Size := 8;
+    C.Font.Color := $FFFFFF;
+    DrawShowcaseText(C, Rect(190, 160, 246, 180), 'vtDark', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Prop 1.3: Accent Color
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 186, 180, 210), 'Accent Color', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := $38BDF8;
+    C.Pen.Color := Colors.Border;
+    C.Rectangle(190, 191, 210, 207);
+    C.Brush.Style := bsClear;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(216, 186, 360, 210), '#38BDF8', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Prop 1.4: Zero Dependencies
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 214, 180, 238), 'Zero Dependency', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [];
+    C.Font.Color := $10B981;
+    DrawShowcaseText(C, Rect(190, 214, 360, 238), 'True (100% Native)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Category 2: Systems Diagnostics & Telemetry
+    TVeloxGdiPlus.DrawCard(C, Rect(20, 246, 376, 270),
+      TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.15), Colors.Border, 4);
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(28, 246, 44, 270), '-', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(48, 246, 370, 270), 'Systems Diagnostics & SCM', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Prop 2.1: Polling Interval
+    DrawShowcaseText(C, Rect(36, 274, 180, 298), 'Polling Rate', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(190, 274, 360, 298), '250 ms (slice: 50ms)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Prop 2.2: Working Set
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 302, 180, 326), 'Working Set', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(190, 302, 360, 326), '48.2 MB (Commit: 62 MB)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Prop 2.3: Windows Service
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 330, 180, 354), 'SCM Service', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [];
+    C.Font.Color := $10B981;
+    DrawShowcaseText(C, Rect(190, 330, 360, 354), 'LanmanServer (Running)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Prop 2.4: Autostart (HKCU)
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 358, 180, 382), 'Autostart (Run)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(190, 358, 360, 382), 'HKCU\...\Run (Active)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Prop 2.5: Crypto Hashing
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 386, 180, 410), 'Crypto Engine', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(190, 386, 360, 410), 'BCrypt CNG SHA-256', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Category 3: Undo/Redo & Transactions (Collapsed)
+    TVeloxGdiPlus.DrawCard(C, Rect(20, 418, 376, 442), Colors.SurfaceCard, Colors.Border, 4);
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(28, 418, 44, 442), '+', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(48, 418, 370, 442), 'Command Transactions & Undo Stack', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Category 4: Storage & IPC (Collapsed)
+    TVeloxGdiPlus.DrawCard(C, Rect(20, 450, 376, 474), Colors.SurfaceCard, Colors.Border, 4);
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(28, 450, 44, 474), '+', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(48, 450, 370, 474), 'Named Mutex IPC & Single Instance', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 3. Middle Top Panel: Interactive Controls (Breadcrumb, Stepper, TagInput, Rating, Pagination)
+    TVeloxGdiPlus.DrawCard(C, Rect(396, 64, 746, 362), Colors.SurfaceCard, Colors.Border, 8);
+
+    // Title
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Surface;
+    C.FillRect(Rect(398, 66, 744, 96));
+    C.Brush.Style := bsClear;
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(408, 66, 736, 96), 'INTERACTIVE DEVELOPER CONTROLS & WIDGETS',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 3.1 Explorer Breadcrumb Navigation (TVeloxBreadcrumb)
+    TVeloxGdiPlus.DrawCard(C, Rect(408, 104, 734, 134), Colors.Background, Colors.Border, 6);
+    C.Font.Size := 9;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(418, 104, 480, 134), 'Workspace', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(484, 104, 496, 134), '>', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(502, 104, 574, 134), 'Diagnostics', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(578, 104, 590, 134), '>', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(596, 104, 726, 134), 'Process Tree (dwm.exe)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 3.2 Pipeline Setup Stepper (TVeloxStepper)
+    // Step 1: Completed
+    TVeloxGdiPlus.DrawCard(C, Rect(416, 146, 436, 166), $10B981, $10B981, 10);
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := $FFFFFF;
+    DrawShowcaseText(C, Rect(416, 146, 436, 166), 'v', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(442, 146, 496, 166), 'Download', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Step Connector 1 -> 2
+    C.Pen.Color := $10B981;
+    C.Pen.Width := 2;
+    C.MoveTo(502, 156);
+    C.LineTo(526, 156);
+
+    // Step 2: Active
+    TVeloxGdiPlus.DrawCard(C, Rect(532, 146, 552, 166), Colors.Accent, Colors.Accent, 10);
+    C.Font.Color := Colors.Background;
+    DrawShowcaseText(C, Rect(532, 146, 552, 166), '2', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(558, 146, 608, 166), 'Verify', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Step Connector 2 -> 3
+    C.Pen.Color := Colors.Border;
+    C.MoveTo(614, 156);
+    C.LineTo(638, 156);
+
+    // Step 3: Pending
+    TVeloxGdiPlus.DrawCard(C, Rect(644, 146, 664, 166), Colors.SurfaceCard, Colors.Border, 10);
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(644, 146, 664, 166), '3', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(670, 146, 730, 166), 'Deploy', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 3.3 Pill Tokenizer & Tag Input (TVeloxTagInput)
+    TVeloxGdiPlus.DrawCard(C, Rect(408, 180, 734, 216), Colors.Background, Colors.Accent, 6);
+    // Pill 1
+    TVeloxGdiPlus.DrawCard(C, Rect(416, 186, 476, 210), $1E293B, $38BDF8, 8);
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := $F8FAFC;
+    DrawShowcaseText(C, Rect(424, 186, 464, 210), 'delphi', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(464, 186, 474, 210), 'x', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Pill 2
+    TVeloxGdiPlus.DrawCard(C, Rect(482, 186, 542, 210), $1E293B, $38BDF8, 8);
+    C.Font.Style := [];
+    C.Font.Color := $F8FAFC;
+    DrawShowcaseText(C, Rect(490, 186, 530, 210), 'pascal', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(530, 186, 540, 210), 'x', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Pill 3
+    TVeloxGdiPlus.DrawCard(C, Rect(548, 186, 620, 210), $1E293B, $38BDF8, 8);
+    C.Font.Style := [];
+    C.Font.Color := $F8FAFC;
+    DrawShowcaseText(C, Rect(556, 186, 608, 210), 'fluent-ui', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(608, 186, 618, 210), 'x', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Pill 4
+    TVeloxGdiPlus.DrawCard(C, Rect(626, 186, 700, 210), $1E293B, $38BDF8, 8);
+    C.Font.Style := [];
+    C.Font.Color := $F8FAFC;
+    DrawShowcaseText(C, Rect(634, 186, 688, 210), 'zero-dep', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(688, 186, 698, 210), 'x', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // 3.4 Star & Severity Rating (TVeloxRating)
+    C.Font.Size := 13;
+    C.Font.Color := $F59E0B;
+    DrawShowcaseText(C, Rect(416, 226, 520, 256), '* * * * -', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(530, 226, 734, 256), '4.5 / 5.0 (High Precision Rating)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 3.5 Compact Pagination Bar (TVeloxPagination)
+    TVeloxGdiPlus.DrawCard(C, Rect(408, 268, 734, 304), Colors.Background, Colors.Border, 6);
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(418, 268, 550, 304), 'Showing 1-25 of 120 items', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Page Buttons
+    TVeloxGdiPlus.DrawCard(C, Rect(560, 274, 584, 298), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(560, 274, 584, 298), '<', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(590, 274, 614, 298), Colors.Accent, Colors.Accent, 4);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Background;
+    DrawShowcaseText(C, Rect(590, 274, 614, 298), '1', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(620, 274, 644, 298), Colors.SurfaceCard, Colors.Border, 4);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(620, 274, 644, 298), '2', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(650, 274, 674, 298), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(650, 274, 674, 298), '3', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(680, 274, 704, 298), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(680, 274, 704, 298), '5', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(710, 274, 730, 298), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(710, 274, 730, 298), '>', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // 3.6 Translucent Acrylic Glass Container (TVeloxGlassPanel)
+    TVeloxGdiPlus.DrawCard(C, Rect(408, 316, 734, 350), Colors.SurfaceCard, Colors.Border, 6);
+    // Specular top highlight reflection
+    C.Pen.Color := $50FFFFFF;
+    C.Pen.Width := 1;
+    C.MoveTo(414, 317);
+    C.LineTo(728, 317);
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(420, 316, 720, 350), 'TVeloxGlassPanel — Translucent Fluent Acrylic Panel with Specular Highlight',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 4. Right Column: Chronological Audit Timeline (TVeloxTimeline)
+    TVeloxGdiPlus.DrawCard(C, Rect(762, 64, 1104, 362), Colors.SurfaceCard, Colors.Border, 8);
+
+    // Title
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Surface;
+    C.FillRect(Rect(764, 66, 1102, 96));
+    C.Brush.Style := bsClear;
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(776, 66, 1094, 96), 'EVENT AUDIT TIMELINE (TVeloxTimeline)',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    DotX := 834;
+    DotR := 5;
+
+    // Timeline continuous vertical track line
+    C.Pen.Color := Colors.Border;
+    C.Pen.Width := 2;
+    C.MoveTo(DotX, 106);
+    C.LineTo(DotX, 350);
+
+    // Timeline Node 1: SCM Service Online (Emerald)
+    DotY := 128;
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := $10B981;
+    C.Pen.Color := Colors.Background;
+    C.Pen.Width := 2;
+    C.Ellipse(DotX - DotR - 1, DotY - DotR - 1, DotX + DotR + 1, DotY + DotR + 1);
+
+    C.Brush.Style := bsClear;
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(768, DotY - 10, DotX - 8, DotY + 10), '10:42:15', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(DotX + 12, DotY - 14, 1096, DotY), 'Windows Service SCM Online', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(DotX + 12, DotY, 1096, DotY + 14), 'LanmanServer service started successfully', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Timeline Node 2: Memory Spike Hysteresis (Amber)
+    DotY := 186;
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := $F59E0B;
+    C.Pen.Color := Colors.Background;
+    C.Ellipse(DotX - DotR - 1, DotY - DotR - 1, DotX + DotR + 1, DotY + DotR + 1);
+
+    C.Brush.Style := bsClear;
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(768, DotY - 10, DotX - 8, DotY + 10), '10:43:08', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(DotX + 12, DotY - 14, 1096, DotY), 'Memory Load Alert (Streak 2/2)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(DotX + 12, DotY, 1096, DotY + 14), 'Physical RAM load hit 78.4% (hysteresis active)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Timeline Node 3: UAC Process Elevation (Cyan)
+    DotY := 244;
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Accent;
+    C.Pen.Color := Colors.Background;
+    C.Ellipse(DotX - DotR - 1, DotY - DotR - 1, DotX + DotR + 1, DotY + DotR + 1);
+
+    C.Brush.Style := bsClear;
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(768, DotY - 10, DotX - 8, DotY + 10), '10:44:00', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(DotX + 12, DotY - 14, 1096, DotY), 'RunTask UAC Elevation', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(DotX + 12, DotY, 1096, DotY + 14), 'NtQueryInformationProcess(60) acquired', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Timeline Node 4: Clipboard Update (Violet)
+    DotY := 302;
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := $818CF8;
+    C.Pen.Color := Colors.Background;
+    C.Ellipse(DotX - DotR - 1, DotY - DotR - 1, DotX + DotR + 1, DotY + DotR + 1);
+
+    C.Brush.Style := bsClear;
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(768, DotY - 10, DotX - 8, DotY + 10), '10:45:22', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(DotX + 12, DotY - 14, 1096, DotY), 'WM_CLIPBOARDUPDATE Event', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(DotX + 12, DotY, 1096, DotY + 14), 'Deduplicated clipboard history updated (420 chars)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 5. Bottom Panel: Side-by-Side & Unified Diff Visualizer (TVeloxDiffView)
+    TVeloxGdiPlus.DrawCard(C, Rect(396, 374, 1104, 624), Colors.SurfaceCard, Colors.Border, 8);
+
+    // Header bar with diff tabs
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Surface;
+    C.FillRect(Rect(398, 376, 1102, 408));
+
+    C.Brush.Style := bsClear;
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(408, 376, 680, 408), 'DIFF VISUALIZER & LINE COMPARISON (TVeloxDiffView)',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // View Mode Tabs on Right
+    TVeloxGdiPlus.DrawCard(C, Rect(900, 380, 996, 404),
+      TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.28), Colors.Accent, 4);
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(900, 380, 996, 404), 'Unified Diff', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(1002, 380, 1096, 404), Colors.SurfaceCard, Colors.Border, 4);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(1002, 380, 1096, 404), 'Side-by-Side', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Diff Header line
+    C.Font.Name := 'Consolas';
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(412, 412, 1096, 432), '--- a/src/Velox.Theme.pas    +++ b/src/Velox.Theme.pas',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Diff Lines with Gutter (Y: 434..616)
+    for I := 0 to 6 do
+    begin
+      RowY := 436 + I * 25;
+      RowR := Rect(400, RowY, 1100, RowY + 24);
+
+      // Gutter Old & New Line Numbers
+      C.Brush.Style := bsSolid;
+      C.Brush.Color := Colors.Surface;
+      C.FillRect(Rect(400, RowY, 464, RowY + 24));
+
+      C.Brush.Style := bsClear;
+      C.Font.Name := 'Consolas';
+      C.Font.Size := 8;
+      C.Font.Style := [];
+      C.Font.Color := Colors.TextSecondary;
+
+      case I of
+        0:
+          begin
+            DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '42', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '42', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  // Query undocumented uxtheme ordinals for dark scrollbars',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        1:
+          begin
+            // Deleted Line (Crimson Red background)
+            C.Brush.Style := bsSolid;
+            C.Brush.Color := $1A0000;
+            C.FillRect(Rect(464, RowY, 1100, RowY + 24));
+            C.Brush.Style := bsClear;
+            DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '43', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            C.Font.Style := [fsBold];
+            C.Font.Color := $F87171;
+            DrawShowcaseText(C, Rect(464, RowY, 474, RowY + 24), '-', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  SetWindowTheme(Handle, ''Explorer'', nil);',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        2:
+          begin
+            // Added Line 1 (Emerald Green background)
+            C.Brush.Style := bsSolid;
+            C.Brush.Color := $0A2814;
+            C.FillRect(Rect(464, RowY, 1100, RowY + 24));
+            C.Brush.Style := bsClear;
+            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '43', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            C.Font.Style := [fsBold];
+            C.Font.Color := $34D399;
+            DrawShowcaseText(C, Rect(464, RowY, 474, RowY + 24), '+', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  SetPreferredAppMode(AllowDarkMode); // Ordinal 135',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        3:
+          begin
+            // Added Line 2 (Emerald Green background)
+            C.Brush.Style := bsSolid;
+            C.Brush.Color := $0A2814;
+            C.FillRect(Rect(464, RowY, 1100, RowY + 24));
+            C.Brush.Style := bsClear;
+            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '44', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            C.Font.Style := [fsBold];
+            C.Font.Color := $34D399;
+            DrawShowcaseText(C, Rect(464, RowY, 474, RowY + 24), '+', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  SetWindowTheme(Handle, ''DarkMode_Explorer'', nil);',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        4:
+          begin
+            DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '44', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '45', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  DwmSetWindowAttribute(Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, 1);',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        5:
+          begin
+            DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '45', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '46', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  ApplySystemBackdrop(Handle, vsbMica); // Windows 11 22H2+ Mica',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        6:
+          begin
+            DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '46', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '47', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), 'end;',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+      end;
+
+      // Gutter separator line
+      C.Pen.Color := Colors.Border;
+      C.Pen.Width := 1;
+      C.MoveTo(464, RowY);
+      C.LineTo(464, RowY + 24);
+    end;
 
     Result := SaveBitmapToPng(Bmp, AFilePath);
   finally

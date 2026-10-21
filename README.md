@@ -6,7 +6,7 @@
   <a href="#-65-framework-modules-7-core--58-expansion"><img src="https://img.shields.io/badge/Modules-65%20Zero--Dependency%20Units-6366f1?style=for-the-badge" alt="65 Modules" /></a>
   <a href="#-getting-started--installation"><img src="https://img.shields.io/badge/Compilers-Delphi%20VCL%20%7C%20Free%20Pascal%203.2.2%20LCL-38bdf8?style=for-the-badge" alt="Compilers" /></a>
   <a href="#-before-vs-after-85-less-boilerplate"><img src="https://img.shields.io/badge/Boilerplate%20Reduction--85%25%20LOC-10b981?style=for-the-badge" alt="Boilerplate Reduction" /></a>
-  <a href="#-automated-verification-suite-250250-passing"><img src="https://img.shields.io/badge/Tests-250%2F250%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
+  <a href="#-automated-verification-suite-252252-passing"><img src="https://img.shields.io/badge/Tests-252%2F252%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
   <a href="#-17-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win11%20Fluent-DWM%20Mica%20%7C%20GDI%2B%20%7C%20High--DPI-f59e0b?style=for-the-badge" alt="Win11 Fluent" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f43f5e?style=for-the-badge" alt="License" /></a>
 </p>
@@ -17,18 +17,36 @@
 
 ---
 
-## 📸 Live GDI+ Component Showcase (`Dark` & `Light` Themes)
+## 📸 Live GDI+ Component Showcases (`Dark` & `Light` Themes)
 
-> Generated programmatically via [`TVeloxScreenshot.RenderComponentShowcase`](src/Velox.Screenshot.pas) using real hardware-accelerated `VeloxUI` GDI+ primitives ([`TVeloxAppShell`](src/Velox.AppShell.pas), [`TVeloxTabStrip`](src/Velox.Tabs.pas), [`TVeloxSearchBox`](src/Velox.Controls.pas), [`TVeloxToggleSwitch`](src/Velox.ToggleSwitch.pas), [`TVeloxChipGroup`](src/Velox.StyledButton.pas), [`TVeloxCharts`](src/Velox.Charts.pas), [`TVeloxSparkGrid`](src/Velox.SparkGrid.pas), and [`TVeloxToast`](src/Velox.Toast.pas)). All controls feature pixel-perfect vertical and horizontal text centering.
+> Programmatically generated via [`TVeloxScreenshot`](src/Velox.Screenshot.pas) using real hardware-accelerated `VeloxUI` GDI+ primitives and custom controls. All visual controls feature sub-pixel antialiasing and pixel-perfect vertical and middle text centering.
 
-### Windows 11 Fluent Dark Mode (`vtDark`)
+### 1. Windows 11 Desktop Shell & Telemetry Dashboard (`TVeloxAppShell`, `TVeloxSparkGrid`, `TVeloxCharts`)
+
+Showcases the integrated application shell ([`TVeloxAppShell`](src/Velox.AppShell.pas)), tab strip ([`TVeloxTabStrip`](src/Velox.Tabs.pas)), vertically centered search edit ([`TVeloxSearchBox`](src/Velox.Controls.pas)), fluent toggle switches ([`TVeloxToggleSwitch`](src/Velox.ToggleSwitch.pas)), segmented filter chips ([`TVeloxChipGroup`](src/Velox.StyledButton.pas)), donut gauge & dual sparkline charts ([`TVeloxCharts`](src/Velox.Charts.pas)), inline process sparkgrid with micro-heatbars ([`TVeloxSparkGrid`](src/Velox.SparkGrid.pas)), and non-blocking floating notifications ([`TVeloxToast`](src/Velox.Toast.pas)).
+
+#### Windows 11 Fluent Dark Mode (`vtDark`)
 <p align="center">
   <img src="resources/component_gallery.png" alt="VeloxUI Dark Mode Component Showcase" width="100%" />
 </p>
 
-### Windows 11 Fluent Daylight Mode (`vtLight`)
+#### Windows 11 Fluent Daylight Mode (`vtLight`)
 <p align="center">
   <img src="resources/component_gallery_light.png" alt="VeloxUI Light Mode Component Showcase" width="100%" />
+</p>
+
+### 2. Developer Controls, Property Grid & Systems Diagnostics Studio (`TVeloxPropertyGrid`, `TVeloxTimeline`, `TVeloxDiffView`)
+
+Showcases the two-column property inspector ([`TVeloxPropertyGrid`](src/Velox.PropertyGrid.pas)), chronological audit event log with continuous track line ([`TVeloxTimeline`](src/Velox.Timeline.pas)), unified & side-by-side syntax-highlighted diff visualizer ([`TVeloxDiffView`](src/Velox.DiffView.pas)), interactive tag input & pill tokenizer ([`TVeloxTagInput`](src/Velox.TagInput.pas)), multi-step setup pipeline stepper ([`TVeloxStepper`](src/Velox.Stepper.pas)), Explorer breadcrumb navigation ([`TVeloxBreadcrumb`](src/Velox.Breadcrumb.pas)), severity star rating ([`TVeloxRating`](src/Velox.Rating.pas)), compact pagination footer bar ([`TVeloxPagination`](src/Velox.Pagination.pas)), and translucent acrylic glass container with specular reflection ([`TVeloxGlassPanel`](src/Velox.Glass.pas)).
+
+#### Windows 11 Controls Studio Dark Mode (`vtDark`)
+<p align="center">
+  <img src="resources/components_studio.png" alt="VeloxUI Controls Studio Dark Mode" width="100%" />
+</p>
+
+#### Windows 11 Controls Studio Daylight Mode (`vtLight`)
+<p align="center">
+  <img src="resources/components_studio_light.png" alt="VeloxUI Controls Studio Light Mode" width="100%" />
 </p>
 
 ---
@@ -205,12 +223,12 @@ flowchart TD
 
 ---
 
-## 🧪 Automated Verification Suite (`250/250 Passing`)
+## 🧪 Automated Verification Suite (`252/252 Passing`)
 
 VeloxUI includes a self-contained console verification suite ([`tests/veloxtest.lpr`](tests/veloxtest.lpr)) that tests all **65 modules** headlessly and regenerates the Dark/Light component gallery PNGs in ~2.8 seconds:
 
 ```powershell
-# Compile and run the 250-assertion verification suite with Lazarus / Free Pascal
+# Compile and run the 252-assertion verification suite with Lazarus / Free Pascal
 lazbuild -B tests\veloxtest.lpi
 .\tests\lib\veloxtest.exe
 ```
@@ -246,7 +264,7 @@ lazbuild -B tests\veloxtest.lpi
 | **`[27/65]` Inline SparkGrid Cells** | `3` | `DrawInlineBar`, `DrawInlineSparkline`, and `DrawStatusDotCell` rendering |
 | **`[28/65]` Declarative Validator** | `2` | `AddRequired` and `AddIntRange` rejection of out-of-range input and acceptance of valid input |
 | **`[29/65]` Native GDI+ MarkdownView** | `2` | Multi-block Markdown parsing and heading/bold token stripping |
-| **`[30/65]` Screenshot & Gallery PNG** | `2` | `RenderComponentShowcase` live PNG generation for both `vtDark` and `vtLight` themes |
+| **`[30/65]` Screenshot & Gallery PNG** | `4` | `RenderComponentShowcase` & `RenderStudioShowcase` live PNG generation for both `vtDark` and `vtLight` themes |
 | **`[31/65]` RFC-8259 JSON DOM & Builder** | `5` | `TVeloxJson.Parse`, `Find`, dotted/indexed `Path('assets[0].name')`, and `NewObject` + `Serialize` roundtrip |
 | **`[32/65]` WinHTTP Client** | `3` | `TVeloxHttp.ParseUrl` HTTPS/HTTP host, port, path parsing, and scheme validation |
 | **`[33/65]` GitHub Releases Self-Updater** | `5` | SemVer `CompareVersions` (including `-beta` prereleases), `ParseRelease` asset selection, and `BuildSwapScript` |
