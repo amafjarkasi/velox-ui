@@ -1225,50 +1225,50 @@ begin
     C.MoveTo(ChevX, 76); C.LineTo(ChevX + 4, 80); C.LineTo(ChevX + 8, 76);
 
     // 3.2 URL Address Bar
-    TVeloxGdiPlus.DrawCard(C, Rect(122, 64, W - 238, 92), Colors.Background, Colors.Border, 4);
+    TVeloxGdiPlus.DrawCard(C, Rect(120, 64, W - 244, 92), Colors.Background, Colors.Border, 4);
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 9;
     C.Font.Style := [];
     C.Font.Color := Colors.TextPrimary;
-    DrawShowcaseText(C, Rect(134, 64, W - 248, 92),
+    DrawShowcaseText(C, Rect(130, 64, W - 254, 92),
       'https://api.github.com/repos/amafjarkasi/velox-ui/deployments', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // 3.3 Action Buttons
-    // Send Button (Primary Accent)
-    TVeloxGdiPlus.DrawCard(C, Rect(W - 230, 64, W - 164, 92), Colors.Accent, Colors.Accent, 4);
+    // 3.3 Action Buttons (Balanced widths & ample text margins)
+    // Send Button (Primary Accent, Width 68px)
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 238, 64, W - 170, 92), Colors.Accent, Colors.Accent, 4);
     C.Font.Style := [fsBold];
     C.Font.Color := $FFFFFF;
-    DrawShowcaseText(C, Rect(W - 230, 64, W - 164, 92), 'Send', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 238, 64, W - 170, 92), 'Send', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    // cURL Export Button (Outline)
-    TVeloxGdiPlus.DrawCard(C, Rect(W - 158, 64, W - 100, 92), Colors.SurfaceCard, Colors.Border, 4);
+    // cURL Export Button (Outline, Width 64px)
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 164, 64, W - 100, 92), Colors.SurfaceCard, Colors.Border, 4);
     C.Font.Style := [];
     C.Font.Color := Colors.TextPrimary;
-    DrawShowcaseText(C, Rect(W - 158, 64, W - 100, 92), 'cURL', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 164, 64, W - 100, 92), 'cURL', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    // Baseline Snapshot Button (Surface)
-    TVeloxGdiPlus.DrawCard(C, Rect(W - 94, 64, W - 36, 92), Colors.SurfaceCard, Colors.Border, 4);
+    // Baseline Snapshot Button (Surface, Width 66px ending at right border W - 28)
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 94, 64, W - 28, 92), Colors.SurfaceCard, Colors.Border, 4);
     C.Font.Color := Colors.TextSecondary;
-    DrawShowcaseText(C, Rect(W - 94, 64, W - 36, 92), 'Baseline', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 94, 64, W - 28, 92), 'Baseline', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // 4. Split Body Panels (Y: 106..594)
     // 4.1 LEFT PANEL: Request Configuration (Width 370px, Rect(28, 106, 400, 594))
     TVeloxGdiPlus.DrawCard(C, Rect(28, 106, 400, 594), Colors.SurfaceCard, Colors.Border, 8);
 
-    // Request Tabs
-    TVeloxGdiPlus.DrawCard(C, Rect(36, 114, 180, 138),
+    // Request Tabs (Evenly spaced, generous padding)
+    TVeloxGdiPlus.DrawCard(C, Rect(36, 114, 186, 138),
       TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.28), Colors.Accent, 4);
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextPrimary;
-    DrawShowcaseText(C, Rect(36, 114, 180, 138), 'Headers & Params (6)', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(36, 114, 186, 138), 'Headers & Params (6)', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(186, 114, 280, 138), Colors.SurfaceCard, Colors.Border, 4);
+    TVeloxGdiPlus.DrawCard(C, Rect(192, 114, 298, 138), Colors.SurfaceCard, Colors.Border, 4);
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    DrawShowcaseText(C, Rect(186, 114, 280, 138), 'Body (JSON)', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(192, 114, 298, 138), 'Body (JSON)', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(286, 114, 346, 138), Colors.SurfaceCard, Colors.Border, 4);
-    DrawShowcaseText(C, Rect(286, 114, 346, 138), 'Format', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    TVeloxGdiPlus.DrawCard(C, Rect(304, 114, 384, 138), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(304, 114, 384, 138), 'Format', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // Section Category 1: Headers
     TVeloxGdiPlus.DrawCard(C, Rect(36, 148, 392, 172), Colors.Surface, Colors.Border, 4);
@@ -1398,14 +1398,14 @@ begin
     TVeloxGdiPlus.DrawCard(C, Rect(410, 106, W - 28, 594), Colors.SurfaceCard, Colors.Border, 8);
 
     // Response Status Bar (Y: 112..146)
-    // Fluent Status Badge: 201 Created (Emerald) - perfectly aligned in the middle
-    TVeloxGdiPlus.DrawCard(C, Rect(420, 114, 526, 140), StatusBg, StatusBorder, 4);
+    // 1. Fluent Status Badge: 201 Created (Emerald) - perfectly aligned in the middle (420..524)
+    TVeloxGdiPlus.DrawCard(C, Rect(420, 114, 524, 140), StatusBg, StatusBorder, 4);
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := StatusTextCol;
 
-    BadgeW := 526 - 420;
+    BadgeW := 524 - 420;
     BadgeH := 140 - 114;
     DotD := 6;
     DotGap := 6;
@@ -1421,39 +1421,40 @@ begin
     DrawShowcaseText(C, Rect(StartX + DotD + DotGap, 114, StartX + TotalW + 4, 140), '201 Created',
       DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // LATENCY IS FIXED TO THE TOP: Telemetry Capsule in Header Bar
-    TVeloxGdiPlus.DrawCard(C, Rect(532, 114, 714, 140), Colors.Surface, Colors.Border, 4);
+    // 2. LATENCY IS FIXED TO THE TOP: Telemetry Capsule (530..698, centered with 14px padding)
+    TVeloxGdiPlus.DrawCard(C, Rect(530, 114, 698, 140), Colors.Surface, Colors.Border, 4);
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.Accent;
-    DrawShowcaseText(C, Rect(542, 114, 592, 140), '118 ms', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(538, 114, 584, 140), '118 ms', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    DrawShowcaseText(C, Rect(592, 114, 708, 140), '(avg 124ms · pk 145ms)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(586, 114, 694, 140), '(avg 124ms · pk 145ms)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // Response Payload Size Badge
-    TVeloxGdiPlus.DrawCard(C, Rect(720, 114, 796, 140), Colors.Surface, Colors.Border, 4);
+    // 3. Response Payload Size Badge (704..766)
+    TVeloxGdiPlus.DrawCard(C, Rect(704, 114, 766, 140), Colors.Surface, Colors.Border, 4);
     C.Font.Color := Colors.TextPrimary;
-    DrawShowcaseText(C, Rect(720, 114, 796, 140), '2.45 KB', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(704, 114, 766, 140), '2.45 KB', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    // View Mode Tabs on Right
-    TVeloxGdiPlus.DrawCard(C, Rect(806, 114, 894, 140),
+    // 4. View Mode Tabs on Right (Total 310px span, generous 14px padding for all tabs including Latency)
+    TVeloxGdiPlus.DrawCard(C, Rect(772, 114, 860, 140),
       TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.28), Colors.Accent, 4);
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextPrimary;
-    DrawShowcaseText(C, Rect(806, 114, 894, 140), 'Pretty JSON', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(772, 114, 860, 140), 'Pretty JSON', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(900, 114, 948, 140), Colors.SurfaceCard, Colors.Border, 4);
+    TVeloxGdiPlus.DrawCard(C, Rect(866, 114, 912, 140), Colors.SurfaceCard, Colors.Border, 4);
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    DrawShowcaseText(C, Rect(900, 114, 948, 140), 'Raw', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(866, 114, 912, 140), 'Raw', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(954, 114, 1038, 140), Colors.SurfaceCard, Colors.Border, 4);
-    DrawShowcaseText(C, Rect(954, 114, 1038, 140), 'Diff Baseline', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    TVeloxGdiPlus.DrawCard(C, Rect(918, 114, 1010, 140), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(918, 114, 1010, 140), 'Diff Baseline', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(1044, 114, 1076, 140), Colors.SurfaceCard, Colors.Border, 4);
-    DrawShowcaseText(C, Rect(1044, 114, 1076, 140), 'Latency', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    // Full 66px width for Latency (eliminates text clipping, 14px margins)
+    TVeloxGdiPlus.DrawCard(C, Rect(1016, 114, 1082, 140), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(1016, 114, 1082, 140), 'Latency', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // Separator line under response header
     C.Pen.Color := Colors.Border;
