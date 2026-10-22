@@ -315,8 +315,10 @@ end;
 procedure TVeloxTelemetryWall.TopBarPaint(Sender: TObject);
 var
   C: TCanvas;
-  StatusBadgeCol: TColor;
+  StatusBadgeCol, StatusBg: TColor;
   StatusTxt: string;
+  BadgeR, R: TRect;
+  TextW, DotD, DotGap, TotalW, StartX, DotY: Integer;
 begin
   C := FTopBar.Canvas;
   C.Pen.Color := FColors.Border;
@@ -349,7 +351,29 @@ begin
     StatusTxt := 'SYSTEM HEALTHY';
   end;
 
-  TVeloxGdiPlus.DrawBadge(C, Rect(210, 10, 336, 34), StatusTxt, StatusBadgeCol, $000000);
+  // Fluent Health Status Badge with centered dot and text
+  StatusBg := TVeloxUtils.BlendColor(FColors.Surface, StatusBadgeCol, 0.18);
+  BadgeR := Rect(210, 10, 350, 34);
+  TVeloxGdiPlus.DrawCard(C, BadgeR, StatusBg, StatusBadgeCol, 12);
+  C.Font.Name := 'Segoe UI';
+  C.Font.Size := 8;
+  C.Font.Style := [fsBold];
+  C.Font.Color := StatusBadgeCol;
+
+  TextW := C.TextWidth(StatusTxt);
+  DotD := 6;
+  DotGap := 6;
+  TotalW := DotD + DotGap + TextW;
+  StartX := BadgeR.Left + (BadgeR.Right - BadgeR.Left - TotalW) div 2;
+  DotY := BadgeR.Top + (BadgeR.Bottom - BadgeR.Top - DotD) div 2;
+
+  // Anti-aliased indicator dot
+  TVeloxGdiPlus.DrawCard(C, Rect(StartX, DotY, StartX + DotD, DotY + DotD), StatusBadgeCol, StatusBadgeCol, DotD div 2);
+
+  // Centered text
+  R := Rect(StartX + DotD + DotGap, BadgeR.Top, BadgeR.Right - 4, BadgeR.Bottom);
+  DrawText(C.Handle, PChar(StatusTxt), Length(StatusTxt), R,
+    DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOPREFIX);
 end;
 
 procedure TVeloxTelemetryWall.ChartsPanelPaint(Sender: TObject);
