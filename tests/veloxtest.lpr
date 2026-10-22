@@ -96,7 +96,12 @@ uses
   Velox.DpiCanvas,
   Velox.Accessibility,
   Velox.Backdrop,
-  Velox.RestStudio;
+  Velox.RestStudio,
+  Velox.LiveLogStreamer,
+  Velox.ConfigStudio,
+  Velox.TelemetryWall,
+  Velox.CrashFlightRecorder,
+  Velox.DataStudio;
 
 type
   TTestRow = record
@@ -347,7 +352,7 @@ var
   ProcMask, SysMask: NativeUInt;
   GdiCnt, UserCnt: Cardinal;
   VerInfo: TVeloxFileVersionInfo;
-  CmdLine, SysRoot, CsvStr, JsonStr, MdStr, CheatStr, TmpIni, GalleryDarkPath, GalleryLightPath, StudioDarkPath, StudioLightPath, RestDarkPath, RestLightPath: string;
+  CmdLine, SysRoot, CsvStr, JsonStr, MdStr, CheatStr, TmpIni, GalleryDarkPath, GalleryLightPath, StudioDarkPath, StudioLightPath, RestDarkPath, RestLightPath, TelemDarkPath, TelemLightPath: string;
   Hotkeys: TVeloxHotkeyRegistry;
   TestKey: Word;
   Cfg: TVeloxConfig;
@@ -452,12 +457,17 @@ var
   FocusMgr: TVeloxFocusManager;
   FocusBtn1, FocusBtn2: TVeloxStyledButton;
   RestStudio: TVeloxRestStudio;
+  LogStreamer: TVeloxLiveLogStreamer;
+  CfgStudio: TVeloxConfigStudio;
+  TelemWall: TVeloxTelemetryWall;
+  FlightRec: TVeloxCrashFlightRecorder;
+  DataStudio: TVeloxDataStudio;
   DensityRowH, DensityFontSz, DensityPad: Integer;
   AccHov, AccPress, AccTint: TColor;
   I: Integer;
 begin
   try
-    WriteLn('=== VeloxUI Automated Verification Suite (79 Modules) ===');
+    WriteLn('=== VeloxUI Automated Verification Suite (84 Modules) ===');
 
     // 1. Ring Buffer & Telemetry Primitives
     WriteLn('[1/78] Testing TVeloxRingBuffer, TVeloxUtils & Customization Tokens...');
@@ -1116,6 +1126,8 @@ begin
     StudioLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\components_studio_light.png');
     RestDarkPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\rest_studio.png');
     RestLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\rest_studio_light.png');
+    TelemDarkPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\telemetry_wall.png');
+    TelemLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\telemetry_wall_light.png');
     Check('screenshot: RenderComponentShowcase (Dark Mode) saves PNG',
       TVeloxScreenshot.RenderComponentShowcase(GalleryDarkPath, vtDark) and FileExists(GalleryDarkPath));
     Check('screenshot: RenderComponentShowcase (Light Mode) saves PNG',
@@ -1128,6 +1140,10 @@ begin
       TVeloxScreenshot.RenderRestStudioShowcase(RestDarkPath, vtDark) and FileExists(RestDarkPath));
     Check('screenshot: RenderRestStudioShowcase (Light Mode) saves PNG',
       TVeloxScreenshot.RenderRestStudioShowcase(RestLightPath, vtLight) and FileExists(RestLightPath));
+    Check('screenshot: RenderTelemetryWallShowcase (Dark Mode) saves PNG',
+      TVeloxScreenshot.RenderTelemetryWallShowcase(TelemDarkPath, vtDark) and FileExists(TelemDarkPath));
+    Check('screenshot: RenderTelemetryWallShowcase (Light Mode) saves PNG',
+      TVeloxScreenshot.RenderTelemetryWallShowcase(TelemLightPath, vtLight) and FileExists(TelemLightPath));
 
     // 31. Zero-Dependency RFC-8259 JSON Reader & Builder (TVeloxJson)
     WriteLn('[31/78] Testing TVeloxJson (RFC-8259 Parser, Path Navigation & Builder)...');
@@ -2003,7 +2019,7 @@ begin
     end;
 
     // 79. Embedded HTTP Workbench & API Debugger (TVeloxRestStudio)
-    WriteLn('[79/79] Testing TVeloxRestStudio (API Workbench, cURL, Latency & Diff)...');
+    WriteLn('[79/84] Testing TVeloxRestStudio (API Workbench, cURL, Latency & Diff)...');
     Frm := TForm.CreateNew(nil);
     try
       RestStudio := TVeloxRestStudio.Create(Frm);
@@ -2021,6 +2037,106 @@ begin
       Check('reststudio: SaveCurrentAsBaseline saves string', RestStudio.BaselineResponse = RestStudio.Response.Body);
       RestStudio.ViewMode := vrvmLatency;
       Check('reststudio: ViewMode updates cleanly', RestStudio.ViewMode = vrvmLatency);
+    finally
+      Frm.Free;
+    end;
+
+    // 80. Real-Time Streaming Log Analyzer & Tail (TVeloxLiveLogStreamer)
+    WriteLn('[80/84] Testing TVeloxLiveLogStreamer (Streaming Log Analyzer & Tail)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      LogStreamer := TVeloxLiveLogStreamer.Create(Frm);
+      LogStreamer.Parent := Frm;
+      LogStreamer.SetBounds(0, 0, 860, 520);
+      LogStreamer.AppendLog(vsllDebug, 'Core', 'Subsystem initialized');
+      LogStreamer.AppendLog(vsllInfo, 'Network', 'Connected to telemetry gateway');
+      LogStreamer.AppendLog(vsllWarn, 'Disk', 'Free storage below 15%');
+      LogStreamer.AppendLog(vsllError, 'Auth', 'Invalid authentication token');
+      Check('logstreamer: TotalCount records 4 items', LogStreamer.TotalCount = 4);
+      Check('logstreamer: Initial FilteredCount is 4', LogStreamer.FilteredCount = 4);
+      LogStreamer.ActiveFilter := 2; // Warning+
+      Check('logstreamer: Warning filter leaves 2 items', LogStreamer.FilteredCount = 2);
+      Check('logstreamer: ExportToCsv contains Auth source', Pos('Auth', LogStreamer.ExportToCsv) > 0);
+      Check('logstreamer: ExportToJson contains Auth source', Pos('Auth', LogStreamer.ExportToJson) > 0);
+      Check('logstreamer: LevelToString maps vsllError to ERROR', TVeloxLiveLogStreamer.LevelToString(vsllError) = 'ERROR');
+      LogStreamer.Clear;
+      Check('logstreamer: Clear resets TotalCount to 0', LogStreamer.TotalCount = 0);
+    finally
+      Frm.Free;
+    end;
+
+    // 81. Configuration Studio & Environment Settings Hub (TVeloxConfigStudio)
+    WriteLn('[81/84] Testing TVeloxConfigStudio (Profile Settings & Diff vs Default)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      CfgStudio := TVeloxConfigStudio.Create(Frm);
+      CfgStudio.Parent := Frm;
+      CfgStudio.SetBounds(0, 0, 860, 520);
+      Check('configstudio: PropertyGrid initialized with demo items', CfgStudio.PropertyGrid.Count > 0);
+      Check('configstudio: ActiveProfile defaults to Development', CfgStudio.ActiveProfile = 'Development');
+      Check('configstudio: ExportProfileJson returns valid JSON', Pos('{', CfgStudio.ExportProfileJson('Development')) > 0);
+      Check('configstudio: DiffView is assigned', Assigned(CfgStudio.DiffView));
+      Check('configstudio: UndoStack is assigned', Assigned(CfgStudio.UndoStack));
+      CfgStudio.ViewMode := vcsvDiff;
+      Check('configstudio: ViewMode updates cleanly to vcsvDiff', CfgStudio.ViewMode = vcsvDiff);
+    finally
+      Frm.Free;
+    end;
+
+    // 82. Mission Control Telemetry Wall (TVeloxTelemetryWall)
+    WriteLn('[82/84] Testing TVeloxTelemetryWall (Mission Control & Hysteresis)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      TelemWall := TVeloxTelemetryWall.Create(Frm);
+      TelemWall.Parent := Frm;
+      TelemWall.SetBounds(0, 0, 860, 520);
+      Check('telemwall: KpiGrid has 4 metric cards', TelemWall.KpiGrid.CardCount = 4);
+      Check('telemwall: Initial CpuSeverity is vsNormal', TelemWall.CpuSeverity = vsNormal);
+      TelemWall.PushMetrics(95.0, 50.0, 1024.0);
+      TelemWall.PushMetrics(96.0, 52.0, 1048.0);
+      Check('telemwall: CpuSeverity escalates to vsCritical upon sustained load', TelemWall.CpuSeverity = vsCritical);
+      Check('telemwall: IsActive is True', TelemWall.IsActive);
+    finally
+      Frm.Free;
+    end;
+
+    // 83. Crash Flight Recorder & Blackbox Diagnostic Center (TVeloxCrashFlightRecorder)
+    WriteLn('[83/84] Testing TVeloxCrashFlightRecorder (Minidumps & Timeline)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      FlightRec := TVeloxCrashFlightRecorder.Create(Frm);
+      FlightRec.Parent := Frm;
+      FlightRec.SetBounds(0, 0, 860, 520);
+      FlightRec.RecordFlightEvent('Diagnostic Check', 'All memory blocks verified', vsNormal);
+      FlightRec.RecordFlightEvent('Network Pulse', 'Telemetry heartbeat acked', vsNormal);
+      Check('flightrecorder: Timeline has recorded flight events', FlightRec.Timeline.Count >= 2);
+      FlightRec.SimulateCrash('EOutOfMemory', 'Out of system memory in GDI+ heap');
+      Check('flightrecorder: ExceptionClass updated', FlightRec.ExceptionClass = 'EOutOfMemory');
+      Check('flightrecorder: GenerateReportJson returns valid JSON report', Pos('EOutOfMemory', FlightRec.GenerateReportJson) > 0);
+      Check('flightrecorder: GenerateFullReport contains diagnostic banner', Pos('VELOXUI FLIGHT RECORDER', FlightRec.GenerateFullReport) > 0);
+      Check('flightrecorder: BinaryHash is non-empty', Length(FlightRec.BinaryHash) > 0);
+    finally
+      Frm.Free;
+    end;
+
+    // 84. Virtual Data Table, Filter Bar & Pagination Hub (TVeloxDataStudio)
+    WriteLn('[84/84] Testing TVeloxDataStudio (Virtual Grid & Pagination Filter)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      DataStudio := TVeloxDataStudio.Create(Frm);
+      DataStudio.Parent := Frm;
+      DataStudio.SetBounds(0, 0, 860, 520);
+      DataStudio.PopulateDemoRecords(60);
+      Check('datastudio: TotalRecords is 60', DataStudio.TotalRecords = 60);
+      Check('datastudio: Initial FilteredRecords is 60', DataStudio.FilteredRecords = 60);
+      Check('datastudio: Pagination TotalPages is 3', DataStudio.Pagination.TotalPages = 3);
+      DataStudio.StatusFilter := vdsActive;
+      Check('datastudio: FilteredRecords reduces for vdsActive', DataStudio.FilteredRecords = 20);
+      Check('datastudio: ExportToCsv returns CSV text', Pos('ID,SKU,Name', DataStudio.ExportToCsv) > 0);
+      Check('datastudio: ExportToJson returns JSON text', Pos('[', DataStudio.ExportToJson) > 0);
+      Check('datastudio: ExportToMarkdown returns GFM table', Pos('| ID | SKU |', DataStudio.ExportToMarkdown) > 0);
+      DataStudio.Clear;
+      Check('datastudio: Clear resets TotalRecords to 0', DataStudio.TotalRecords = 0);
     finally
       Frm.Free;
     end;

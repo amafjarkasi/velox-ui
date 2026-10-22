@@ -59,6 +59,8 @@ type
     function GetUndoDescription: string;
     function GetRedoDescription: string;
     function GetIsDirty: Boolean;
+    function GetUndoCount: Integer;
+    function GetRedoCount: Integer;
   public
     constructor Create(const AMaxCapacity: Integer = 50);
     destructor Destroy; override;
@@ -75,6 +77,8 @@ type
 
     property CanUndo: Boolean read GetCanUndo;
     property CanRedo: Boolean read GetCanRedo;
+    property UndoCount: Integer read GetUndoCount;
+    property RedoCount: Integer read GetRedoCount;
     property UndoDescription: string read GetUndoDescription;
     property RedoDescription: string read GetRedoDescription;
     property IsDirty: Boolean read GetIsDirty;
@@ -223,6 +227,16 @@ begin
     Result := FRedoList[High(FRedoList)].Description
   else
     Result := '';
+end;
+
+function TVeloxUndoStack.GetUndoCount: Integer;
+begin
+  Result := Length(FUndoList);
+end;
+
+function TVeloxUndoStack.GetRedoCount: Integer;
+begin
+  Result := Length(FRedoList);
 end;
 
 procedure TVeloxUndoStack.BeginGroup(const ADescription: string);

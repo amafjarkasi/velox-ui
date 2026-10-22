@@ -74,6 +74,12 @@ type
     /// </summary>
     class function RenderRestStudioShowcase(const AFilePath: string;
       const ATheme: TVeloxTheme = vtDark): Boolean; static;
+
+    /// <summary>
+    /// Renders an end-to-end pixel-perfect screenshot of the Mission Control Telemetry Wall (TVeloxTelemetryWall)
+    /// </summary>
+    class function RenderTelemetryWallShowcase(const AFilePath: string;
+      const ATheme: TVeloxTheme = vtDark): Boolean; static;
   end;
 
 implementation
@@ -1455,6 +1461,271 @@ begin
     C.Font.Color := Colors.TextSecondary;
     DrawShowcaseText(C, Rect(30, 604, W - 30, 626),
       'WinHTTP 5.1 TLS 1.3  |  HTTP/2 Multiplexing  |  Payload: 2.45 KB  |  Baseline Snapshot: 2.40 KB stored  |  TVeloxRestStudio v2.5.0',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    Result := SaveBitmapToPng(Bmp, AFilePath);
+  finally
+    Bmp.Free;
+  end;
+end;
+
+class function TVeloxScreenshot.RenderTelemetryWallShowcase(const AFilePath: string;
+  const ATheme: TVeloxTheme): Boolean;
+const
+  W = 1120;
+  H = 640;
+var
+  Bmp: TBitmap;
+  C: TCanvas;
+  Colors: TVeloxThemeColors;
+  CpuSamples, RamSamples, NetSamples: TSingleDynArray;
+  I, CardW, CardSpacing, LeftX: Integer;
+  CardR, DonutR, SparkR: TRect;
+begin
+  Result := False;
+  Colors := TVeloxUtils.GetThemeColors(ATheme);
+
+  SetLength(CpuSamples, 16);
+  CpuSamples[0] := 18; CpuSamples[1] := 22; CpuSamples[2] := 19; CpuSamples[3] := 25;
+  CpuSamples[4] := 21; CpuSamples[5] := 28; CpuSamples[6] := 24; CpuSamples[7] := 32;
+  CpuSamples[8] := 26; CpuSamples[9] := 30; CpuSamples[10] := 27; CpuSamples[11] := 23;
+  CpuSamples[12] := 29; CpuSamples[13] := 25; CpuSamples[14] := 24; CpuSamples[15] := 25;
+
+  SetLength(RamSamples, 16);
+  RamSamples[0] := 64; RamSamples[1] := 65; RamSamples[2] := 65; RamSamples[3] := 66;
+  RamSamples[4] := 66; RamSamples[5] := 67; RamSamples[6] := 67; RamSamples[7] := 68;
+  RamSamples[8] := 68; RamSamples[9] := 68; RamSamples[10] := 67; RamSamples[11] := 68;
+  RamSamples[12] := 68; RamSamples[13] := 68; RamSamples[14] := 68; RamSamples[15] := 68;
+
+  SetLength(NetSamples, 16);
+  NetSamples[0] := 12; NetSamples[1] := 15; NetSamples[2] := 14; NetSamples[3] := 18;
+  NetSamples[4] := 22; NetSamples[5] := 19; NetSamples[6] := 26; NetSamples[7] := 31;
+  NetSamples[8] := 28; NetSamples[9] := 24; NetSamples[10] := 29; NetSamples[11] := 33;
+  NetSamples[12] := 27; NetSamples[13] := 25; NetSamples[14] := 30; NetSamples[15] := 28;
+
+  Bmp := TBitmap.Create;
+  try
+    Bmp.PixelFormat := pf24bit;
+    Bmp.SetSize(W, H);
+    C := Bmp.Canvas;
+
+    // 1. Background fill
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Background;
+    C.FillRect(Rect(0, 0, W, H));
+
+    // Outer Main Window Frame
+    TVeloxGdiPlus.DrawCard(C, Rect(16, 14, W - 16, H - 14), Colors.Surface, Colors.Border, 10);
+
+    // 2. Title Bar (Y: 14..50)
+    C.Brush.Style := bsClear;
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 18, 700, 48),
+      'VeloxUI Telemetry Wall - Executive Mission Control & Multi-Stream Operations Hub');
+
+    // Titlebar Window Controls (_ [] X)
+    C.Font.Size := 9;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(W - 100, 18, W - 78, 48), '_', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 74, 18, W - 52, 48), #$25A2, DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 48, 18, W - 26, 48), #$2715, DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Titlebar bottom separator line
+    C.Pen.Color := Colors.Border;
+    C.Pen.Width := 1;
+    C.MoveTo(16, 50); C.LineTo(W - 16, 50);
+
+    // 3. Top Control Bar (Y: 58..98)
+    TVeloxGdiPlus.DrawCard(C, Rect(28, 58, W - 28, 98), Colors.SurfaceCard, Colors.Border, 6);
+
+    // Polling rate buttons
+    TVeloxGdiPlus.DrawCard(C, Rect(38, 64, 82, 92), Colors.Accent, Colors.Accent, 4);
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := $000000;
+    DrawShowcaseText(C, Rect(38, 64, 82, 92), '1s', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(88, 64, 132, 92), Colors.Surface, Colors.Border, 4);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(88, 64, 132, 92), '2s', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(138, 64, 182, 92), Colors.Surface, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(138, 64, 182, 92), '5s', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(188, 64, 248, 92), Colors.Surface, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(188, 64, 248, 92), 'Pause', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Operational Status Badge (Green)
+    TVeloxGdiPlus.DrawBadge(C, Rect(266, 65, 480, 91), #$25CF'  ALL SYSTEMS OPERATIONAL', $34D399, $000000);
+
+    // Battery / Power Telemetry Badge (Right aligned)
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 240, 64, W - 38, 92), Colors.Surface, Colors.Border, 4);
+    C.Font.Color := Colors.TextPrimary;
+    C.Font.Style := [fsBold];
+    DrawShowcaseText(C, Rect(W - 232, 64, W - 46, 92), #$26A1' Power: 98% (AC Plugged)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 4. Central 4 KPI Metric Cards (Y: 106..226)
+    CardSpacing := 12;
+    CardW := (W - 56 - (CardSpacing * 3)) div 4;
+
+    for I := 0 to 3 do
+    begin
+      LeftX := 28 + I * (CardW + CardSpacing);
+      CardR := Rect(LeftX, 106, LeftX + CardW, 226);
+      TVeloxGdiPlus.DrawCard(C, CardR, Colors.SurfaceCard, Colors.Border, 8);
+
+      C.Font.Name := 'Segoe UI';
+      C.Font.Size := 8;
+      C.Font.Style := [fsBold];
+      C.Font.Color := Colors.TextSecondary;
+
+      case I of
+        0:
+          begin
+            DrawShowcaseText(C, Rect(LeftX + 14, 114, LeftX + CardW - 14, 132), 'PROCESSOR LOAD (ALL CORES)');
+            C.Font.Size := 16;
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(LeftX + 14, 134, LeftX + 130, 164), '24.8%');
+            TVeloxGdiPlus.DrawBadge(C, Rect(LeftX + CardW - 68, 136, LeftX + CardW - 14, 160), '+1.4%', $34D399, $000000);
+            TVeloxGdiPlus.DrawSparkline(C, Rect(LeftX + 14, 172, LeftX + CardW - 14, 216), CpuSamples,
+              Colors.Accent, TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.25));
+          end;
+        1:
+          begin
+            DrawShowcaseText(C, Rect(LeftX + 14, 114, LeftX + CardW - 14, 132), 'COMMITTED MEMORY (RAM)');
+            C.Font.Size := 16;
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(LeftX + 14, 134, LeftX + 130, 164), '6.8 GB');
+            TVeloxGdiPlus.DrawBadge(C, Rect(LeftX + CardW - 76, 136, LeftX + CardW - 14, 160), '-120 MB', $34D399, $000000);
+            TVeloxGdiPlus.DrawSparkline(C, Rect(LeftX + 14, 172, LeftX + CardW - 14, 216), RamSamples,
+              $6366F1, TVeloxUtils.BlendColor(Colors.SurfaceCard, $6366F1, 0.25));
+          end;
+        2:
+          begin
+            DrawShowcaseText(C, Rect(LeftX + 14, 114, LeftX + CardW - 14, 132), 'NETWORK THROUGHPUT (I/O)');
+            C.Font.Size := 16;
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(LeftX + 14, 134, LeftX + 140, 164), '1.85 MB/s');
+            TVeloxGdiPlus.DrawBadge(C, Rect(LeftX + CardW - 80, 136, LeftX + CardW - 14, 160), '+420 KB/s', Colors.Accent, $000000);
+            TVeloxGdiPlus.DrawSparkline(C, Rect(LeftX + 14, 172, LeftX + CardW - 14, 216), NetSamples,
+              $10B981, TVeloxUtils.BlendColor(Colors.SurfaceCard, $10B981, 0.25));
+          end;
+        3:
+          begin
+            DrawShowcaseText(C, Rect(LeftX + 14, 114, LeftX + CardW - 14, 132), 'SYSTEM POWER & BATTERY');
+            C.Font.Size := 16;
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(LeftX + 14, 134, LeftX + 140, 164), '98% AC');
+            TVeloxGdiPlus.DrawBadge(C, Rect(LeftX + CardW - 74, 136, LeftX + CardW - 14, 160), 'Optimal', $34D399, $000000);
+            C.Font.Size := 8;
+            C.Font.Style := [];
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(LeftX + 14, 174, LeftX + CardW - 14, 192), 'Primary: AC Power Supply Online');
+            DrawShowcaseText(C, Rect(LeftX + 14, 194, LeftX + CardW - 14, 212), 'Remaining: Full Capacity (Healthy)');
+          end;
+      end;
+    end;
+
+    // 5. Bottom Section: Left Card (Donut Gauge) & Right Card (Dual Stream) (Y: 236..594)
+    // 5.1 Left Card: Memory Allocation & Commit Ratio (Width 480)
+    TVeloxGdiPlus.DrawCard(C, Rect(28, 236, 508, 594), Colors.SurfaceCard, Colors.Border, 8);
+
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(42, 246, 494, 268), 'Memory Allocation & Commit Ratio');
+
+    DonutR := Rect(44, 280, 184, 420);
+    TVeloxCharts.DrawDonutGauge(C, DonutR, 68.0, '68%', 'RAM', Colors, Colors.Accent);
+
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(200, 290, 494, 310), 'Working Set:       4.2 GB');
+    DrawShowcaseText(C, Rect(200, 316, 494, 336), 'Paged Pool:        380 MB');
+    DrawShowcaseText(C, Rect(200, 342, 494, 362), 'Available RAM:     9.4 GB');
+    DrawShowcaseText(C, Rect(200, 368, 494, 388), 'Commit Limit:      16.0 GB');
+    DrawShowcaseText(C, Rect(200, 394, 494, 414), 'Page Faults:       12 / sec (Normal)');
+
+    // Hysteresis Status Box inside Left Card
+    TVeloxGdiPlus.DrawCard(C, Rect(42, 436, 494, 578), Colors.Surface, Colors.Border, 6);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(54, 444, 482, 464), 'HYSTERESIS ANTI-SPIKE ENGINE');
+
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(54, 470, 482, 490), 'Warning Threshold:   75.0% (2 consecutive samples)');
+    DrawShowcaseText(C, Rect(54, 492, 482, 512), 'Critical Threshold:  90.0% (immediate escalation)');
+    DrawShowcaseText(C, Rect(54, 514, 482, 534), 'Cooldown Period:     5000 ms hysteresis guard');
+    C.Font.Color := $34D399;
+    DrawShowcaseText(C, Rect(54, 542, 482, 566), #$2713'  Telemetry engine operating within normal baseline');
+
+    // 5.2 Right Card: Rolling Processor & I/O Activity Stream (Width W - 524 - 28 = 568)
+    TVeloxGdiPlus.DrawCard(C, Rect(522, 236, W - 28, 594), Colors.SurfaceCard, Colors.Border, 8);
+
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(536, 246, W - 42, 268), 'Rolling Multi-Channel Telemetry (30 Rolling Samples)');
+
+    // Legend items
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(536, 276, 750, 296), #$25CF' Channel 1: Processor Load (QPC)');
+
+    C.Font.Color := $10B981;
+    DrawShowcaseText(C, Rect(760, 276, 980, 296), #$25CF' Channel 2: Network I/O Stream');
+
+    // Dual Sparkline
+    SparkR := Rect(536, 306, W - 42, 476);
+    TVeloxCharts.DrawDualSparkline(C, SparkR, CpuSamples, NetSamples, Colors.Accent, $10B981, Colors.SurfaceCard);
+
+    // Diagnostic Metrics Panel inside Right Card
+    TVeloxGdiPlus.DrawCard(C, Rect(536, 490, W - 42, 578), Colors.Surface, Colors.Border, 6);
+
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(550, 498, W - 56, 518), 'HARDWARE DIAGNOSTIC METRICS SUMMARY');
+
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(550, 524, 760, 544), 'Min Load:     18.2%');
+    DrawShowcaseText(C, Rect(550, 546, 760, 566), 'Peak Spike:   32.0%');
+
+    DrawShowcaseText(C, Rect(770, 524, 950, 544), 'Average Load: 24.5%');
+    DrawShowcaseText(C, Rect(770, 546, 950, 566), 'P95 Latency:  28.4%');
+
+    DrawShowcaseText(C, Rect(960, 524, W - 56, 544), 'Sampling:     1000 ms');
+    DrawShowcaseText(C, Rect(960, 546, W - 56, 566), 'Jitter:       < 0.4 ms');
+
+    // 6. Bottom Footer Status Bar (Y: 602..628)
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Surface;
+    C.FillRect(Rect(18, 602, W - 18, 628));
+
+    C.Pen.Color := Colors.Border;
+    C.Pen.Width := 1;
+    C.MoveTo(18, 602); C.LineTo(W - 18, 602);
+
+    C.Brush.Style := bsClear;
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(30, 604, W - 30, 626),
+      'Win32 NT Poller 1000ms  |  QPC Microsecond Telemetry  |  Hysteresis Anti-Spike Guard Active  |  TVeloxTelemetryWall v2.5.0',
       DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     Result := SaveBitmapToPng(Bmp, AFilePath);
