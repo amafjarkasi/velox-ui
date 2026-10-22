@@ -23,6 +23,7 @@ uses
   Types,
   Graphics,
   Controls,
+  ExtCtrls,
   Velox.Types,
   Velox.GdiPlus;
 
@@ -36,9 +37,13 @@ type
     FCaption: string;
     FColors: TVeloxThemeColors;
     FHot: Boolean;
+    FAnimThumbX: Single;
+    FTargetThumbX: Single;
+    FAnimTimer: TTimer;
     FOnToggle: TNotifyEvent;
     procedure SetChecked(const AValue: Boolean);
     procedure SetCaptionText(const AValue: string);
+    procedure OnAnimTick(Sender: TObject);
   protected
     procedure Paint; override;
     procedure MouseEnter; override;
@@ -50,6 +55,7 @@ type
       const ACaption: string; const AColors: TVeloxThemeColors;
       const AChecked: Boolean = False;
       const AOnToggle: TNotifyEvent = nil);
+    destructor Destroy; override;
     procedure ApplyColors(const AColors: TVeloxThemeColors);
 
     property Checked: Boolean read FChecked write SetChecked;
@@ -108,6 +114,23 @@ begin
   FChecked := AChecked;
   FHot := False;
   FOnToggle := AOnToggle;
+
+  if FChecked then
+    FAnimThumbX := 24.0
+  else
+    FAnimThumbX := 4.0;
+  FTargetThumbX := FAnimThumbX;
+
+  FAnimTimer := TTimer.Create(Self);
+  FAnimTimer.Interval := 15;
+  FAnimTimer.Enabled := False;
+  FAnimTimer.OnTimer := OnAnimTick;
+end;
+
+destructor TVeloxToggleSwitch.Destroy;
+begin
+  FAnimTimer.Free;
+  inherited Destroy;
 end;
 
 procedure TVeloxToggleSwitch.ApplyColors(const AColors: TVeloxThemeColors);
@@ -116,11 +139,29 @@ begin
   Invalidate;
 end;
 
+procedure TVeloxToggleSwitch.OnAnimTick(Sender: TObject);
+begin
+  // Smooth exponential dampening towards target thumb coordinate (60 FPS)
+  FAnimThumbX := FAnimThumbX + (FTargetThumbX - FAnimThumbX) * 0.35;
+  if Abs(FAnimThumbX - FTargetThumbX) < 0.5 then
+  begin
+    FAnimThumbX := FTargetThumbX;
+    FAnimTimer.Enabled := False;
+  end;
+  Invalidate;
+end;
+
 procedure TVeloxToggleSwitch.SetChecked(const AValue: Boolean);
 begin
   if FChecked <> AValue then
   begin
     FChecked := AValue;
+    if FChecked then
+      FTargetThumbX := 24.0
+    else
+      FTargetThumbX := 4.0;
+    if Assigned(FAnimTimer) then
+      FAnimTimer.Enabled := True;
     Invalidate;
     if Assigned(FOnToggle) then
       FOnToggle(Self);
@@ -179,7 +220,6 @@ begin
     PillFill   := FColors.Accent;
     PillBorder := FColors.Accent;
     ThumbCol   := FColors.Background;
-    ThumbX     := PillR.Right - ThumbD - 4;
   end
   else
   begin
@@ -189,8 +229,9 @@ begin
       PillFill := FColors.SurfaceCard;
     PillBorder := FColors.Border;
     ThumbCol   := FColors.TextSecondary;
-    ThumbX     := PillR.Left + 4;
   end;
+
+  ThumbX := PillR.Left + Round(FAnimThumbX);
 
   TVeloxGdiPlus.DrawCard(Canvas, PillR, PillFill, PillBorder, PillH div 2);
 

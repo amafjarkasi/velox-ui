@@ -49,6 +49,9 @@ uses
   Velox.DiffInspector,
   Velox.ClipboardPalette,
   Velox.AuditSecurityLog,
+  Velox.ToggleSwitch,
+  Velox.Icons,
+  Velox.Layout,
   Velox.System,
   Velox.Memory;
 
@@ -85,6 +88,12 @@ type
     FClipboard: TVeloxClipboardPalette;
     FAuditLog: TVeloxAuditSecurityLog;
 
+    // Design Sandbox & Icons controls
+    FSandboxStack: TVeloxStackPanel;
+    FToggle60Fps: TVeloxToggleSwitch;
+    FToggleStatusLabel: TLabel;
+    FIconPaintBox: TPaintBox;
+
     procedure SetupPages;
     procedure SetupCommandPalette;
     procedure SetupTelemetryPage(APanel: TPanel);
@@ -93,9 +102,12 @@ type
     procedure SetupDiffPage(APanel: TPanel);
     procedure SetupClipboardPage(APanel: TPanel);
     procedure SetupSecurityPage(APanel: TPanel);
+    procedure SetupSandboxPage(APanel: TPanel);
 
     procedure OnTimerTick(Sender: TObject);
     procedure OnChartBoxPaint(Sender: TObject);
+    procedure OnIconPaintBoxPaint(Sender: TObject);
+    procedure OnToggle60FpsClick(Sender: TObject);
     procedure OnListViewData(Sender: TObject; Item: TListItem);
     procedure OnCustomDrawItem(Sender: TCustomListView; Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure OnCustomDrawSubItem(Sender: TCustomListView; Item: TListItem; SubItem: Integer; State: TCustomDrawState; var DefaultDraw: Boolean);
@@ -111,6 +123,10 @@ type
     procedure HandleBtnMidClick(Sender: TObject);
     procedure HandleBtnNordClick(Sender: TObject);
     procedure HandleBtnTrimClick(Sender: TObject);
+    procedure HandleBtnStackHorz(Sender: TObject);
+    procedure HandleBtnStackVert(Sender: TObject);
+    procedure HandleBtnStackWrap(Sender: TObject);
+    procedure HandleBtnStackGap(Sender: TObject);
 
     // Command Palette callbacks
     procedure CmdNavDash;
@@ -119,6 +135,7 @@ type
     procedure CmdNavDiff;
     procedure CmdNavClip;
     procedure CmdNavSec;
+    procedure CmdNavSandbox;
     procedure CmdThemeDark;
     procedure CmdThemeLight;
     procedure CmdThemeMid;
@@ -150,7 +167,7 @@ begin
   FRows := TList<TTelemetryRow>.Create;
 
   // 1. Desktop Shell (#2)
-  FShell := TVeloxAppShell.CreateShell(Self, 'VeloxUI Studio', 'v1.0 · 73 Zero-Dep Units', FColors, 220);
+  FShell := TVeloxAppShell.CreateShell(Self, 'VeloxUI Studio', 'v1.0 · 75 Zero-Dep Units', FColors, 220);
   FShell.SearchBox.Text := 'Search studio (Ctrl+K)...';
   FShell.SearchBox.Edit.ReadOnly := True;
   FShell.SearchBox.Edit.OnClick := HandleSearchClick;
@@ -181,7 +198,7 @@ end;
 
 procedure TStudioMainForm.SetupPages;
 var
-  PnlDash, PnlInsp, PnlJson, PnlDiff, PnlClip, PnlSec: TPanel;
+  PnlDash, PnlInsp, PnlJson, PnlDiff, PnlClip, PnlSec, PnlBox: TPanel;
 begin
   PnlDash := FShell.AddPage('dashboard', 'Telemetry & Charts');
   PnlInsp := FShell.AddPage('inspector', 'Property Studio');
@@ -189,6 +206,7 @@ begin
   PnlDiff := FShell.AddPage('diff', 'Diff Inspector');
   PnlClip := FShell.AddPage('clipboard', 'Clipboard (Win+V)');
   PnlSec  := FShell.AddPage('security', 'Security Audit');
+  PnlBox  := FShell.AddPage('sandbox', 'Design Sandbox & Icons');
 
   SetupTelemetryPage(PnlDash);
   SetupInspectorPage(PnlInsp);
@@ -196,6 +214,7 @@ begin
   SetupDiffPage(PnlDiff);
   SetupClipboardPage(PnlClip);
   SetupSecurityPage(PnlSec);
+  SetupSandboxPage(PnlBox);
 
   FShell.SwitchPage('dashboard');
   FShell.SetStatusMessage('Studio Ready. Press Ctrl+K for Fuzzy Command Palette.', vsNormal);
@@ -380,6 +399,246 @@ begin
   FAuditLog.LogEvent('Audit Alert', 'Non-blocking directory integrity monitoring active', vsWarning);
 end;
 
+procedure TStudioMainForm.SetupSandboxPage(APanel: TPanel);
+var
+  HeaderCard, StackControlsCard, IconGalleryCard: TPanel;
+  TitleLbl, SubtitleLbl, StackLbl, GalleryLbl: TLabel;
+  BtnHorz, BtnVert, BtnWrap, BtnGap: TVeloxStyledButton;
+  BtnItem1, BtnItem2, BtnItem3, BtnItem4: TVeloxStyledButton;
+begin
+  APanel.Color := FColors.Background;
+
+  // 1. Header Card
+  HeaderCard := TPanel.Create(Self);
+  HeaderCard.Parent := APanel;
+  HeaderCard.Align := alTop;
+  HeaderCard.Height := 58;
+  HeaderCard.BevelOuter := bvNone;
+  HeaderCard.Color := FColors.Surface;
+
+  TitleLbl := TLabel.Create(Self);
+  TitleLbl.Parent := HeaderCard;
+  TitleLbl.Left := 16;
+  TitleLbl.Top := 8;
+  TitleLbl.Font.Name := 'Segoe UI';
+  TitleLbl.Font.Size := 12;
+  TitleLbl.Font.Style := [fsBold];
+  TitleLbl.Font.Color := FColors.TextPrimary;
+  TitleLbl.Caption := 'Design System Sandbox & Vector Icon Engine';
+
+  SubtitleLbl := TLabel.Create(Self);
+  SubtitleLbl.Parent := HeaderCard;
+  SubtitleLbl.Left := 16;
+  SubtitleLbl.Top := 32;
+  SubtitleLbl.Font.Name := 'Segoe UI';
+  SubtitleLbl.Font.Size := 9;
+  SubtitleLbl.Font.Color := FColors.TextSecondary;
+  SubtitleLbl.Caption := 'Scalable resolution-independent GDI+ Fluent vector glyphs, responsive TVeloxStackPanel, and 60 FPS micro-animations';
+
+  // 2. Interactive Stack & Micro-Animation Demo Card
+  StackControlsCard := TPanel.Create(Self);
+  StackControlsCard.Parent := APanel;
+  StackControlsCard.Align := alTop;
+  StackControlsCard.Height := 170;
+  StackControlsCard.BevelOuter := bvNone;
+  StackControlsCard.Color := FColors.Surface;
+
+  StackLbl := TLabel.Create(Self);
+  StackLbl.Parent := StackControlsCard;
+  StackLbl.Left := 16;
+  StackLbl.Top := 10;
+  StackLbl.Font.Name := 'Segoe UI';
+  StackLbl.Font.Size := 10;
+  StackLbl.Font.Style := [fsBold];
+  StackLbl.Font.Color := FColors.Accent;
+  StackLbl.Caption := 'Responsive TVeloxStackPanel (Auto-Wrap, Gap Spacing & Cross-Alignment)';
+
+  BtnHorz := TVeloxStyledButton.Create(Self);
+  BtnHorz.Parent := StackControlsCard;
+  BtnHorz.SetBounds(16, 32, 90, 26);
+  BtnHorz.Caption := 'Horizontal';
+  BtnHorz.Variant := vsbOutline;
+  BtnHorz.OnClick := HandleBtnStackHorz;
+
+  BtnVert := TVeloxStyledButton.Create(Self);
+  BtnVert.Parent := StackControlsCard;
+  BtnVert.SetBounds(112, 32, 80, 26);
+  BtnVert.Caption := 'Vertical';
+  BtnVert.Variant := vsbOutline;
+  BtnVert.OnClick := HandleBtnStackVert;
+
+  BtnWrap := TVeloxStyledButton.Create(Self);
+  BtnWrap.Parent := StackControlsCard;
+  BtnWrap.SetBounds(198, 32, 90, 26);
+  BtnWrap.Caption := 'Toggle Wrap';
+  BtnWrap.Variant := vsbOutline;
+  BtnWrap.OnClick := HandleBtnStackWrap;
+
+  BtnGap := TVeloxStyledButton.Create(Self);
+  BtnGap.Parent := StackControlsCard;
+  BtnGap.SetBounds(294, 32, 80, 26);
+  BtnGap.Caption := 'Cycle Gap';
+  BtnGap.Variant := vsbOutline;
+  BtnGap.OnClick := HandleBtnStackGap;
+
+  // 60 FPS Micro-Animation Toggle
+  FToggle60Fps := TVeloxToggleSwitch.CreateSwitch(Self, StackControlsCard, 390, 32, 175, 'Hardware 60 FPS', FColors, True, OnToggle60FpsClick);
+
+  FToggleStatusLabel := TLabel.Create(Self);
+  FToggleStatusLabel.Parent := StackControlsCard;
+  FToggleStatusLabel.Left := 580;
+  FToggleStatusLabel.Top := 37;
+  FToggleStatusLabel.Font.Name := 'Segoe UI';
+  FToggleStatusLabel.Font.Size := 9;
+  FToggleStatusLabel.Font.Color := FColors.Success;
+  FToggleStatusLabel.Caption := 'Interpolated Smooth Sliding Active';
+
+  // Live StackPanel host
+  FSandboxStack := TVeloxStackPanel.CreateHorizontal(Self, StackControlsCard, 8, 8);
+  FSandboxStack.SetBounds(16, 68, 700, 90);
+  FSandboxStack.ApplyColors(FColors);
+
+  BtnItem1 := TVeloxStyledButton.Create(Self);
+  BtnItem1.SetBounds(0, 0, 110, 30);
+  BtnItem1.Caption := 'viShield Secure';
+  BtnItem1.Variant := vsbPrimary;
+  FSandboxStack.Add(BtnItem1);
+
+  BtnItem2 := TVeloxStyledButton.Create(Self);
+  BtnItem2.SetBounds(0, 0, 100, 30);
+  BtnItem2.Caption := 'viCpu Telemetry';
+  BtnItem2.Variant := vsbSurface;
+  FSandboxStack.Add(BtnItem2);
+
+  BtnItem3 := TVeloxStyledButton.Create(Self);
+  BtnItem3.SetBounds(0, 0, 120, 30);
+  BtnItem3.Caption := 'viTerminal Shell';
+  BtnItem3.Variant := vsbOutline;
+  FSandboxStack.Add(BtnItem3);
+
+  BtnItem4 := TVeloxStyledButton.Create(Self);
+  BtnItem4.SetBounds(0, 0, 95, 30);
+  BtnItem4.Caption := 'viCloud Sync';
+  BtnItem4.Variant := vsbSurface;
+  FSandboxStack.Add(BtnItem4);
+
+  // 3. Vector Icon Gallery Card
+  IconGalleryCard := TPanel.Create(Self);
+  IconGalleryCard.Parent := APanel;
+  IconGalleryCard.Align := alClient;
+  IconGalleryCard.BevelOuter := bvNone;
+  IconGalleryCard.Color := FColors.Background;
+
+  GalleryLbl := TLabel.Create(Self);
+  GalleryLbl.Parent := IconGalleryCard;
+  GalleryLbl.Left := 16;
+  GalleryLbl.Top := 8;
+  GalleryLbl.Font.Name := 'Segoe UI';
+  GalleryLbl.Font.Size := 10;
+  GalleryLbl.Font.Style := [fsBold];
+  GalleryLbl.Font.Color := FColors.Accent;
+  GalleryLbl.Caption := 'Scalable Windows 11 Fluent Vector Icons (TVeloxIcons — 36 Built-in Glyphs)';
+
+  FIconPaintBox := TPaintBox.Create(Self);
+  FIconPaintBox.Parent := IconGalleryCard;
+  FIconPaintBox.SetBounds(16, 32, 900, 360);
+  FIconPaintBox.OnPaint := OnIconPaintBoxPaint;
+end;
+
+procedure TStudioMainForm.OnIconPaintBoxPaint(Sender: TObject);
+var
+  Idx, Col, Row, CellW, CellH, X, Y: Integer;
+  IconKind: TVeloxIcon;
+  NameStr: string;
+  R: TRect;
+begin
+  FIconPaintBox.Canvas.Brush.Color := FColors.Background;
+  FIconPaintBox.Canvas.FillRect(FIconPaintBox.ClientRect);
+  FIconPaintBox.Canvas.Font.Name := 'Segoe UI';
+  FIconPaintBox.Canvas.Font.Size := 8;
+
+  CellW := 95;
+  CellH := 58;
+  Idx := 0;
+
+  for IconKind := Succ(viNone) to High(TVeloxIcon) do
+  begin
+    Col := Idx mod 9;
+    Row := Idx div 9;
+    X := Col * CellW;
+    Y := Row * CellH;
+
+    R := Rect(X, Y, X + CellW - 4, Y + CellH - 4);
+    FIconPaintBox.Canvas.Brush.Color := FColors.Surface;
+    FIconPaintBox.Canvas.Pen.Color := FColors.Border;
+    FIconPaintBox.Canvas.RoundRect(R.Left, R.Top, R.Right, R.Bottom, 6, 6);
+
+    TVeloxIcons.Draw(FIconPaintBox.Canvas, Rect(X + 6, Y + 6, X + 34, Y + 34), IconKind, FColors.Accent, 20);
+
+    NameStr := TVeloxIcons.IconName(IconKind);
+    FIconPaintBox.Canvas.Font.Color := FColors.TextPrimary;
+    FIconPaintBox.Canvas.Brush.Style := bsClear;
+    FIconPaintBox.Canvas.TextOut(X + 6, Y + 38, NameStr);
+
+    Inc(Idx);
+  end;
+end;
+
+procedure TStudioMainForm.OnToggle60FpsClick(Sender: TObject);
+begin
+  if FToggle60Fps.Checked then
+  begin
+    FToggleStatusLabel.Font.Color := FColors.Success;
+    FToggleStatusLabel.Caption := 'Interpolated Smooth Sliding Active';
+  end
+  else
+  begin
+    FToggleStatusLabel.Font.Color := FColors.TextSecondary;
+    FToggleStatusLabel.Caption := 'Toggle Switch Switched OFF';
+  end;
+end;
+
+procedure TStudioMainForm.HandleBtnStackHorz(Sender: TObject);
+begin
+  if Assigned(FSandboxStack) then
+  begin
+    FSandboxStack.Orientation := voHorizontal;
+    FSandboxStack.Relayout;
+  end;
+end;
+
+procedure TStudioMainForm.HandleBtnStackVert(Sender: TObject);
+begin
+  if Assigned(FSandboxStack) then
+  begin
+    FSandboxStack.Orientation := voVertical;
+    FSandboxStack.Relayout;
+  end;
+end;
+
+procedure TStudioMainForm.HandleBtnStackWrap(Sender: TObject);
+begin
+  if Assigned(FSandboxStack) then
+  begin
+    FSandboxStack.Wrap := not FSandboxStack.Wrap;
+    FSandboxStack.Relayout;
+  end;
+end;
+
+procedure TStudioMainForm.HandleBtnStackGap(Sender: TObject);
+begin
+  if Assigned(FSandboxStack) then
+  begin
+    if FSandboxStack.Gap = 4 then
+      FSandboxStack.Gap := 8
+    else if FSandboxStack.Gap = 8 then
+      FSandboxStack.Gap := 16
+    else
+      FSandboxStack.Gap := 4;
+    FSandboxStack.Relayout;
+  end;
+end;
+
 procedure TStudioMainForm.SetupCommandPalette;
 begin
   FPalette := TVeloxCommandPalette.Create(Self);
@@ -391,6 +650,7 @@ begin
   FPalette.RegisterCommand('nav_diff', 'Go to Diff Inspector', 'Navigation', 'Alt+4', CmdNavDiff);
   FPalette.RegisterCommand('nav_clip', 'Go to Clipboard (Win+V)', 'Navigation', 'Alt+5', CmdNavClip);
   FPalette.RegisterCommand('nav_sec', 'Go to Security Audit', 'Navigation', 'Alt+6', CmdNavSec);
+  FPalette.RegisterCommand('nav_box', 'Go to Design Sandbox & Icons', 'Navigation', 'Alt+7', CmdNavSandbox);
 
   // Theme commands
   FPalette.RegisterCommand('theme_dark', 'Switch Theme: Dark', 'Theme', '', CmdThemeDark);
@@ -415,6 +675,7 @@ procedure TStudioMainForm.CmdNavJson;   begin FShell.SwitchPage('jsontree'); end
 procedure TStudioMainForm.CmdNavDiff;   begin FShell.SwitchPage('diff'); end;
 procedure TStudioMainForm.CmdNavClip;   begin FShell.SwitchPage('clipboard'); end;
 procedure TStudioMainForm.CmdNavSec;    begin FShell.SwitchPage('security'); end;
+procedure TStudioMainForm.CmdNavSandbox;begin FShell.SwitchPage('sandbox'); end;
 
 procedure TStudioMainForm.CmdThemeDark;  begin SwitchToTheme(vctDark); end;
 procedure TStudioMainForm.CmdThemeLight; begin SwitchToTheme(vctLight); end;
@@ -469,6 +730,9 @@ begin
   if Assigned(FDiffInspector) then FDiffInspector.ApplyColors(FColors);
   if Assigned(FClipboard) then FClipboard.ApplyColors(FColors);
   if Assigned(FAuditLog) then FAuditLog.ApplyColors(FColors);
+  if Assigned(FSandboxStack) then FSandboxStack.ApplyColors(FColors);
+  if Assigned(FToggle60Fps) then FToggle60Fps.ApplyColors(FColors);
+  if Assigned(FIconPaintBox) then FIconPaintBox.Invalidate;
 
   FListView.Color := FColors.Background;
   FListView.Font.Color := FColors.TextPrimary;
