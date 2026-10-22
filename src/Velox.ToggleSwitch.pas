@@ -49,6 +49,9 @@ type
     procedure MouseEnter; override;
     procedure MouseLeave; override;
     procedure Click; override;
+    procedure DoEnter; override;
+    procedure DoExit; override;
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     constructor CreateSwitch(AOwner: TComponent; AParent: TWinControl;
       const ALeft, ATop, AWidth: Integer;
@@ -60,6 +63,7 @@ type
 
     property Checked: Boolean read FChecked write SetChecked;
     property CaptionText: string read FCaption write SetCaptionText;
+    property TabStop default True;
     property OnToggle: TNotifyEvent read FOnToggle write FOnToggle;
   end;
 
@@ -107,6 +111,7 @@ begin
   inherited Create(AOwner);
   Parent := AParent;
   DoubleBuffered := True;
+  TabStop := True;
   SetBounds(ALeft, ATop, AWidth, 26);
   Cursor := crHandPoint;
   FCaption := ACaption;
@@ -125,6 +130,29 @@ begin
   FAnimTimer.Interval := 15;
   FAnimTimer.Enabled := False;
   FAnimTimer.OnTimer := OnAnimTick;
+end;
+
+procedure TVeloxToggleSwitch.DoEnter;
+begin
+  inherited DoEnter;
+  Invalidate;
+end;
+
+procedure TVeloxToggleSwitch.DoExit;
+begin
+  inherited DoExit;
+  Invalidate;
+end;
+
+procedure TVeloxToggleSwitch.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  if (Key = VK_SPACE) or (Key = VK_RETURN) then
+  begin
+    Click;
+    Key := 0;
+    Exit;
+  end;
+  inherited KeyDown(Key, Shift);
 end;
 
 destructor TVeloxToggleSwitch.Destroy;
@@ -234,6 +262,9 @@ begin
   ThumbX := PillR.Left + Round(FAnimThumbX);
 
   TVeloxGdiPlus.DrawCard(Canvas, PillR, PillFill, PillBorder, PillH div 2);
+
+  if Focused then
+    TVeloxGdiPlus.DrawGlowBorder(Canvas, PillR, FColors.Accent, PillH div 2, 140);
 
   ThumbY := PillR.Top + (PillH - ThumbD) div 2;
   ThumbR := Rect(ThumbX, ThumbY, ThumbX + ThumbD, ThumbY + ThumbD);

@@ -65,11 +65,30 @@ type
     FPages: array of TVeloxPageRoute;
     FActivePageId: string;
     FOnPageSwitch: TVeloxPageSwitchEvent;
+
+    // Smooth 60 FPS animated collapsible sidebar
+    FSidebarExpandedWidth: Integer;
+    FSidebarCollapsedWidth: Integer;
+    FSidebarCollapsed: Boolean;
+    FSidebarAnimTimer: TTimer;
+    FAnimSidebarWidth: Single;
+    FTargetSidebarWidth: Single;
+    procedure OnSidebarAnimTick(Sender: TObject);
     procedure NavButtonClick(Sender: TObject);
   public
     constructor CreateShell(AForm: TForm; const AAppTitle, AAppSubtitle: string;
       const AColors: TVeloxThemeColors; const ASidebarWidth: Integer = 210);
     destructor Destroy; override;
+
+    /// <summary>
+    /// Smoothly animates the sidebar between expanded and compact icon rail mode (60 FPS)
+    /// </summary>
+    procedure ToggleSidebar(const AAnimated: Boolean = True);
+
+    /// <summary>
+    /// Explicitly sets the sidebar collapsed state with optional smooth animation
+    /// </summary>
+    procedure SetSidebarCollapsed(const ACollapsed: Boolean; const AAnimated: Boolean = True);
 
     /// <summary>
     /// Registers a navigation page into the sidebar and returns its client TPanel container
@@ -98,6 +117,9 @@ type
 
     function PageCount: Integer;
     property ActivePageId: string read FActivePageId;
+    property SidebarCollapsed: Boolean read FSidebarCollapsed;
+    property SidebarExpandedWidth: Integer read FSidebarExpandedWidth write FSidebarExpandedWidth;
+    property SidebarCollapsedWidth: Integer read FSidebarCollapsedWidth write FSidebarCollapsedWidth;
     property SidebarPanel: TPanel read FSidebarPanel;
     property BrandPanel: TPanel read FBrandPanel;
     property HeaderPanel: TPanel read FHeaderPanel;
@@ -211,12 +233,79 @@ begin
   FContentPanel.Align := alClient;
   FContentPanel.BevelOuter := bvNone;
   FContentPanel.Color := AColors.Background;
+
+  // 60 FPS Micro-Animation for Sidebar Collapsing
+  FSidebarExpandedWidth := ASidebarWidth;
+  FSidebarCollapsedWidth := 56;
+  FSidebarCollapsed := False;
+  FAnimSidebarWidth := ASidebarWidth;
+  FTargetSidebarWidth := ASidebarWidth;
+
+  FSidebarAnimTimer := TTimer.Create(Self);
+  FSidebarAnimTimer.Interval := 15;
+  FSidebarAnimTimer.OnTimer := OnSidebarAnimTick;
+  FSidebarAnimTimer.Enabled := False;
 end;
 
 destructor TVeloxAppShell.Destroy;
 begin
+  if Assigned(FSidebarAnimTimer) then
+  begin
+    FSidebarAnimTimer.Enabled := False;
+    FSidebarAnimTimer.Free;
+  end;
   SetLength(FPages, 0);
   inherited Destroy;
+end;
+
+procedure TVeloxAppShell.OnSidebarAnimTick(Sender: TObject);
+const
+  ALPHA = 0.28;
+var
+  Diff: Single;
+  NewW: Integer;
+begin
+  Diff := FTargetSidebarWidth - FAnimSidebarWidth;
+  if Abs(Diff) < 0.75 then
+  begin
+    FAnimSidebarWidth := FTargetSidebarWidth;
+    FSidebarAnimTimer.Enabled := False;
+  end
+  else
+    FAnimSidebarWidth := FAnimSidebarWidth + (Diff * ALPHA);
+
+  NewW := Round(FAnimSidebarWidth);
+  if FSidebarPanel.Width <> NewW then
+  begin
+    FSidebarPanel.Width := NewW;
+    FTitleLabel.Visible := (NewW >= 110);
+    FSubtitleLabel.Visible := (NewW >= 110);
+  end;
+end;
+
+procedure TVeloxAppShell.SetSidebarCollapsed(const ACollapsed: Boolean; const AAnimated: Boolean);
+begin
+  FSidebarCollapsed := ACollapsed;
+  if ACollapsed then
+    FTargetSidebarWidth := FSidebarCollapsedWidth
+  else
+    FTargetSidebarWidth := FSidebarExpandedWidth;
+
+  if AAnimated then
+    FSidebarAnimTimer.Enabled := True
+  else
+  begin
+    FSidebarAnimTimer.Enabled := False;
+    FAnimSidebarWidth := FTargetSidebarWidth;
+    FSidebarPanel.Width := Round(FTargetSidebarWidth);
+    FTitleLabel.Visible := not ACollapsed;
+    FSubtitleLabel.Visible := not ACollapsed;
+  end;
+end;
+
+procedure TVeloxAppShell.ToggleSidebar(const AAnimated: Boolean);
+begin
+  SetSidebarCollapsed(not FSidebarCollapsed, AAnimated);
 end;
 
 procedure TVeloxAppShell.NavButtonClick(Sender: TObject);

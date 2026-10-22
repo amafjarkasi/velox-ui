@@ -53,7 +53,13 @@ type
   end;
 
   /// <summary>
-  /// Generic Virtual TListView Controller with QuickSort & Sort Arrows
+  /// Callback fired when virtual grid scrolls near the bottom and requests more streaming chunk data
+  /// </summary>
+  TVeloxStreamRequestEvent = procedure(Sender: TObject; const ACurrentCount, ABatchSize: Integer;
+    var AAddedCount: Integer) of object;
+
+  /// <summary>
+  /// Generic Virtual TListView Controller with QuickSort, Sort Arrows & Infinite Streaming
   /// </summary>
   TVeloxVirtualGrid<T> = class
   private
@@ -62,6 +68,14 @@ type
     FSortColumn: Integer;
     FSortAscending: Boolean;
     FTreeMode: Boolean;
+
+    // Virtual data streaming & infinite scroll
+    FStreamingEnabled: Boolean;
+    FStreamBatchSize: Integer;
+    FStreamThreshold: Integer;
+    FIsStreaming: Boolean;
+    FOnNeedMoreData: TVeloxStreamRequestEvent;
+
     procedure QuickSortArray(var AItems: array of T; ALo, AHi: Integer;
       const ACompare: TVeloxCompareFunc<T>);
   public
@@ -73,6 +87,16 @@ type
     /// </summary>
     procedure AttachListView(const AListView: TListView);
     procedure EnableNativeDoubleBuffer;
+
+    /// <summary>
+    /// Checks if item index is near the end and triggers OnNeedMoreData if streaming is enabled
+    /// </summary>
+    procedure CheckStreaming(const ACurrentItemIndex: Integer);
+
+    /// <summary>
+    /// Appends ACount new rows to the virtual list view without resetting scroll position
+    /// </summary>
+    procedure AppendBatch(const ACount: Integer);
 
     /// <summary>
     /// Adds a column definition and creates the corresponding TListColumn
@@ -113,6 +137,12 @@ type
     property SortColumn: Integer read FSortColumn;
     property SortAscending: Boolean read FSortAscending;
     property TreeMode: Boolean read FTreeMode write FTreeMode;
+
+    property StreamingEnabled: Boolean read FStreamingEnabled write FStreamingEnabled;
+    property StreamBatchSize: Integer read FStreamBatchSize write FStreamBatchSize;
+    property StreamThreshold: Integer read FStreamThreshold write FStreamThreshold;
+    property IsStreaming: Boolean read FIsStreaming;
+    property OnNeedMoreData: TVeloxStreamRequestEvent read FOnNeedMoreData write FOnNeedMoreData;
   end;
 
 implementation
@@ -125,6 +155,11 @@ begin
   FSortColumn := 0;
   FSortAscending := True;
   FTreeMode := False;
+  FStreamingEnabled := False;
+  FStreamBatchSize := 50;
+  FStreamThreshold := 10;
+  FIsStreaming := False;
+  FOnNeedMoreData := nil;
   if Assigned(AListView) then
     AttachListView(AListView);
 end;
@@ -309,6 +344,36 @@ begin
   if W < AMinWidth then W := AMinWidth;
   if FListView.Columns[FListView.Columns.Count - 1].Width <> W then
     FListView.Columns[FListView.Columns.Count - 1].Width := W;
+end;
+
+procedure TVeloxVirtualGrid<T>.CheckStreaming(const ACurrentItemIndex: Integer);
+var
+  CurCount, Added: Integer;
+begin
+  if not FStreamingEnabled or FIsStreaming or not Assigned(FOnNeedMoreData) or not Assigned(FListView) then
+    Exit;
+
+  CurCount := FListView.Items.Count;
+  if ACurrentItemIndex >= (CurCount - FStreamThreshold) then
+  begin
+    FIsStreaming := True;
+    try
+      Added := 0;
+      FOnNeedMoreData(Self, CurCount, FStreamBatchSize, Added);
+      if Added > 0 then
+        AppendBatch(Added);
+    finally
+      FIsStreaming := False;
+    end;
+  end;
+end;
+
+procedure TVeloxVirtualGrid<T>.AppendBatch(const ACount: Integer);
+begin
+  if not Assigned(FListView) or (ACount <= 0) then Exit;
+  FListView.Items.Count := FListView.Items.Count + ACount;
+  StretchLastColumn;
+  FListView.Invalidate;
 end;
 
 end.

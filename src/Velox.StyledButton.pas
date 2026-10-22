@@ -55,7 +55,11 @@ type
     procedure MouseLeave; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure DoEnter; override;
+    procedure DoExit; override;
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
+    constructor Create(AOwner: TComponent); override;
     constructor CreateButton(AOwner: TComponent; AParent: TWinControl;
       const ALeft, ATop, AWidth, AHeight: Integer;
       const ACaption: string; const AColors: TVeloxThemeColors;
@@ -67,6 +71,7 @@ type
     property Variant: TVeloxButtonVariant read FVariant write SetVariant;
     property Active: Boolean read FActive write SetActive;
     property Radius: Integer read FRadius write FRadius;
+    property TabStop default True;
     property OnClick;
   end;
 
@@ -100,25 +105,56 @@ implementation
 
 { TVeloxStyledButton }
 
+constructor TVeloxStyledButton.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  DoubleBuffered := True;
+  TabStop := True;
+  Cursor := crHandPoint;
+  FRadius := 6;
+  FVariant := vsbSurface;
+  FColors := TVeloxUtils.GetThemeColors(vtDark);
+  FHot := False;
+  FPressed := False;
+  FActive := False;
+end;
+
 constructor TVeloxStyledButton.CreateButton(AOwner: TComponent; AParent: TWinControl;
   const ALeft, ATop, AWidth, AHeight: Integer;
   const ACaption: string; const AColors: TVeloxThemeColors;
   const AVariant: TVeloxButtonVariant;
   const AOnClick: TNotifyEvent);
 begin
-  inherited Create(AOwner);
+  Create(AOwner);
   Parent := AParent;
-  DoubleBuffered := True;
   SetBounds(ALeft, ATop, AWidth, AHeight);
-  Cursor := crHandPoint;
   FCaption := ACaption;
   FColors := AColors;
   FVariant := AVariant;
-  FRadius := 6;
-  FHot := False;
-  FPressed := False;
-  FActive := False;
   OnClick := AOnClick;
+end;
+
+procedure TVeloxStyledButton.DoEnter;
+begin
+  inherited DoEnter;
+  Invalidate;
+end;
+
+procedure TVeloxStyledButton.DoExit;
+begin
+  inherited DoExit;
+  Invalidate;
+end;
+
+procedure TVeloxStyledButton.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  if (Key = VK_SPACE) or (Key = VK_RETURN) then
+  begin
+    Click;
+    Key := 0;
+    Exit;
+  end;
+  inherited KeyDown(Key, Shift);
 end;
 
 procedure TVeloxStyledButton.ApplyColors(const AColors: TVeloxThemeColors);
@@ -239,6 +275,9 @@ begin
   end;
 
   TVeloxGdiPlus.DrawCard(Canvas, R, FillCol, BorderCol, FRadius);
+
+  if Focused then
+    TVeloxGdiPlus.DrawGlowBorder(Canvas, R, FColors.Accent, FRadius, 140);
 
   Canvas.Brush.Style := bsClear;
   Canvas.Font.Name := 'Segoe UI';
