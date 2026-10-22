@@ -1110,7 +1110,7 @@ var
   Colors: TVeloxThemeColors;
   MethodPillBg, KeyCol, StrCol, NumCol, BoolCol, StatusBg, StatusBorder, StatusTextCol: TColor;
   I, RowY, CurX, FirstQuote, SecondQuote, ColonPos: Integer;
-  BadgeW, BadgeH, DotD, DotGap, TextW, TotalW, StartX, DotY: Integer;
+  BadgeW, BadgeH, DotD, DotGap, TextW, TotalW, StartX, DotY, MethodPillW, ChevW, ChevX: Integer;
   LeadSpaces, KeyText, ColonText, ValText, NumStr: string;
   HasComma: Boolean;
   JsonLines: array[0..20] of string;
@@ -1202,11 +1202,27 @@ begin
     // 3. Top Address & Control Bar (Y: 58..98)
     TVeloxGdiPlus.DrawCard(C, Rect(28, 58, W - 28, 98), Colors.SurfaceCard, Colors.Border, 6);
 
-    // 3.1 Method Pill Selector: 'POST' with crisp vector chevron
-    TVeloxGdiPlus.DrawBadge(C, Rect(36, 64, 114, 92), 'POST', MethodPillBg, $000000);
+    // 3.1 Method Pill Selector: 'POST' with centered text and crisp vector chevron
+    TVeloxGdiPlus.DrawCard(C, Rect(36, 64, 114, 92), MethodPillBg, MethodPillBg, 14);
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := $000000;
+
+    MethodPillW := 114 - 36;
+    TextW := C.TextWidth('POST');
+    ChevW := 8;
+    DotGap := 6;
+    TotalW := TextW + DotGap + ChevW;
+    StartX := 36 + (MethodPillW - TotalW) div 2;
+
+    DrawShowcaseText(C, Rect(StartX, 64, StartX + TextW + 2, 92), 'POST', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Chevron icon centered with text
+    ChevX := StartX + TextW + DotGap;
     C.Pen.Color := $000000;
     C.Pen.Width := 2;
-    C.MoveTo(92, 76); C.LineTo(96, 80); C.LineTo(100, 76);
+    C.MoveTo(ChevX, 76); C.LineTo(ChevX + 4, 80); C.LineTo(ChevX + 8, 76);
 
     // 3.2 URL Address Bar
     TVeloxGdiPlus.DrawCard(C, Rect(122, 64, W - 238, 92), Colors.Background, Colors.Border, 4);
