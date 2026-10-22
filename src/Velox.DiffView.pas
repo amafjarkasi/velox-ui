@@ -45,12 +45,12 @@ type
     property Anchors;
     property ViewMode: TVeloxDiffViewMode read FViewMode write SetViewMode default vdvmUnified;
     property LineHeight: Integer read FLineHeight write SetLineHeight default 20;
-    property AddedBgColor: TColor read FAddedBgColor write FAddedBgColor default $1B3B2B;
-    property DeletedBgColor: TColor read FDeletedBgColor write FDeletedBgColor default $3D1A1F;
-    property AddedTextColor: TColor read FAddedTextColor write FAddedTextColor default $34D399;
-    property DeletedTextColor: TColor read FDeletedTextColor write FDeletedTextColor default $F87171;
+    property AddedBgColor: TColor read FAddedBgColor write FAddedBgColor default $1B351E;
+    property DeletedBgColor: TColor read FDeletedBgColor write FDeletedBgColor default $1F1836;
+    property AddedTextColor: TColor read FAddedTextColor write FAddedTextColor default $99D334;
+    property DeletedTextColor: TColor read FDeletedTextColor write FDeletedTextColor default $7171F8;
     property GutterBgColor: TColor read FGutterBgColor write FGutterBgColor default $11151F;
-    property GutterTextColor: TColor read FGutterTextColor write FGutterTextColor default $64748B;
+    property GutterTextColor: TColor read FGutterTextColor write FGutterTextColor default $8B7464;
     property Visible;
     property Enabled;
   end;
@@ -67,17 +67,40 @@ begin
   FScrollY := 0;
   FViewMode := vdvmUnified;
   FColors := TVeloxUtils.GetThemeColors(vtDark);
-  FAddedBgColor := $1B3B2B;
-  FDeletedBgColor := $3D1A1F;
-  FAddedTextColor := $34D399;
-  FDeletedTextColor := $F87171;
+  FAddedBgColor := $1B351E;
+  FDeletedBgColor := $1F1836;
+  FAddedTextColor := $99D334;
+  FDeletedTextColor := $7171F8;
   FGutterBgColor := $11151F;
-  FGutterTextColor := $64748B;
+  FGutterTextColor := $8B7464;
 end;
 
 procedure TVeloxDiffView.ApplyColors(const AColors: TVeloxThemeColors);
+var
+  R, G, B: Byte;
+  IsLight: Boolean;
 begin
   FColors := AColors;
+  FGutterBgColor := AColors.Surface;
+  FGutterTextColor := AColors.TextSecondary;
+  R := AColors.Background and $FF;
+  G := (AColors.Background shr 8) and $FF;
+  B := (AColors.Background shr 16) and $FF;
+  IsLight := (R * 299 + G * 587 + B * 114) > 128000;
+  if IsLight then
+  begin
+    FAddedBgColor := $E7FCDC;
+    FDeletedBgColor := $E2E2FE;
+    FAddedTextColor := $4AA316;
+    FDeletedTextColor := $2626DC;
+  end
+  else
+  begin
+    FAddedBgColor := $1B351E;
+    FDeletedBgColor := $1F1836;
+    FAddedTextColor := $99D334;
+    FDeletedTextColor := $7171F8;
+  end;
   Invalidate;
 end;
 

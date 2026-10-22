@@ -439,22 +439,26 @@ var
   C: TCanvas;
   Colors: TVeloxThemeColors;
   I, RowY, DotX, DotY, DotR: Integer;
-  DelBg, AddBg, PillBg, PillBorder, PillText: TColor;
+  DelBg, AddBg, DelSignCol, AddSignCol, PillBg, PillBorder, PillText: TColor;
 begin
   Colors := TVeloxUtils.GetThemeColors(ATheme);
 
   if ATheme = vtLight then
   begin
-    DelBg := $FEE2E2;
-    AddBg := $DCFCE7;
+    DelBg := $E2E2FE;
+    AddBg := $E7FCDC;
+    DelSignCol := $2626DC;
+    AddSignCol := $4AA316;
     PillBg := $E2E8F0;
     PillBorder := Colors.Border;
     PillText := Colors.TextPrimary;
   end
   else
   begin
-    DelBg := $1A0000;
-    AddBg := $0A2814;
+    DelBg := $1F1836;
+    AddBg := $1B351E;
+    DelSignCol := $7171F8;
+    AddSignCol := $99D334;
     PillBg := $1E293B;
     PillBorder := $38BDF8;
     PillText := $F8FAFC;
@@ -953,11 +957,32 @@ begin
     begin
       RowY := 436 + I * 25;
 
-      // Gutter Old & New Line Numbers
+      // 1. Line Background for added/deleted rows (covers code and sign area)
+      if I = 1 then
+      begin
+        C.Brush.Style := bsSolid;
+        C.Brush.Color := DelBg;
+        C.FillRect(Rect(465, RowY, 1100, RowY + 24));
+      end
+      else if (I = 2) or (I = 3) then
+      begin
+        C.Brush.Style := bsSolid;
+        C.Brush.Color := AddBg;
+        C.FillRect(Rect(465, RowY, 1100, RowY + 24));
+      end;
+
+      // 2. Gutter Old & New Line Numbers Background
       C.Brush.Style := bsSolid;
       C.Brush.Color := Colors.Surface;
       C.FillRect(Rect(400, RowY, 464, RowY + 24));
 
+      // 3. Gutter Separator Line
+      C.Pen.Color := Colors.Border;
+      C.Pen.Width := 1;
+      C.MoveTo(464, RowY);
+      C.LineTo(464, RowY + 24);
+
+      // 4. Line Numbers (Gutter Old: 402..430, Gutter New: 432..460)
       C.Brush.Style := bsClear;
       C.Font.Name := 'Consolas';
       C.Font.Size := 8;
@@ -968,89 +993,92 @@ begin
         0:
           begin
             DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '42', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '42', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            C.Font.Color := Colors.TextSecondary;
-            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  // Query undocumented uxtheme ordinals for dark scrollbars',
-              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            DrawShowcaseText(C, Rect(432, RowY, 460, RowY + 24), '42', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
           end;
         1:
-          begin
-            // Deleted Line (Red background)
-            C.Brush.Style := bsSolid;
-            C.Brush.Color := DelBg;
-            C.FillRect(Rect(464, RowY, 1100, RowY + 24));
-            C.Brush.Style := bsClear;
-            DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '43', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            // Crisp minus sign centered in gutter at MidX = 470, MidY = RowY + 12
-            C.Pen.Color := $F87171;
-            C.Pen.Width := 2;
-            C.MoveTo(467, RowY + 12); C.LineTo(474, RowY + 12);
-            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  SetWindowTheme(Handle, ''Explorer'', nil);',
-              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-          end;
+          DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '43', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
         2:
-          begin
-            // Added Line 1 (Green background)
-            C.Brush.Style := bsSolid;
-            C.Brush.Color := AddBg;
-            C.FillRect(Rect(464, RowY, 1100, RowY + 24));
-            C.Brush.Style := bsClear;
-            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '43', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            // Crisp plus sign centered in gutter at MidX = 470, MidY = RowY + 12
-            C.Pen.Color := $34D399;
-            C.Pen.Width := 2;
-            C.MoveTo(467, RowY + 12); C.LineTo(474, RowY + 12);
-            C.MoveTo(470, RowY + 9); C.LineTo(470, RowY + 16);
-            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  SetPreferredAppMode(AllowDarkMode); // Ordinal 135',
-              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-          end;
+          DrawShowcaseText(C, Rect(432, RowY, 460, RowY + 24), '43', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
         3:
-          begin
-            // Added Line 2 (Green background)
-            C.Brush.Style := bsSolid;
-            C.Brush.Color := AddBg;
-            C.FillRect(Rect(464, RowY, 1100, RowY + 24));
-            C.Brush.Style := bsClear;
-            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '44', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            // Crisp plus sign centered in gutter at MidX = 470, MidY = RowY + 12
-            C.Pen.Color := $34D399;
-            C.Pen.Width := 2;
-            C.MoveTo(467, RowY + 12); C.LineTo(474, RowY + 12);
-            C.MoveTo(470, RowY + 9); C.LineTo(470, RowY + 16);
-            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  SetWindowTheme(Handle, ''DarkMode_Explorer'', nil);',
-              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-          end;
+          DrawShowcaseText(C, Rect(432, RowY, 460, RowY + 24), '44', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
         4:
           begin
             DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '44', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '45', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            C.Font.Color := Colors.TextSecondary;
-            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  DwmSetWindowAttribute(Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, 1);',
-              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            DrawShowcaseText(C, Rect(432, RowY, 460, RowY + 24), '45', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
           end;
         5:
           begin
             DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '45', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '46', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            C.Font.Color := Colors.TextSecondary;
-            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), '  ApplySystemBackdrop(Handle, vsbMica); // Windows 11 22H2+ Mica',
-              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            DrawShowcaseText(C, Rect(432, RowY, 460, RowY + 24), '46', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
           end;
         6:
           begin
             DrawShowcaseText(C, Rect(402, RowY, 430, RowY + 24), '46', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            DrawShowcaseText(C, Rect(434, RowY, 460, RowY + 24), '47', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-            C.Font.Color := Colors.TextSecondary;
-            DrawShowcaseText(C, Rect(476, RowY, 1096, RowY + 24), 'end;',
-              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            DrawShowcaseText(C, Rect(432, RowY, 460, RowY + 24), '47', DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
           end;
       end;
 
-      // Gutter separator line
-      C.Pen.Color := Colors.Border;
-      C.Pen.Width := 1;
-      C.MoveTo(464, RowY);
-      C.LineTo(464, RowY + 24);
+      // 5. Dedicated 20px Sign Column (+ / -) perfectly centered at Rect(465, RowY, 485, RowY + 24)
+      C.Font.Size := 9;
+      C.Font.Style := [fsBold];
+      if I = 1 then
+      begin
+        C.Font.Color := DelSignCol;
+        DrawShowcaseText(C, Rect(465, RowY, 485, RowY + 24), '-', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+      end
+      else if (I = 2) or (I = 3) then
+      begin
+        C.Font.Color := AddSignCol;
+        DrawShowcaseText(C, Rect(465, RowY, 485, RowY + 24), '+', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+      end;
+
+      // 6. Code Text at uniform column starting at Rect(488, RowY, 1096, RowY + 24)
+      C.Font.Size := 8;
+      C.Font.Style := [];
+      case I of
+        0:
+          begin
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(488, RowY, 1096, RowY + 24), '  // Query undocumented uxtheme ordinals for dark scrollbars',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        1:
+          begin
+            C.Font.Color := DelSignCol;
+            DrawShowcaseText(C, Rect(488, RowY, 1096, RowY + 24), '  SetWindowTheme(Handle, ''Explorer'', nil);',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        2:
+          begin
+            C.Font.Color := AddSignCol;
+            DrawShowcaseText(C, Rect(488, RowY, 1096, RowY + 24), '  SetPreferredAppMode(AllowDarkMode); // Ordinal 135',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        3:
+          begin
+            C.Font.Color := AddSignCol;
+            DrawShowcaseText(C, Rect(488, RowY, 1096, RowY + 24), '  SetWindowTheme(Handle, ''DarkMode_Explorer'', nil);',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        4:
+          begin
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(488, RowY, 1096, RowY + 24), '  DwmSetWindowAttribute(Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, 1);',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        5:
+          begin
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(488, RowY, 1096, RowY + 24), '  ApplySystemBackdrop(Handle, vsbMica); // Windows 11 22H2+ Mica',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        6:
+          begin
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(488, RowY, 1096, RowY + 24), 'end;',
+              DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+      end;
     end;
 
     Result := SaveBitmapToPng(Bmp, AFilePath);
