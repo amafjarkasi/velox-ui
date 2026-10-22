@@ -8,6 +8,7 @@
   <a href="#-before-vs-after-85-less-boilerplate"><img src="https://img.shields.io/badge/Boilerplate%20Reduction--85%25%20LOC-10b981?style=for-the-badge" alt="Boilerplate Reduction" /></a>
   <a href="#-automated-verification-suite-315315-passing"><img src="https://img.shields.io/badge/Tests-315%2F315%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
   <a href="#-17-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win11%20Fluent-DWM%20Mica%20%7C%20GDI%2B%20%7C%20High--DPI-f59e0b?style=for-the-badge" alt="Win11 Fluent" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Changelog-v2.5.0-8b5cf6?style=for-the-badge" alt="Changelog" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f43f5e?style=for-the-badge" alt="License" /></a>
 </p>
 
@@ -48,6 +49,29 @@ Showcases the two-column property inspector ([`TVeloxPropertyGrid`](src/Velox.Pr
 <p align="center">
   <img src="resources/components_studio_light.png" alt="VeloxUI Controls Studio Light Mode" width="100%" />
 </p>
+
+---
+
+## 📝 Latest Updates & Changelog
+
+> Showing the 3 most recent updates. For full version history and release details, see **[CHANGELOG.md](CHANGELOG.md)**.
+
+### [v2.5.0] - 2026-10-22
+- **Pixel-Perfect Diff Visualizer (`Velox.DiffView`)**: Dedicated 20px centered sign column for `+`/`-` glyphs, uniform code column alignment, and corrected Delphi BGR `TColor` palette.
+- **Windows 11 DWM Desktop Acrylic (`Velox.Backdrop`)**: Real translucent blur-behind for floating popups and dialogs via `DWMSBT_TRANSIENTWINDOW`.
+- **Per-Monitor v2 Auto-Rescaling Canvas (`Velox.DpiCanvas`) & Focus Rings (`Velox.Accessibility`)**: High-DPI GDI+ graphics scaling and keyboard tab focus rings.
+- **Animated Collapsible Navigation Rail (`Velox.AppShell`)**: 60 FPS cubic-ease smooth transition between expanded and compact icon rail modes.
+- **Infinite Virtual Streaming (`Velox.VirtualGrid`)**: Lazy-loading and `AppendBatch` for high-throughput continuous telemetry.
+
+### [v2.4.0] - 2026-10-21
+- **Scalable Vector Icon Engine (`Velox.Icons`)**: 35+ anti-aliased geometric GDI+ vector icons without external asset or font dependencies.
+- **Responsive Stack Layout Panel (`Velox.Layout`)**: Added `TVeloxStackPanel` with auto-wrapping, gap spacing, and flex-style card arrangement.
+- **Sub-Pixel Text & Icon Alignment**: Fixed baseline alignment across buttons, pill tokens, pagination bars, and timeline event nodes.
+
+### [v2.3.0] - 2026-10-20
+- **8 Flagship Composite Components (73 Units Total)**: Added PropertyGrid Studio with Undo/Redo rollback, Myers Diff Inspector, `Win+V` Clipboard Palette, Multi-Host Network Ping Monitor, Task/Process Explorer, Audit Security Log, JSON Tree Viewer, and GitHub Update Flyout.
+
+👉 **[View the complete changelog and version history →](CHANGELOG.md)**
 
 ---
 
