@@ -1108,35 +1108,59 @@ var
   Bmp: TBitmap;
   C: TCanvas;
   Colors: TVeloxThemeColors;
-  I, RowY: Integer;
-  KeyCol, StrCol, NumCol, BoolCol, MethodPillBg: TColor;
-  LatencySamples: TSingleDynArray;
-  JsonLines: array[0..13] of string;
+  MethodPillBg, KeyCol, StrCol, NumCol, BoolCol, StatusBg, StatusBorder, StatusTextCol: TColor;
+  I, RowY, CurX, FirstQuote, SecondQuote, ColonPos: Integer;
+  LeadSpaces, KeyText, ColonText, ValText, NumStr: string;
+  HasComma: Boolean;
+  JsonLines: array[0..20] of string;
 begin
+  Result := False;
   Colors := TVeloxUtils.GetThemeColors(ATheme);
 
   if ATheme = vtLight then
   begin
-    MethodPillBg := $C78402; // Blue #0284C7
-    KeyCol := $0284C7;
-    StrCol := $16A34A;
-    NumCol := $D97706;
-    BoolCol := $7C3AED;
+    MethodPillBg := $D97706; // Blue/Amber
+    KeyCol := $B45309;
+    StrCol := $15803D;
+    NumCol := $C2410C;
+    BoolCol := $B91C1C;
+    StatusBg := $DCFCE7;
+    StatusBorder := $16A34A;
+    StatusTextCol := $15803D;
   end
   else
   begin
     MethodPillBg := $F8BD38; // Sky Blue #38BDF8
-    KeyCol := $F8BD38;
-    StrCol := $99D334;
-    NumCol := $0B9EF5;
-    BoolCol := $F755A8;
+    KeyCol := $F8BD38;       // #38BDF8 Sky Blue
+    StrCol := $99D334;       // #34D399 Emerald Green
+    NumCol := $0B9EF5;       // #F59E0B Amber
+    BoolCol := $7171F8;      // #F87171 Coral Rose
+    StatusBg := $143820;     // Dark Translucent Emerald
+    StatusBorder := $99D334; // Vibrant Emerald Border
+    StatusTextCol := $99D334;
   end;
 
-  SetLength(LatencySamples, 12);
-  LatencySamples[0] := 142; LatencySamples[1] := 138; LatencySamples[2] := 129;
-  LatencySamples[3] := 145; LatencySamples[4] := 118; LatencySamples[5] := 122;
-  LatencySamples[6] := 115; LatencySamples[7] := 118; LatencySamples[8] := 120;
-  LatencySamples[9] := 114; LatencySamples[10] := 119; LatencySamples[11] := 118;
+  JsonLines[0]  := '{';
+  JsonLines[1]  := '  "id": 149827361,';
+  JsonLines[2]  := '  "sha": "bada74e7c10b4f8a9102c77d612e",';
+  JsonLines[3]  := '  "ref": "refs/heads/master",';
+  JsonLines[4]  := '  "task": "deploy:production",';
+  JsonLines[5]  := '  "environment": "production",';
+  JsonLines[6]  := '  "description": "Deploying VeloxUI v2.5.0 to cluster",';
+  JsonLines[7]  := '  "creator": {';
+  JsonLines[8]  := '    "login": "amafjarkasi",';
+  JsonLines[9]  := '    "id": 482019,';
+  JsonLines[10] := '    "type": "User",';
+  JsonLines[11] := '    "site_admin": false';
+  JsonLines[12] := '  },';
+  JsonLines[13] := '  "created_at": "2026-10-22T04:29:31Z",';
+  JsonLines[14] := '  "updated_at": "2026-10-22T04:29:32Z",';
+  JsonLines[15] := '  "statuses_url": "https://api.github.com/.../statuses",';
+  JsonLines[16] := '  "repository_url": "https://api.github.com/repos/amafjarkasi/velox-ui",';
+  JsonLines[17] := '  "auto_merge": false,';
+  JsonLines[18] := '  "transient_environment": false,';
+  JsonLines[19] := '  "production_environment": true';
+  JsonLines[20] := '}';
 
   Bmp := TBitmap.Create;
   try
@@ -1166,8 +1190,8 @@ begin
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
     DrawShowcaseText(C, Rect(W - 100, 18, W - 78, 48), '_', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
-    DrawShowcaseText(C, Rect(W - 74, 18, W - 52, 48), #$25A2, DT_SINGLELINE or DT_VCENTER or DT_CENTER);
-    DrawShowcaseText(C, Rect(W - 48, 18, W - 26, 48), #$2715, DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 74, 18, W - 52, 48), '[ ]', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 48, 18, W - 26, 48), 'X', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // Titlebar bottom separator line
     C.Pen.Color := Colors.Border;
@@ -1177,8 +1201,11 @@ begin
     // 3. Top Address & Control Bar (Y: 58..98)
     TVeloxGdiPlus.DrawCard(C, Rect(28, 58, W - 28, 98), Colors.SurfaceCard, Colors.Border, 6);
 
-    // 3.1 Method Pill Selector: 'POST'
-    TVeloxGdiPlus.DrawBadge(C, Rect(36, 64, 114, 92), 'POST  '#$25BC, MethodPillBg, $000000);
+    // 3.1 Method Pill Selector: 'POST' with crisp vector chevron
+    TVeloxGdiPlus.DrawBadge(C, Rect(36, 64, 114, 92), 'POST', MethodPillBg, $000000);
+    C.Pen.Color := $000000;
+    C.Pen.Width := 2;
+    C.MoveTo(92, 76); C.LineTo(96, 80); C.LineTo(100, 76);
 
     // 3.2 URL Address Bar
     TVeloxGdiPlus.DrawCard(C, Rect(122, 64, W - 238, 92), Colors.Background, Colors.Border, 4);
@@ -1228,10 +1255,13 @@ begin
 
     // Section Category 1: Headers
     TVeloxGdiPlus.DrawCard(C, Rect(36, 148, 392, 172), Colors.Surface, Colors.Border, 4);
+    C.Pen.Color := Colors.Accent;
+    C.Pen.Width := 2;
+    C.MoveTo(44, 158); C.LineTo(48, 162); C.LineTo(52, 158);
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.Accent;
-    DrawShowcaseText(C, Rect(44, 148, 384, 172), #$25BC'  REQUEST HEADERS', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(58, 148, 384, 172), 'REQUEST HEADERS', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     // Property Grid Rows (Headers)
     for I := 0 to 3 do
@@ -1274,11 +1304,14 @@ begin
 
     // Section Category 2: Query Parameters
     TVeloxGdiPlus.DrawCard(C, Rect(36, 290, 392, 314), Colors.Surface, Colors.Border, 4);
+    C.Pen.Color := Colors.Accent;
+    C.Pen.Width := 2;
+    C.MoveTo(44, 300); C.LineTo(48, 304); C.LineTo(52, 300);
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.Accent;
-    DrawShowcaseText(C, Rect(44, 290, 384, 314), #$25BC'  QUERY PARAMETERS', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(58, 290, 384, 314), 'QUERY PARAMETERS', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     for I := 0 to 2 do
     begin
@@ -1333,117 +1366,161 @@ begin
     DrawShowcaseText(C, Rect(46, 508, 382, 524), '  -H "Accept: application/vnd.github..." \', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
     C.Font.Color := StrCol;
     DrawShowcaseText(C, Rect(46, 526, 382, 542), '  -d ''{"ref":"master","task":"deploy"}''', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-    C.Font.Color := Colors.Accent;
-    DrawShowcaseText(C, Rect(46, 552, 382, 574), #$2713' Click "cURL" button to copy command', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // 4.2 RIGHT PANEL: Response & Live Telemetry (Width 692px, Rect(410, 106, W - 28, 594))
+    // cURL Copy Hint with green vector checkmark
+    C.Pen.Color := $34D399;
+    C.Pen.Width := 2;
+    C.MoveTo(48, 562); C.LineTo(51, 565); C.LineTo(57, 558);
+
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(62, 552, 382, 574), 'Click "cURL" button to copy command', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 4.2 RIGHT PANEL: Response & Full Height Code Viewer (Width 692px, Rect(410, 106, W - 28, 594))
     TVeloxGdiPlus.DrawCard(C, Rect(410, 106, W - 28, 594), Colors.SurfaceCard, Colors.Border, 8);
 
     // Response Status Bar (Y: 112..146)
-    // Status Badge: 201 Created (Green)
-    TVeloxGdiPlus.DrawBadge(C, Rect(420, 114, 526, 140), '201 Created', $99D334, $000000);
-
-    // Response Duration Badge: 118 ms
-    TVeloxGdiPlus.DrawBadge(C, Rect(532, 114, 614, 140), '118 ms', Colors.Surface, Colors.TextPrimary);
-
-    // Response Payload Size Badge: 2.45 KB
-    TVeloxGdiPlus.DrawBadge(C, Rect(620, 114, 706, 140), '2.45 KB', Colors.Surface, Colors.TextPrimary);
-
-    // View Mode Tabs on Right
-    TVeloxGdiPlus.DrawCard(C, Rect(720, 114, 820, 140),
-      TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.28), Colors.Accent, 4);
+    // Fluent Status Badge: 201 Created (Emerald)
+    TVeloxGdiPlus.DrawCard(C, Rect(420, 114, 526, 140), StatusBg, StatusBorder, 4);
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := StatusTextCol;
+    C.Pen.Color := StatusTextCol;
+    C.Ellipse(430, 124, 438, 132);
+    C.Brush.Style := bsClear;
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
-    C.Font.Color := Colors.TextPrimary;
-    DrawShowcaseText(C, Rect(720, 114, 820, 140), 'Pretty JSON', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    C.Font.Color := StatusTextCol;
+    DrawShowcaseText(C, Rect(442, 114, 520, 140), '201 Created', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(826, 114, 882, 140), Colors.SurfaceCard, Colors.Border, 4);
+    // LATENCY IS FIXED TO THE TOP: Telemetry Capsule in Header Bar
+    TVeloxGdiPlus.DrawCard(C, Rect(532, 114, 714, 140), Colors.Surface, Colors.Border, 4);
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(542, 114, 592, 140), '118 ms', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    DrawShowcaseText(C, Rect(826, 114, 882, 140), 'Raw', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(592, 114, 708, 140), '(avg 124ms · pk 145ms)', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(888, 114, 998, 140), Colors.SurfaceCard, Colors.Border, 4);
-    DrawShowcaseText(C, Rect(888, 114, 998, 140), 'Diff vs Baseline', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    // Response Payload Size Badge
+    TVeloxGdiPlus.DrawCard(C, Rect(720, 114, 796, 140), Colors.Surface, Colors.Border, 4);
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(720, 114, 796, 140), '2.45 KB', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    TVeloxGdiPlus.DrawCard(C, Rect(1004, 114, 1076, 140), Colors.SurfaceCard, Colors.Border, 4);
-    DrawShowcaseText(C, Rect(1004, 114, 1076, 140), 'Latency', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    // View Mode Tabs on Right
+    TVeloxGdiPlus.DrawCard(C, Rect(806, 114, 894, 140),
+      TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.28), Colors.Accent, 4);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(806, 114, 894, 140), 'Pretty JSON', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(900, 114, 948, 140), Colors.SurfaceCard, Colors.Border, 4);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(900, 114, 948, 140), 'Raw', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(954, 114, 1038, 140), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(954, 114, 1038, 140), 'Diff Baseline', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(1044, 114, 1076, 140), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(1044, 114, 1076, 140), 'Latency', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // Separator line under response header
     C.Pen.Color := Colors.Border;
     C.Pen.Width := 1;
     C.MoveTo(410, 148); C.LineTo(W - 28, 148);
 
-    // Formatted JSON Response Body (Consolas 8pt with syntax highlighting)
-    JsonLines[0]  := '{';
-    JsonLines[1]  := '  "id": 149827361,';
-    JsonLines[2]  := '  "sha": "bada74e7c10b4f8",';
-    JsonLines[3]  := '  "ref": "refs/heads/master",';
-    JsonLines[4]  := '  "task": "deploy",';
-    JsonLines[5]  := '  "environment": "production",';
-    JsonLines[6]  := '  "description": "Deploying VeloxUI v2.5.0",';
-    JsonLines[7]  := '  "creator": { "login": "amafjarkasi", "type": "User", "site_admin": false },';
-    JsonLines[8]  := '  "created_at": "2026-10-22T04:29:31Z",';
-    JsonLines[9]  := '  "updated_at": "2026-10-22T04:29:32Z",';
-    JsonLines[10] := '  "statuses_url": "https://api.github.com/repos/amafjarkasi/velox-ui/deployments/149827361/statuses",';
-    JsonLines[11] := '  "repository_url": "https://api.github.com/repos/amafjarkasi/velox-ui",';
-    JsonLines[12] := '  "transient_environment": false';
-    JsonLines[13] := '}';
+    // Response Body: FULL HEIGHT SYNTAX-HIGHLIGHTED JSON (Y: 152..592)
+    // Left Line Numbers Gutter
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Surface;
+    C.FillRect(Rect(412, 150, 450, 592));
+
+    C.Pen.Color := Colors.Border;
+    C.Pen.Width := 1;
+    C.MoveTo(450, 150); C.LineTo(450, 592);
 
     C.Font.Name := 'Consolas';
     C.Font.Size := 8;
-    C.Font.Style := [];
 
-    for I := 0 to 13 do
+    for I := 0 to 20 do
     begin
-      RowY := 156 + I * 21;
-      case I of
-        0, 13:
-          begin
-            C.Font.Color := Colors.TextSecondary;
-            DrawShowcaseText(C, Rect(424, RowY, W - 40, RowY + 20), JsonLines[I], DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-          end;
-        1:
-          begin
-            C.Font.Color := KeyCol;
-            DrawShowcaseText(C, Rect(424, RowY, 490, RowY + 20), '  "id": ', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-            C.Font.Color := NumCol;
-            DrawShowcaseText(C, Rect(490, RowY, W - 40, RowY + 20), '149827361,', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-          end;
-        7, 12:
-          begin
-            C.Font.Color := KeyCol;
-            DrawShowcaseText(C, Rect(424, RowY, 620, RowY + 20), Copy(JsonLines[I], 1, 28), DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-            C.Font.Color := BoolCol;
-            DrawShowcaseText(C, Rect(620, RowY, W - 40, RowY + 20), Copy(JsonLines[I], 29, Length(JsonLines[I])), DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-          end;
+      RowY := 156 + I * 20;
+
+      // Line number in gutter
+      NumStr := IntToStr(I + 1);
+      C.Brush.Style := bsClear;
+      C.Font.Style := [];
+      C.Font.Color := Colors.TextSecondary;
+      C.TextOut(444 - C.TextWidth(NumStr), RowY + 2, NumStr);
+
+      CurX := 462;
+      FirstQuote := Pos('"', JsonLines[I]);
+
+      if (FirstQuote = 0) or (Pos(':', JsonLines[I]) = 0) then
+      begin
+        // Braces / Structural lines: '{', '}', '  },'
+        C.Font.Color := Colors.TextSecondary;
+        C.TextOut(CurX, RowY + 2, JsonLines[I]);
+      end
       else
+      begin
+        // 1. Leading Indent
+        if FirstQuote > 1 then
+        begin
+          LeadSpaces := Copy(JsonLines[I], 1, FirstQuote - 1);
+          C.TextOut(CurX, RowY + 2, LeadSpaces);
+          Inc(CurX, C.TextWidth(LeadSpaces));
+        end;
+
+        // 2. Key
+        SecondQuote := FirstQuote + 1;
+        while (SecondQuote <= Length(JsonLines[I])) and (JsonLines[I][SecondQuote] <> '"') do
+          Inc(SecondQuote);
+
+        KeyText := Copy(JsonLines[I], FirstQuote, SecondQuote - FirstQuote + 1);
         C.Font.Color := KeyCol;
-        DrawShowcaseText(C, Rect(424, RowY, 520, RowY + 20), Copy(JsonLines[I], 1, 14), DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-        C.Font.Color := StrCol;
-        DrawShowcaseText(C, Rect(520, RowY, W - 40, RowY + 20), Copy(JsonLines[I], 15, Length(JsonLines[I])), DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+        C.TextOut(CurX, RowY + 2, KeyText);
+        Inc(CurX, C.TextWidth(KeyText));
+
+        // 3. Colon & separator
+        ColonPos := Pos(':', JsonLines[I]);
+        ColonText := ': ';
+        C.Font.Color := Colors.TextSecondary;
+        C.TextOut(CurX, RowY + 2, ColonText);
+        Inc(CurX, C.TextWidth(ColonText));
+
+        // 4. Value
+        ValText := Trim(Copy(JsonLines[I], ColonPos + 1, Length(JsonLines[I])));
+        HasComma := False;
+        if (Length(ValText) > 0) and (ValText[Length(ValText)] = ',') then
+        begin
+          HasComma := True;
+          Delete(ValText, Length(ValText), 1);
+        end;
+
+        if (Length(ValText) > 0) and (ValText[1] = '"') then
+          C.Font.Color := StrCol
+        else if (ValText = 'true') or (ValText = 'false') or (ValText = 'null') then
+          C.Font.Color := BoolCol
+        else if (Length(ValText) > 0) and (ValText[1] in ['0'..'9', '-']) then
+          C.Font.Color := NumCol
+        else
+          C.Font.Color := Colors.TextSecondary;
+
+        C.TextOut(CurX, RowY + 2, ValText);
+        Inc(CurX, C.TextWidth(ValText));
+
+        if HasComma then
+        begin
+          C.Font.Color := Colors.TextSecondary;
+          C.TextOut(CurX, RowY + 2, ',');
+        end;
       end;
     end;
-
-    // Latency Telemetry Sparkline Card (Y: 480..584)
-    TVeloxGdiPlus.DrawCard(C, Rect(420, 480, W - 38, 584), Colors.Surface, Colors.Border, 6);
-
-    // Telemetry header
-    C.Font.Name := 'Segoe UI';
-    C.Font.Size := 8;
-    C.Font.Style := [fsBold];
-    C.Font.Color := Colors.TextPrimary;
-    DrawShowcaseText(C, Rect(432, 486, 600, 506), 'HTTP LATENCY TELEMETRY', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
-
-    C.Font.Style := [];
-    C.Font.Color := Colors.TextSecondary;
-    DrawShowcaseText(C, Rect(606, 486, W - 48, 506),
-      'Latest: 118 ms   |   Min: 114 ms   |   Avg: 124 ms   |   Peak: 145 ms (12 calls)',
-      DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
-
-    // GDI+ Anti-Aliased Sparkline
-    TVeloxGdiPlus.DrawSparkline(C, Rect(432, 510, W - 48, 574), LatencySamples,
-      Colors.Accent, TVeloxUtils.BlendColor(Colors.Surface, Colors.Accent, 0.22));
 
     // 5. Bottom Footer Status Bar (Y: 602..628)
     C.Brush.Style := bsSolid;
@@ -1460,7 +1537,7 @@ begin
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
     DrawShowcaseText(C, Rect(30, 604, W - 30, 626),
-      'WinHTTP 5.1 TLS 1.3  |  HTTP/2 Multiplexing  |  Payload: 2.45 KB  |  Baseline Snapshot: 2.40 KB stored  |  TVeloxRestStudio v2.5.0',
+      'WinHTTP 5.1 TLS 1.3  |  HTTP/2 Multiplexing  |  Payload: 2.45 KB  |  Response Time: 118 ms  |  TVeloxRestStudio v2.5.0',
       DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     Result := SaveBitmapToPng(Bmp, AFilePath);

@@ -78,6 +78,7 @@ type
   protected
     procedure Paint; override;
   public
+    constructor Create(AOwner: TComponent); override;
     constructor CreateViewer(AOwner: TComponent; AParent: TWinControl;
       const ALeft, ATop, AWidth, AHeight: Integer;
       const ALang: TVeloxSyntaxLang; const AColors: TVeloxThemeColors);
@@ -292,20 +293,27 @@ end;
 
 { TVeloxCodeViewer }
 
-constructor TVeloxCodeViewer.CreateViewer(AOwner: TComponent; AParent: TWinControl;
-  const ALeft, ATop, AWidth, AHeight: Integer;
-  const ALang: TVeloxSyntaxLang; const AColors: TVeloxThemeColors);
+constructor TVeloxCodeViewer.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  Parent := AParent;
   DoubleBuffered := True;
-  SetBounds(ALeft, ATop, AWidth, AHeight);
-  FLang := ALang;
-  FColors := AColors;
+  FLang := vslPascal;
+  FColors := TVeloxUtils.GetThemeColors(vtDark);
   FLineHeight := 18;
   FShowLineNumbers := True;
   FLines := TStringList.Create;
   FLines.OnChange := LinesChanged;
+end;
+
+constructor TVeloxCodeViewer.CreateViewer(AOwner: TComponent; AParent: TWinControl;
+  const ALeft, ATop, AWidth, AHeight: Integer;
+  const ALang: TVeloxSyntaxLang; const AColors: TVeloxThemeColors);
+begin
+  Create(AOwner);
+  Parent := AParent;
+  SetBounds(ALeft, ATop, AWidth, AHeight);
+  FLang := ALang;
+  FColors := AColors;
 end;
 
 destructor TVeloxCodeViewer.Destroy;

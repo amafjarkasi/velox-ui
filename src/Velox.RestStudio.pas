@@ -36,7 +36,8 @@ uses
   Velox.PropertyGrid,
   Velox.StyledButton,
   Velox.Clipboard,
-  Velox.Export;
+  Velox.Export,
+  Velox.SyntaxHighlight;
 
 type
   TVeloxRestMethod = (vrmGET, vrmPOST, vrmPUT, vrmDELETE, vrmPATCH, vrmHEAD);
@@ -85,6 +86,7 @@ type
     FBtnViewDiff: TVeloxStyledButton;
     FBtnViewLatency: TVeloxStyledButton;
     FResponseMemo: TMemo;
+    FResponseCodeView: TVeloxCodeViewer;
     FDiffView: TVeloxDiffView;
     FLatencyPanel: TPanel;
     FFooterBar: TPanel;
@@ -386,29 +388,36 @@ begin
   FBtnViewPretty.Parent := FRespHeaderBar;
   FBtnViewPretty.Caption := 'Pretty JSON';
   FBtnViewPretty.Variant := vsbPrimary;
-  FBtnViewPretty.SetBounds(200, 4, 82, 26);
+  FBtnViewPretty.SetBounds(286, 4, 86, 26);
   FBtnViewPretty.OnClick := HandleViewPrettyClick;
 
   FBtnViewRaw := TVeloxStyledButton.Create(Self);
   FBtnViewRaw.Parent := FRespHeaderBar;
   FBtnViewRaw.Caption := 'Raw';
   FBtnViewRaw.Variant := vsbOutline;
-  FBtnViewRaw.SetBounds(288, 4, 54, 26);
+  FBtnViewRaw.SetBounds(378, 4, 54, 26);
   FBtnViewRaw.OnClick := HandleViewRawClick;
 
   FBtnViewDiff := TVeloxStyledButton.Create(Self);
   FBtnViewDiff.Parent := FRespHeaderBar;
   FBtnViewDiff.Caption := 'Diff vs Baseline';
   FBtnViewDiff.Variant := vsbOutline;
-  FBtnViewDiff.SetBounds(348, 4, 108, 26);
+  FBtnViewDiff.SetBounds(438, 4, 108, 26);
   FBtnViewDiff.OnClick := HandleViewDiffClick;
 
   FBtnViewLatency := TVeloxStyledButton.Create(Self);
   FBtnViewLatency.Parent := FRespHeaderBar;
   FBtnViewLatency.Caption := 'Latency';
   FBtnViewLatency.Variant := vsbOutline;
-  FBtnViewLatency.SetBounds(462, 4, 68, 26);
+  FBtnViewLatency.SetBounds(552, 4, 68, 26);
   FBtnViewLatency.OnClick := HandleViewLatencyClick;
+
+  FResponseCodeView := TVeloxCodeViewer.Create(Self);
+  FResponseCodeView.Parent := FRightPanel;
+  FResponseCodeView.Align := alClient;
+  FResponseCodeView.Lang := vslJson;
+  FResponseCodeView.ShowLineNumbers := True;
+  FResponseCodeView.SetCode('// Click Send to execute request against endpoint.');
 
   FResponseMemo := TMemo.Create(Self);
   FResponseMemo.Parent := FRightPanel;
@@ -418,6 +427,7 @@ begin
   FResponseMemo.Font.Size := 9;
   FResponseMemo.ReadOnly := True;
   FResponseMemo.ScrollBars := ssBoth;
+  FResponseMemo.Visible := False;
   FResponseMemo.Text := '// Click Send to execute request against endpoint.';
 
   FDiffView := TVeloxDiffView.Create(Self);
@@ -464,6 +474,8 @@ begin
 
   FResponseMemo.Color := FColors.SurfaceCard;
   FResponseMemo.Font.Color := FColors.TextPrimary;
+  if Assigned(FResponseCodeView) then
+    FResponseCodeView.ApplyColors(FColors);
 
   FLatencyPanel.Color := FColors.SurfaceCard;
 
@@ -513,7 +525,8 @@ begin
   FBtnViewDiff.Invalidate;
   FBtnViewLatency.Invalidate;
 
-  FResponseMemo.Visible := (FViewMode = vrvmPrettyJson) or (FViewMode = vrvmRawText);
+  FResponseCodeView.Visible := (FViewMode = vrvmPrettyJson);
+  FResponseMemo.Visible := (FViewMode = vrvmRawText);
   FDiffView.Visible := (FViewMode = vrvmDiffBaseline);
   FLatencyPanel.Visible := (FViewMode = vrvmLatency);
 
@@ -525,13 +538,17 @@ begin
       if Assigned(J) then
       begin
         try
+          FResponseCodeView.SetCode(J.Serialize(True));
           FResponseMemo.Text := J.Serialize(True);
         finally
           J.Free;
         end;
       end
       else
+      begin
+        FResponseCodeView.SetCode(FLastResponse.Body);
         FResponseMemo.Text := FLastResponse.Body;
+      end;
     end;
   end
   else if FViewMode = vrvmRawText then
@@ -881,12 +898,19 @@ begin
   // Status Badge
   TVeloxGdiPlus.DrawBadge(C, Rect(8, 7, 100, 27), StatusTxt, BadgeCol, $000000);
 
-  // Time Badge
+  // Latency Telemetry Capsule (Fixed to the top)
   if FLastElapsedMs > 0 then
-    TimeTxt := IntToStr(FLastElapsedMs) + ' ms'
+    TimeTxt := Format('%d ms (avg %.0fms)', [FLastElapsedMs, FLatencyHistory.Average])
   else
     TimeTxt := '-- ms';
-  TVeloxGdiPlus.DrawBadge(C, Rect(106, 7, 186, 27), TimeTxt, FColors.SurfaceCard, FColors.TextPrimary);
+  TVeloxGdiPlus.DrawBadge(C, Rect(106, 7, 212, 27), TimeTxt, FColors.SurfaceCard, FColors.TextPrimary);
+
+  // Payload Size Badge
+  if Length(FLastResponse.Body) > 0 then
+    SizeTxt := TVeloxUtils.FormatBytes(Length(FLastResponse.Body))
+  else
+    SizeTxt := '-- B';
+  TVeloxGdiPlus.DrawBadge(C, Rect(218, 7, 280, 27), SizeTxt, FColors.SurfaceCard, FColors.TextSecondary);
 
   // Bottom Border
   C.Pen.Color := FColors.Border;
