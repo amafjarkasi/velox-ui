@@ -8,6 +8,7 @@ The project adheres to [Semantic Versioning](https://semver.org/).
 ## [v2.5.0] - 2026-10-22
 
 ### Added
+- **Embedded HTTP Workbench & API Debugger (`Velox.RestStudio` - Unit #79)**: Full-featured API debugger combining native WinHTTP TLS 1.3 requests, two-column header & parameter property grid, JSON pretty-printer, payload baseline regression diffing (`TVeloxDiffView`), latency telemetry sparklines (`TVeloxRingBuffer`), and 1-click executable cURL export.
 - **Windows 11 DWM Desktop Acrylic (`Velox.Backdrop`)**: Zero-dependency integration of `DWMSBT_TRANSIENTWINDOW` (Attribute 38) and `DWMWA_SYSTEMBACKDROP_TYPE` for real desktop translucent blur-behind on popup flyouts and floating dialogs.
 - **Focus Rings & Tab Traversal (`Velox.Accessibility`)**: Universal `TVeloxFocusManager` and `TVeloxFocusRing` handling standard Windows tab/shift-tab cycling, directional arrows, and high-contrast Fluent outer focus rings.
 - **Per-Monitor v2 Auto-Rescaling Canvas (`Velox.DpiCanvas`)**: DPI-aware GDI+ drawing context with automatic scaling of rectangles, fonts, cards, and icons across mixed-DPI multi-monitor setups.

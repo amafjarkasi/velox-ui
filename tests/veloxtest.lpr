@@ -95,7 +95,8 @@ uses
   Velox.Layout,
   Velox.DpiCanvas,
   Velox.Accessibility,
-  Velox.Backdrop;
+  Velox.Backdrop,
+  Velox.RestStudio;
 
 type
   TTestRow = record
@@ -346,7 +347,7 @@ var
   ProcMask, SysMask: NativeUInt;
   GdiCnt, UserCnt: Cardinal;
   VerInfo: TVeloxFileVersionInfo;
-  CmdLine, SysRoot, CsvStr, JsonStr, MdStr, CheatStr, TmpIni, GalleryDarkPath, GalleryLightPath, StudioDarkPath, StudioLightPath: string;
+  CmdLine, SysRoot, CsvStr, JsonStr, MdStr, CheatStr, TmpIni, GalleryDarkPath, GalleryLightPath, StudioDarkPath, StudioLightPath, RestDarkPath, RestLightPath: string;
   Hotkeys: TVeloxHotkeyRegistry;
   TestKey: Word;
   Cfg: TVeloxConfig;
@@ -450,12 +451,13 @@ var
   DpiCanvas: TVeloxDpiCanvas;
   FocusMgr: TVeloxFocusManager;
   FocusBtn1, FocusBtn2: TVeloxStyledButton;
+  RestStudio: TVeloxRestStudio;
   DensityRowH, DensityFontSz, DensityPad: Integer;
   AccHov, AccPress, AccTint: TColor;
   I: Integer;
 begin
   try
-    WriteLn('=== VeloxUI Automated Verification Suite (78 Modules) ===');
+    WriteLn('=== VeloxUI Automated Verification Suite (79 Modules) ===');
 
     // 1. Ring Buffer & Telemetry Primitives
     WriteLn('[1/78] Testing TVeloxRingBuffer, TVeloxUtils & Customization Tokens...');
@@ -1112,6 +1114,8 @@ begin
     GalleryLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\component_gallery_light.png');
     StudioDarkPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\components_studio.png');
     StudioLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\components_studio_light.png');
+    RestDarkPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\rest_studio.png');
+    RestLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\rest_studio_light.png');
     Check('screenshot: RenderComponentShowcase (Dark Mode) saves PNG',
       TVeloxScreenshot.RenderComponentShowcase(GalleryDarkPath, vtDark) and FileExists(GalleryDarkPath));
     Check('screenshot: RenderComponentShowcase (Light Mode) saves PNG',
@@ -1120,6 +1124,10 @@ begin
       TVeloxScreenshot.RenderStudioShowcase(StudioDarkPath, vtDark) and FileExists(StudioDarkPath));
     Check('screenshot: RenderStudioShowcase (Light Mode) saves PNG',
       TVeloxScreenshot.RenderStudioShowcase(StudioLightPath, vtLight) and FileExists(StudioLightPath));
+    Check('screenshot: RenderRestStudioShowcase (Dark Mode) saves PNG',
+      TVeloxScreenshot.RenderRestStudioShowcase(RestDarkPath, vtDark) and FileExists(RestDarkPath));
+    Check('screenshot: RenderRestStudioShowcase (Light Mode) saves PNG',
+      TVeloxScreenshot.RenderRestStudioShowcase(RestLightPath, vtLight) and FileExists(RestLightPath));
 
     // 31. Zero-Dependency RFC-8259 JSON Reader & Builder (TVeloxJson)
     WriteLn('[31/78] Testing TVeloxJson (RFC-8259 Parser, Path Navigation & Builder)...');
@@ -1981,7 +1989,7 @@ begin
     end;
 
     // 78. Windows 11 DWM Desktop Acrylic & System Blur (TVeloxBackdrop)
-    WriteLn('[78/78] Testing TVeloxBackdrop (DWM Desktop Acrylic & System Blur)...');
+    WriteLn('[78/79] Testing TVeloxBackdrop (DWM Desktop Acrylic & System Blur)...');
     Frm := TForm.CreateNew(nil);
     try
       Check('backdrop: SupportsDarkMode returns valid boolean on NT', TVeloxBackdrop.SupportsDarkMode or not TVeloxBackdrop.SupportsDarkMode);
@@ -1990,6 +1998,29 @@ begin
       Check('backdrop: ApplyBackdrop with vbkMica guards HWND 0 cleanly', not TVeloxBackdrop.ApplyBackdrop(0, vbkMica, True));
       TVeloxBackdrop.ConfigureFloatingPopup(Frm, True);
       Check('backdrop: ConfigureFloatingPopup sets bsNone border style', Frm.BorderStyle = bsNone);
+    finally
+      Frm.Free;
+    end;
+
+    // 79. Embedded HTTP Workbench & API Debugger (TVeloxRestStudio)
+    WriteLn('[79/79] Testing TVeloxRestStudio (API Workbench, cURL, Latency & Diff)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      RestStudio := TVeloxRestStudio.Create(Frm);
+      RestStudio.Parent := Frm;
+      RestStudio.SetBounds(0, 0, 860, 540);
+      Check('reststudio: Method defaults to vrmGET', RestStudio.Method = vrmGET);
+      RestStudio.SetEndpoint(vrmPOST, 'https://api.github.com/repos/amafjarkasi/velox-ui', '{"name":"velox"}');
+      Check('reststudio: SetEndpoint updates method to POST', RestStudio.Method = vrmPOST);
+      Check('reststudio: BuildEffectiveUrl appends query params', Pos('page=1', RestStudio.BuildEffectiveUrl) > 0);
+      Check('reststudio: BuildHeadersString contains Content-Type', Pos('application/json', RestStudio.BuildHeadersString) > 0);
+      Check('reststudio: GenerateCurlCommand outputs curl CLI command', Pos('curl -X POST', RestStudio.GenerateCurlCommand) > 0);
+      Check('reststudio: MethodToString maps correctly', TVeloxRestStudio.MethodToString(vrmDELETE) = 'DELETE');
+      Check('reststudio: StringToMethod parses method', TVeloxRestStudio.StringToMethod('PATCH') = vrmPATCH);
+      RestStudio.SaveCurrentAsBaseline;
+      Check('reststudio: SaveCurrentAsBaseline saves string', RestStudio.BaselineResponse = RestStudio.Response.Body);
+      RestStudio.ViewMode := vrvmLatency;
+      Check('reststudio: ViewMode updates cleanly', RestStudio.ViewMode = vrvmLatency);
     finally
       Frm.Free;
     end;

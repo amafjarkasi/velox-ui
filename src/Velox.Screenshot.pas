@@ -68,6 +68,12 @@ type
     /// </summary>
     class function RenderStudioShowcase(const AFilePath: string;
       const ATheme: TVeloxTheme = vtDark): Boolean; static;
+
+    /// <summary>
+    /// Renders an end-to-end pixel-perfect screenshot of the REST API Workbench & Debugger Studio (TVeloxRestStudio)
+    /// </summary>
+    class function RenderRestStudioShowcase(const AFilePath: string;
+      const ATheme: TVeloxTheme = vtDark): Boolean; static;
   end;
 
 implementation
@@ -1080,6 +1086,376 @@ begin
           end;
       end;
     end;
+
+    Result := SaveBitmapToPng(Bmp, AFilePath);
+  finally
+    Bmp.Free;
+  end;
+end;
+
+class function TVeloxScreenshot.RenderRestStudioShowcase(const AFilePath: string;
+  const ATheme: TVeloxTheme): Boolean;
+const
+  W = 1120;
+  H = 640;
+var
+  Bmp: TBitmap;
+  C: TCanvas;
+  Colors: TVeloxThemeColors;
+  I, RowY: Integer;
+  KeyCol, StrCol, NumCol, BoolCol, MethodPillBg: TColor;
+  LatencySamples: TSingleDynArray;
+  JsonLines: array[0..13] of string;
+begin
+  Colors := TVeloxUtils.GetThemeColors(ATheme);
+
+  if ATheme = vtLight then
+  begin
+    MethodPillBg := $C78402; // Blue #0284C7
+    KeyCol := $0284C7;
+    StrCol := $16A34A;
+    NumCol := $D97706;
+    BoolCol := $7C3AED;
+  end
+  else
+  begin
+    MethodPillBg := $F8BD38; // Sky Blue #38BDF8
+    KeyCol := $F8BD38;
+    StrCol := $99D334;
+    NumCol := $0B9EF5;
+    BoolCol := $F755A8;
+  end;
+
+  SetLength(LatencySamples, 12);
+  LatencySamples[0] := 142; LatencySamples[1] := 138; LatencySamples[2] := 129;
+  LatencySamples[3] := 145; LatencySamples[4] := 118; LatencySamples[5] := 122;
+  LatencySamples[6] := 115; LatencySamples[7] := 118; LatencySamples[8] := 120;
+  LatencySamples[9] := 114; LatencySamples[10] := 119; LatencySamples[11] := 118;
+
+  Bmp := TBitmap.Create;
+  try
+    Bmp.PixelFormat := pf24bit;
+    Bmp.SetSize(W, H);
+    C := Bmp.Canvas;
+
+    // 1. Background fill
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Background;
+    C.FillRect(Rect(0, 0, W, H));
+
+    // Outer Main Window Frame
+    TVeloxGdiPlus.DrawCard(C, Rect(16, 14, W - 16, H - 14), Colors.Surface, Colors.Border, 10);
+
+    // 2. Title Bar (Y: 14..50)
+    C.Brush.Style := bsClear;
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 9;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 18, 700, 48),
+      'VeloxUI REST Studio - Native WinHTTP API Workbench, JSON Inspector & Telemetry');
+
+    // Titlebar Window Controls (_ [] X)
+    C.Font.Size := 9;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(W - 100, 18, W - 78, 48), '_', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 74, 18, W - 52, 48), #$25A2, DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 48, 18, W - 26, 48), #$2715, DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Titlebar bottom separator line
+    C.Pen.Color := Colors.Border;
+    C.Pen.Width := 1;
+    C.MoveTo(16, 50); C.LineTo(W - 16, 50);
+
+    // 3. Top Address & Control Bar (Y: 58..98)
+    TVeloxGdiPlus.DrawCard(C, Rect(28, 58, W - 28, 98), Colors.SurfaceCard, Colors.Border, 6);
+
+    // 3.1 Method Pill Selector: 'POST'
+    TVeloxGdiPlus.DrawBadge(C, Rect(36, 64, 114, 92), 'POST  '#$25BC, MethodPillBg, $000000);
+
+    // 3.2 URL Address Bar
+    TVeloxGdiPlus.DrawCard(C, Rect(122, 64, W - 238, 92), Colors.Background, Colors.Border, 4);
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 9;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(134, 64, W - 248, 92),
+      'https://api.github.com/repos/amafjarkasi/velox-ui/deployments', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 3.3 Action Buttons
+    // Send Button (Primary Accent)
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 230, 64, W - 164, 92), Colors.Accent, Colors.Accent, 4);
+    C.Font.Style := [fsBold];
+    C.Font.Color := $FFFFFF;
+    DrawShowcaseText(C, Rect(W - 230, 64, W - 164, 92), 'Send', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // cURL Export Button (Outline)
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 158, 64, W - 100, 92), Colors.SurfaceCard, Colors.Border, 4);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(W - 158, 64, W - 100, 92), 'cURL', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Baseline Snapshot Button (Surface)
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 94, 64, W - 36, 92), Colors.SurfaceCard, Colors.Border, 4);
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(W - 94, 64, W - 36, 92), 'Baseline', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // 4. Split Body Panels (Y: 106..594)
+    // 4.1 LEFT PANEL: Request Configuration (Width 370px, Rect(28, 106, 400, 594))
+    TVeloxGdiPlus.DrawCard(C, Rect(28, 106, 400, 594), Colors.SurfaceCard, Colors.Border, 8);
+
+    // Request Tabs
+    TVeloxGdiPlus.DrawCard(C, Rect(36, 114, 180, 138),
+      TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.28), Colors.Accent, 4);
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(36, 114, 180, 138), 'Headers & Params (6)', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(186, 114, 280, 138), Colors.SurfaceCard, Colors.Border, 4);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(186, 114, 280, 138), 'Body (JSON)', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(286, 114, 346, 138), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(286, 114, 346, 138), 'Format', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Section Category 1: Headers
+    TVeloxGdiPlus.DrawCard(C, Rect(36, 148, 392, 172), Colors.Surface, Colors.Border, 4);
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(44, 148, 384, 172), #$25BC'  REQUEST HEADERS', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // Property Grid Rows (Headers)
+    for I := 0 to 3 do
+    begin
+      RowY := 176 + I * 26;
+      C.Font.Name := 'Consolas';
+      C.Font.Size := 8;
+      C.Font.Style := [];
+      C.Font.Color := Colors.TextSecondary;
+      case I of
+        0:
+          begin
+            DrawShowcaseText(C, Rect(44, RowY, 170, RowY + 24), 'Content-Type', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(174, RowY, 388, RowY + 24), 'application/json', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        1:
+          begin
+            DrawShowcaseText(C, Rect(44, RowY, 170, RowY + 24), 'Authorization', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(174, RowY, 388, RowY + 24), 'Bearer ghp_9xK8...4bQ', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        2:
+          begin
+            DrawShowcaseText(C, Rect(44, RowY, 170, RowY + 24), 'Accept', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(174, RowY, 388, RowY + 24), 'application/vnd.github.v3+json', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        3:
+          begin
+            DrawShowcaseText(C, Rect(44, RowY, 170, RowY + 24), 'User-Agent', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(174, RowY, 388, RowY + 24), 'VeloxUI-RestStudio/2.5', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+      end;
+      C.Pen.Color := Colors.Border;
+      C.Pen.Width := 1;
+      C.MoveTo(44, RowY + 25); C.LineTo(388, RowY + 25);
+    end;
+
+    // Section Category 2: Query Parameters
+    TVeloxGdiPlus.DrawCard(C, Rect(36, 290, 392, 314), Colors.Surface, Colors.Border, 4);
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(44, 290, 384, 314), #$25BC'  QUERY PARAMETERS', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    for I := 0 to 2 do
+    begin
+      RowY := 318 + I * 26;
+      C.Font.Name := 'Consolas';
+      C.Font.Size := 8;
+      C.Font.Style := [];
+      C.Font.Color := Colors.TextSecondary;
+      case I of
+        0:
+          begin
+            DrawShowcaseText(C, Rect(44, RowY, 170, RowY + 24), 'environment', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(174, RowY, 388, RowY + 24), 'production', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        1:
+          begin
+            DrawShowcaseText(C, Rect(44, RowY, 170, RowY + 24), 'per_page', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(174, RowY, 388, RowY + 24), '50', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        2:
+          begin
+            DrawShowcaseText(C, Rect(44, RowY, 170, RowY + 24), 'page', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            C.Font.Color := Colors.TextPrimary;
+            DrawShowcaseText(C, Rect(174, RowY, 388, RowY + 24), '1', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+      end;
+      C.Pen.Color := Colors.Border;
+      C.Pen.Width := 1;
+      C.MoveTo(44, RowY + 25); C.LineTo(388, RowY + 25);
+    end;
+
+    // cURL Preview Card in Left Panel
+    TVeloxGdiPlus.DrawCard(C, Rect(36, 408, 392, 584), Colors.Background, Colors.Border, 6);
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(46, 414, 382, 432), 'GENERATED cURL COMMAND:', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    C.Font.Name := 'Consolas';
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(46, 436, 382, 452), 'curl -X POST \', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(46, 454, 382, 470), '  "https://api.github.com/.../deployments" \', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(46, 472, 382, 488), '  -H "Content-Type: application/json" \', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(46, 490, 382, 506), '  -H "Authorization: Bearer ghp_9x..." \', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    DrawShowcaseText(C, Rect(46, 508, 382, 524), '  -H "Accept: application/vnd.github..." \', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Color := StrCol;
+    DrawShowcaseText(C, Rect(46, 526, 382, 542), '  -d ''{"ref":"master","task":"deploy"}''', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+    C.Font.Color := Colors.Accent;
+    DrawShowcaseText(C, Rect(46, 552, 382, 574), #$2713' Click "cURL" button to copy command', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    // 4.2 RIGHT PANEL: Response & Live Telemetry (Width 692px, Rect(410, 106, W - 28, 594))
+    TVeloxGdiPlus.DrawCard(C, Rect(410, 106, W - 28, 594), Colors.SurfaceCard, Colors.Border, 8);
+
+    // Response Status Bar (Y: 112..146)
+    // Status Badge: 201 Created (Green)
+    TVeloxGdiPlus.DrawBadge(C, Rect(420, 114, 526, 140), '201 Created', $99D334, $000000);
+
+    // Response Duration Badge: 118 ms
+    TVeloxGdiPlus.DrawBadge(C, Rect(532, 114, 614, 140), '118 ms', Colors.Surface, Colors.TextPrimary);
+
+    // Response Payload Size Badge: 2.45 KB
+    TVeloxGdiPlus.DrawBadge(C, Rect(620, 114, 706, 140), '2.45 KB', Colors.Surface, Colors.TextPrimary);
+
+    // View Mode Tabs on Right
+    TVeloxGdiPlus.DrawCard(C, Rect(720, 114, 820, 140),
+      TVeloxUtils.BlendColor(Colors.SurfaceCard, Colors.Accent, 0.28), Colors.Accent, 4);
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(720, 114, 820, 140), 'Pretty JSON', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(826, 114, 882, 140), Colors.SurfaceCard, Colors.Border, 4);
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(826, 114, 882, 140), 'Raw', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(888, 114, 998, 140), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(888, 114, 998, 140), 'Diff vs Baseline', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    TVeloxGdiPlus.DrawCard(C, Rect(1004, 114, 1076, 140), Colors.SurfaceCard, Colors.Border, 4);
+    DrawShowcaseText(C, Rect(1004, 114, 1076, 140), 'Latency', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+
+    // Separator line under response header
+    C.Pen.Color := Colors.Border;
+    C.Pen.Width := 1;
+    C.MoveTo(410, 148); C.LineTo(W - 28, 148);
+
+    // Formatted JSON Response Body (Consolas 8pt with syntax highlighting)
+    JsonLines[0]  := '{';
+    JsonLines[1]  := '  "id": 149827361,';
+    JsonLines[2]  := '  "sha": "bada74e7c10b4f8",';
+    JsonLines[3]  := '  "ref": "refs/heads/master",';
+    JsonLines[4]  := '  "task": "deploy",';
+    JsonLines[5]  := '  "environment": "production",';
+    JsonLines[6]  := '  "description": "Deploying VeloxUI v2.5.0",';
+    JsonLines[7]  := '  "creator": { "login": "amafjarkasi", "type": "User", "site_admin": false },';
+    JsonLines[8]  := '  "created_at": "2026-10-22T04:29:31Z",';
+    JsonLines[9]  := '  "updated_at": "2026-10-22T04:29:32Z",';
+    JsonLines[10] := '  "statuses_url": "https://api.github.com/repos/amafjarkasi/velox-ui/deployments/149827361/statuses",';
+    JsonLines[11] := '  "repository_url": "https://api.github.com/repos/amafjarkasi/velox-ui",';
+    JsonLines[12] := '  "transient_environment": false';
+    JsonLines[13] := '}';
+
+    C.Font.Name := 'Consolas';
+    C.Font.Size := 8;
+    C.Font.Style := [];
+
+    for I := 0 to 13 do
+    begin
+      RowY := 156 + I * 21;
+      case I of
+        0, 13:
+          begin
+            C.Font.Color := Colors.TextSecondary;
+            DrawShowcaseText(C, Rect(424, RowY, W - 40, RowY + 20), JsonLines[I], DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        1:
+          begin
+            C.Font.Color := KeyCol;
+            DrawShowcaseText(C, Rect(424, RowY, 490, RowY + 20), '  "id": ', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            C.Font.Color := NumCol;
+            DrawShowcaseText(C, Rect(490, RowY, W - 40, RowY + 20), '149827361,', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+        7, 12:
+          begin
+            C.Font.Color := KeyCol;
+            DrawShowcaseText(C, Rect(424, RowY, 620, RowY + 20), Copy(JsonLines[I], 1, 28), DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+            C.Font.Color := BoolCol;
+            DrawShowcaseText(C, Rect(620, RowY, W - 40, RowY + 20), Copy(JsonLines[I], 29, Length(JsonLines[I])), DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+          end;
+      else
+        C.Font.Color := KeyCol;
+        DrawShowcaseText(C, Rect(424, RowY, 520, RowY + 20), Copy(JsonLines[I], 1, 14), DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+        C.Font.Color := StrCol;
+        DrawShowcaseText(C, Rect(520, RowY, W - 40, RowY + 20), Copy(JsonLines[I], 15, Length(JsonLines[I])), DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+      end;
+    end;
+
+    // Latency Telemetry Sparkline Card (Y: 480..584)
+    TVeloxGdiPlus.DrawCard(C, Rect(420, 480, W - 38, 584), Colors.Surface, Colors.Border, 6);
+
+    // Telemetry header
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [fsBold];
+    C.Font.Color := Colors.TextPrimary;
+    DrawShowcaseText(C, Rect(432, 486, 600, 506), 'HTTP LATENCY TELEMETRY', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(606, 486, W - 48, 506),
+      'Latest: 118 ms   |   Min: 114 ms   |   Avg: 124 ms   |   Peak: 145 ms (12 calls)',
+      DT_SINGLELINE or DT_VCENTER or DT_RIGHT);
+
+    // GDI+ Anti-Aliased Sparkline
+    TVeloxGdiPlus.DrawSparkline(C, Rect(432, 510, W - 48, 574), LatencySamples,
+      Colors.Accent, TVeloxUtils.BlendColor(Colors.Surface, Colors.Accent, 0.22));
+
+    // 5. Bottom Footer Status Bar (Y: 602..628)
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := Colors.Surface;
+    C.FillRect(Rect(18, 602, W - 18, 628));
+
+    C.Pen.Color := Colors.Border;
+    C.Pen.Width := 1;
+    C.MoveTo(18, 602); C.LineTo(W - 18, 602);
+
+    C.Brush.Style := bsClear;
+    C.Font.Name := 'Segoe UI';
+    C.Font.Size := 8;
+    C.Font.Style := [];
+    C.Font.Color := Colors.TextSecondary;
+    DrawShowcaseText(C, Rect(30, 604, W - 30, 626),
+      'WinHTTP 5.1 TLS 1.3  |  HTTP/2 Multiplexing  |  Payload: 2.45 KB  |  Baseline Snapshot: 2.40 KB stored  |  TVeloxRestStudio v2.5.0',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     Result := SaveBitmapToPng(Bmp, AFilePath);
   finally

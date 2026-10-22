@@ -77,6 +77,9 @@ type
     procedure SetPropColor(const AKey: string; const AValue: TColor);
 
     function Count: Integer;
+    function GetItem(Index: Integer): TVeloxPropItem;
+    property Items[Index: Integer]: TVeloxPropItem read GetItem; default;
+    property ItemCount: Integer read Count;
     property SelectedKey: string read FSelectedKey write FSelectedKey;
     property OnChange: TVeloxPropChangeEvent read FOnChange write FOnChange;
   published
@@ -124,6 +127,14 @@ end;
 function TVeloxPropertyGrid.Count: Integer;
 begin
   Result := Length(FItems);
+end;
+
+function TVeloxPropertyGrid.GetItem(Index: Integer): TVeloxPropItem;
+begin
+  if (Index >= 0) and (Index < Length(FItems)) then
+    Result := FItems[Index]
+  else
+    FillChar(Result, SizeOf(Result), 0);
 end;
 
 function TVeloxPropertyGrid.FindCategoryIndex(const AName: string): Integer;

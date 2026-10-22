@@ -3,17 +3,17 @@
 </p>
 
 <p align="center">
-  <a href="#-78-framework-modules-7-core--63-expansion--8-composite"><img src="https://img.shields.io/badge/Modules-78%20Zero--Dependency%20Units-6366f1?style=for-the-badge" alt="78 Modules" /></a>
+  <a href="#-79-framework-modules-7-core--63-expansion--9-composite"><img src="https://img.shields.io/badge/Modules-79%20Zero--Dependency%20Units-6366f1?style=for-the-badge" alt="79 Modules" /></a>
   <a href="#-getting-started--installation"><img src="https://img.shields.io/badge/Compilers-Delphi%20VCL%20%7C%20Free%20Pascal%203.2.2%20LCL-38bdf8?style=for-the-badge" alt="Compilers" /></a>
   <a href="#-before-vs-after-85-less-boilerplate"><img src="https://img.shields.io/badge/Boilerplate%20Reduction--85%25%20LOC-10b981?style=for-the-badge" alt="Boilerplate Reduction" /></a>
-  <a href="#-automated-verification-suite-315315-passing"><img src="https://img.shields.io/badge/Tests-315%2F315%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
+  <a href="#-automated-verification-suite-326326-passing"><img src="https://img.shields.io/badge/Tests-326%2F326%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
   <a href="#-17-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win11%20Fluent-DWM%20Mica%20%7C%20GDI%2B%20%7C%20High--DPI-f59e0b?style=for-the-badge" alt="Win11 Fluent" /></a>
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Changelog-v2.5.0-8b5cf6?style=for-the-badge" alt="Changelog" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f43f5e?style=for-the-badge" alt="License" /></a>
 </p>
 
 <p align="center">
-  <strong>VeloxUI</strong> is a high-velocity, zero-dependency <strong>Object Pascal (Delphi VCL &amp; Lazarus / Free Pascal LCL)</strong> desktop UI and MVVM micro-framework. It distills every hard-won Win32, Windows 11 DWM (Mica/Acrylic/Dark Titlebar), undocumented <code>uxtheme.dll</code> dark scrollbar, Per-Monitor v2 High-DPI scaling, hardware-accelerated <code>GDI+</code> vector rendering, flicker-free virtual <code>TListView</code>, 60 FPS easing animation, two-way MVVM data-binding, WinHTTP networking, GitHub self-updater, runtime i18n, minidump crash reporting, BCrypt CNG cryptography, Win32 directory watching, zero-COM drag-and-drop, diff visualizers, undo/redo stacks, property grids, tag tokenizers, ICMP ping, Windows service management, clipboard monitoring, memory diagnostics, registry autostart, acrylic glass panels, KPI dashboards, timelines, star ratings, pagination, vector icon engines, responsive stack layouts, DPI-aware canvas scaling, keyboard accessibility focus rings, and DWM Acrylic transient blur into <strong>78 drop-in units</strong> (including 8 rich composite workflow components).
+  <strong>VeloxUI</strong> is a high-velocity, zero-dependency <strong>Object Pascal (Delphi VCL &amp; Lazarus / Free Pascal LCL)</strong> desktop UI and MVVM micro-framework. It distills every hard-won Win32, Windows 11 DWM (Mica/Acrylic/Dark Titlebar), undocumented <code>uxtheme.dll</code> dark scrollbar, Per-Monitor v2 High-DPI scaling, hardware-accelerated <code>GDI+</code> vector rendering, flicker-free virtual <code>TListView</code>, 60 FPS easing animation, two-way MVVM data-binding, WinHTTP networking, GitHub self-updater, runtime i18n, minidump crash reporting, BCrypt CNG cryptography, Win32 directory watching, zero-COM drag-and-drop, diff visualizers, undo/redo stacks, property grids, tag tokenizers, ICMP ping, Windows service management, clipboard monitoring, memory diagnostics, registry autostart, acrylic glass panels, KPI dashboards, timelines, star ratings, pagination, vector icon engines, responsive stack layouts, DPI-aware canvas scaling, keyboard accessibility focus rings, DWM Acrylic transient blur, and embedded REST API debugging workbenches into <strong>79 drop-in units</strong> (including 9 rich composite workflow components).
 </p>
 
 ---
@@ -50,6 +50,20 @@ Showcases the two-column property inspector ([`TVeloxPropertyGrid`](src/Velox.Pr
   <img src="resources/components_studio_light.png" alt="VeloxUI Controls Studio Light Mode" width="100%" />
 </p>
 
+### 3. REST API Workbench, JSON Inspector & Telemetry Studio (`TVeloxRestStudio`)
+
+Showcases the embedded HTTP client and API workbench ([`TVeloxRestStudio`](src/Velox.RestStudio.pas)), method selector pill, URL bar with auto-completing query parameters, two-column header property inspector ([`TVeloxPropertyGrid`](src/Velox.PropertyGrid.pas)), formatted JSON response body with syntax highlighting tokens, rolling latency sparkline telemetry ([`Velox.GdiPlus`](src/Velox.GdiPlus.pas)), side-by-side response regression diffing ([`TVeloxDiffView`](src/Velox.DiffView.pas)), and 1-click executable cURL export.
+
+#### Windows 11 REST Studio Dark Mode (`vtDark`)
+<p align="center">
+  <img src="resources/rest_studio.png" alt="VeloxUI REST Studio Dark Mode" width="100%" />
+</p>
+
+#### Windows 11 REST Studio Daylight Mode (`vtLight`)
+<p align="center">
+  <img src="resources/rest_studio_light.png" alt="VeloxUI REST Studio Light Mode" width="100%" />
+</p>
+
 ---
 
 ## 📝 Latest Updates & Changelog
@@ -57,6 +71,7 @@ Showcases the two-column property inspector ([`TVeloxPropertyGrid`](src/Velox.Pr
 > Showing the 3 most recent updates. For full version history and release details, see **[CHANGELOG.md](CHANGELOG.md)**.
 
 ### [v2.5.0] - 2026-10-22
+- **Embedded HTTP Workbench & API Debugger (`Velox.RestStudio` - Unit #79)**: Full-featured API debugger combining native WinHTTP TLS 1.3 requests, two-column header & parameter property grid, JSON pretty-printer, payload baseline regression diffing (`TVeloxDiffView`), latency telemetry sparklines (`TVeloxRingBuffer`), and 1-click executable cURL export.
 - **Pixel-Perfect Diff Visualizer (`Velox.DiffView`)**: Dedicated 20px centered sign column for `+`/`-` glyphs, uniform code column alignment, and corrected Delphi BGR `TColor` palette.
 - **Windows 11 DWM Desktop Acrylic (`Velox.Backdrop`)**: Real translucent blur-behind for floating popups and dialogs via `DWMSBT_TRANSIENTWINDOW`.
 - **Per-Monitor v2 Auto-Rescaling Canvas (`Velox.DpiCanvas`) & Focus Rings (`Velox.Accessibility`)**: High-DPI GDI+ graphics scaling and keyboard tab focus rings.
@@ -131,7 +146,7 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 
 ---
 
-## 📦 78 Framework Modules (7 Core + 63 Expansion + 8 Composite)
+## 📦 79 Framework Modules (7 Core + 63 Expansion + 9 Composite)
 
 ### Part I — 7 Core Foundation Modules
 
@@ -215,7 +230,7 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 | **77** | [`src/Velox.Accessibility.pas`](src/Velox.Accessibility.pas) | `TVeloxFocusRing`, `TVeloxFocusManager`, `TVeloxAccessibility` | Universal keyboard focus indicators, Tab-order traversal manager (`FocusNext`), Space/Enter activation, and assistive announcement hooks. |
 | **78** | [`src/Velox.Backdrop.pas`](src/Velox.Backdrop.pas) | `TVeloxBackdrop` | Windows 11 DWM Desktop Acrylic (`DWMSBT_TRANSIENTWINDOW = 3`) and Mica backdrop controller for floating popups, context menus, command palettes, and modals with Windows 10 fallback. |
 
-### Part III — 8 Composite Workflow Components
+### Part III — 9 Composite Workflow Components
 
 | # | Module | Key Classes | Purpose |
 | :---: | :--- | :--- | :--- |
@@ -227,6 +242,7 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 | **71** | [`src/Velox.AuditSecurityLog.pas`](src/Velox.AuditSecurityLog.pas) | `TVeloxAuditSecurityLog` | File System Integrity & Security Tracker combining `TVeloxFileWatcher`, `TVeloxCrypto` (BCrypt CNG SHA-256), and `TVeloxTimeline` with real-time audit event logging. |
 | **72** | [`src/Velox.JsonTreeViewer.pas`](src/Velox.JsonTreeViewer.pas) | `TVeloxJsonTreeViewer` | RFC-8259 JSON Document & Hierarchy Explorer combining `TVeloxJson`, `TVeloxTreeBuilder`, and `TVeloxBreadcrumb` with type badges, dotted path breadcrumb, and tree navigation. |
 | **73** | [`src/Velox.UpdateFlyout.pas`](src/Velox.UpdateFlyout.pas) | `TVeloxUpdateFlyout` | WinUI 3 Fluent Self-Updater Notification Flyout combining `TVeloxUpdater`, `TVeloxGlassPanel`, `TVeloxProgressRing`, and `TVeloxStyledButton` with download spinner and install actions. |
+| **79** | [`src/Velox.RestStudio.pas`](src/Velox.RestStudio.pas) | `TVeloxRestStudio` | Embedded HTTP Workbench & API Debugger combining `TVeloxHttp` (WinHTTP TLS 1.3), `TVeloxPropertyGrid` (headers & query params), `TVeloxJson` (formatting), `TVeloxDiffView` (regression diffing), `TVeloxRingBuffer` (latency sparklines), and `TVeloxClipboard` (1-click cURL export). |
 
 ---
 
