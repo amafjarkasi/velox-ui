@@ -856,8 +856,10 @@ end;
 procedure TVeloxRestStudio.RespHeaderPaint(Sender: TObject);
 var
   C: TCanvas;
-  BadgeCol: TColor;
+  BadgeCol, StatusBg, StatusBorder, StatusTextCol: TColor;
   StatusTxt, TimeTxt, SizeTxt: string;
+  BadgeR, R: TRect;
+  BadgeW, BadgeH, DotD, DotGap, TextW, TotalW, StartX, DotY: Integer;
 begin
   C := FRespHeaderBar.Canvas;
   C.Brush.Style := bsSolid;
@@ -895,22 +897,48 @@ begin
     StatusTxt := 'Ready';
   end;
 
-  // Status Badge
-  TVeloxGdiPlus.DrawBadge(C, Rect(8, 7, 100, 27), StatusTxt, BadgeCol, $000000);
+  // Fluent Status Badge with centered dot and text
+  StatusBg := TVeloxUtils.BlendColor(FColors.Surface, BadgeCol, 0.18);
+  StatusBorder := BadgeCol;
+  StatusTextCol := BadgeCol;
+  BadgeR := Rect(8, 4, 114, 28);
+  TVeloxGdiPlus.DrawCard(C, BadgeR, StatusBg, StatusBorder, 4);
+
+  C.Font.Name := 'Segoe UI';
+  C.Font.Size := 8;
+  C.Font.Style := [fsBold];
+  C.Font.Color := StatusTextCol;
+
+  BadgeW := BadgeR.Right - BadgeR.Left;
+  BadgeH := BadgeR.Bottom - BadgeR.Top;
+  DotD := 6;
+  DotGap := 6;
+  TextW := C.TextWidth(StatusTxt);
+  TotalW := DotD + DotGap + TextW;
+  StartX := BadgeR.Left + (BadgeW - TotalW) div 2;
+  DotY := BadgeR.Top + (BadgeH - DotD) div 2;
+
+  // Anti-aliased status dot
+  TVeloxGdiPlus.DrawCard(C, Rect(StartX, DotY, StartX + DotD, DotY + DotD), StatusTextCol, StatusTextCol, DotD div 2);
+
+  // Status text aligned in the middle
+  R := Rect(StartX + DotD + DotGap, BadgeR.Top, StartX + TotalW + 4, BadgeR.Bottom);
+  DrawText(C.Handle, PChar(StatusTxt), Length(StatusTxt), R,
+    DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOPREFIX);
 
   // Latency Telemetry Capsule (Fixed to the top)
   if FLastElapsedMs > 0 then
     TimeTxt := Format('%d ms (avg %.0fms)', [FLastElapsedMs, FLatencyHistory.Average])
   else
     TimeTxt := '-- ms';
-  TVeloxGdiPlus.DrawBadge(C, Rect(106, 7, 212, 27), TimeTxt, FColors.SurfaceCard, FColors.TextPrimary);
+  TVeloxGdiPlus.DrawBadge(C, Rect(120, 4, 226, 28), TimeTxt, FColors.SurfaceCard, FColors.TextPrimary);
 
   // Payload Size Badge
   if Length(FLastResponse.Body) > 0 then
     SizeTxt := TVeloxUtils.FormatBytes(Length(FLastResponse.Body))
   else
     SizeTxt := '-- B';
-  TVeloxGdiPlus.DrawBadge(C, Rect(218, 7, 280, 27), SizeTxt, FColors.SurfaceCard, FColors.TextSecondary);
+  TVeloxGdiPlus.DrawBadge(C, Rect(232, 4, 294, 28), SizeTxt, FColors.SurfaceCard, FColors.TextSecondary);
 
   // Bottom Border
   C.Pen.Color := FColors.Border;

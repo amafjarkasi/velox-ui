@@ -1110,6 +1110,7 @@ var
   Colors: TVeloxThemeColors;
   MethodPillBg, KeyCol, StrCol, NumCol, BoolCol, StatusBg, StatusBorder, StatusTextCol: TColor;
   I, RowY, CurX, FirstQuote, SecondQuote, ColonPos: Integer;
+  BadgeW, BadgeH, DotD, DotGap, TextW, TotalW, StartX, DotY: Integer;
   LeadSpaces, KeyText, ColonText, ValText, NumStr: string;
   HasComma: Boolean;
   JsonLines: array[0..20] of string;
@@ -1381,18 +1382,28 @@ begin
     TVeloxGdiPlus.DrawCard(C, Rect(410, 106, W - 28, 594), Colors.SurfaceCard, Colors.Border, 8);
 
     // Response Status Bar (Y: 112..146)
-    // Fluent Status Badge: 201 Created (Emerald)
+    // Fluent Status Badge: 201 Created (Emerald) - perfectly aligned in the middle
     TVeloxGdiPlus.DrawCard(C, Rect(420, 114, 526, 140), StatusBg, StatusBorder, 4);
-    C.Brush.Style := bsSolid;
-    C.Brush.Color := StatusTextCol;
-    C.Pen.Color := StatusTextCol;
-    C.Ellipse(430, 124, 438, 132);
-    C.Brush.Style := bsClear;
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := StatusTextCol;
-    DrawShowcaseText(C, Rect(442, 114, 520, 140), '201 Created', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
+
+    BadgeW := 526 - 420;
+    BadgeH := 140 - 114;
+    DotD := 6;
+    DotGap := 6;
+    TextW := C.TextWidth('201 Created');
+    TotalW := DotD + DotGap + TextW;
+    StartX := 420 + (BadgeW - TotalW) div 2;
+    DotY := 114 + (BadgeH - DotD) div 2;
+
+    // Smooth anti-aliased dot aligned with the center of the text
+    TVeloxGdiPlus.DrawCard(C, Rect(StartX, DotY, StartX + DotD, DotY + DotD), StatusTextCol, StatusTextCol, DotD div 2);
+
+    // Text aligned in the middle
+    DrawShowcaseText(C, Rect(StartX + DotD + DotGap, 114, StartX + TotalW + 4, 140), '201 Created',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
     // LATENCY IS FIXED TO THE TOP: Telemetry Capsule in Header Bar
     TVeloxGdiPlus.DrawCard(C, Rect(532, 114, 714, 140), Colors.Surface, Colors.Border, 4);
