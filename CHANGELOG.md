@@ -5,6 +5,26 @@ The project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [v2.5.1] - 2026-10-22
+
+### Added
+- **Embedded ANSI Terminal & Interactive Process Workbench (`Velox.Terminal` - Unit #85)**:
+  - Asynchronous, non-blocking sub-process hosting via native Win32 anonymous pipes (`CreatePipe`, `CreateProcessW`, `PeekNamedPipe` polling timer).
+  - Comprehensive ANSI / VT100 / xterm-256 and 24-bit TrueColor (`\x1b[38;2;r;g;bm`) escape sequence parser.
+  - Double-buffered fixed-pitch terminal canvas (`TVeloxTerminalDisplay`) with sub-pixel alignment, smooth vertical scrollbar, mouse drag selection, and `Ctrl+C` / `Ctrl+A` / `Ctrl+L` shortcuts.
+  - Interactive bottom command prompt with vector chevron (`❯`), command history tracking (`↑`/`↓`), and 1-click execution (`Run ↵`).
+  - Top toolbar with working directory badge, real-time process state indicators (`● IDLE`, `● RUNNING (PID)`, `● EXITED (Code)`), and quick action buttons (`Clear`, `Copy All`, `Stop`, `cmd`, `powershell`).
+  - Zero-allocation plain text and ANSI scrollback buffer export.
+- **Terminal Showcase Generator (`TVeloxScreenshot.RenderTerminalShowcase`)**: High-DPI programmatic rendering in Windows 11 Fluent Dark (`vtDark`) and Daylight (`vtLight`) modes.
+
+### Fixed
+- **Sub-Pixel Chevron & Input Baseline Centering (`Velox.Terminal`, `Velox.Screenshot`)**:
+  - Replaced mismatched characters with mathematically centered anti-aliased GDI+ vector chevrons aligned to text centerlines.
+  - Fixed terminal line prompt character spacing (`PromptW := C.TextWidth('> ')`) for natural font-metric separation.
+  - Corrected 32-bit DIB alpha channel preservation (`pf24bit` RGB) in `SaveBitmapToPng` to prevent font transparency artifacts.
+
+---
+
 ## [v2.5.0] - 2026-10-22
 
 ### Added

@@ -3,17 +3,17 @@
 </p>
 
 <p align="center">
-  <a href="#-84-framework-modules-7-core--63-expansion--14-composite"><img src="https://img.shields.io/badge/Modules-84%20Zero--Dependency%20Units-6366f1?style=for-the-badge" alt="84 Modules" /></a>
+  <a href="#-85-framework-modules-7-core--63-expansion--15-composite"><img src="https://img.shields.io/badge/Modules-85%20Zero--Dependency%20Units-6366f1?style=for-the-badge" alt="84 Modules" /></a>
   <a href="#-getting-started--installation"><img src="https://img.shields.io/badge/Compilers-Delphi%20VCL%20%7C%20Free%20Pascal%203.2.2%20LCL-38bdf8?style=for-the-badge" alt="Compilers" /></a>
   <a href="#-before-vs-after-85-less-boilerplate"><img src="https://img.shields.io/badge/Boilerplate%20Reduction--85%25%20LOC-10b981?style=for-the-badge" alt="Boilerplate Reduction" /></a>
-  <a href="#-automated-verification-suite-358358-passing"><img src="https://img.shields.io/badge/Tests-358%2F358%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
+  <a href="#-automated-verification-suite-374374-passing"><img src="https://img.shields.io/badge/Tests-374%2F374%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
   <a href="#-17-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win11%20Fluent-DWM%20Mica%20%7C%20GDI%2B%20%7C%20High--DPI-f59e0b?style=for-the-badge" alt="Win11 Fluent" /></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Changelog-v2.5.0-8b5cf6?style=for-the-badge" alt="Changelog" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Changelog-v2.5.1-8b5cf6?style=for-the-badge" alt="Changelog" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f43f5e?style=for-the-badge" alt="License" /></a>
 </p>
 
 <p align="center">
-  <strong>VeloxUI</strong> is a high-velocity, zero-dependency <strong>Object Pascal (Delphi VCL &amp; Lazarus / Free Pascal LCL)</strong> desktop UI and MVVM micro-framework. It distills every hard-won Win32, Windows 11 DWM (Mica/Acrylic/Dark Titlebar), undocumented <code>uxtheme.dll</code> dark scrollbar, Per-Monitor v2 High-DPI scaling, hardware-accelerated <code>GDI+</code> vector rendering, flicker-free virtual <code>TListView</code>, 60 FPS easing animation, two-way MVVM data-binding, WinHTTP networking, GitHub self-updater, runtime i18n, minidump crash reporting, BCrypt CNG cryptography, Win32 directory watching, zero-COM drag-and-drop, diff visualizers, undo/redo stacks, property grids, tag tokenizers, ICMP ping, Windows service management, clipboard monitoring, memory diagnostics, registry autostart, acrylic glass panels, KPI dashboards, timelines, star ratings, pagination, vector icon engines, responsive stack layouts, DPI-aware canvas scaling, keyboard accessibility focus rings, DWM Acrylic transient blur, embedded REST API debugging workbenches, live log stream tails, environment configuration hubs, mission control telemetry walls, crash flight blackboxes, and virtual paginated data tables into <strong>84 drop-in units</strong> (including 14 rich composite workflow components).
+  <strong>VeloxUI</strong> is a high-velocity, zero-dependency <strong>Object Pascal (Delphi VCL &amp; Lazarus / Free Pascal LCL)</strong> desktop UI and MVVM micro-framework. It distills every hard-won Win32, Windows 11 DWM (Mica/Acrylic/Dark Titlebar), undocumented <code>uxtheme.dll</code> dark scrollbar, Per-Monitor v2 High-DPI scaling, hardware-accelerated <code>GDI+</code> vector rendering, flicker-free virtual <code>TListView</code>, 60 FPS easing animation, two-way MVVM data-binding, WinHTTP networking, GitHub self-updater, runtime i18n, minidump crash reporting, BCrypt CNG cryptography, Win32 directory watching, zero-COM drag-and-drop, diff visualizers, undo/redo stacks, property grids, tag tokenizers, ICMP ping, Windows service management, clipboard monitoring, memory diagnostics, registry autostart, acrylic glass panels, KPI dashboards, timelines, star ratings, pagination, vector icon engines, responsive stack layouts, DPI-aware canvas scaling, keyboard accessibility focus rings, DWM Acrylic transient blur, embedded REST API debugging workbenches, live log stream tails, environment configuration hubs, mission control telemetry walls, crash flight blackboxes, and virtual paginated data tables into <strong>85 drop-in units</strong> (including 15 rich composite workflow components).
 </p>
 
 ---
@@ -80,9 +80,30 @@ Showcases the executive operations wall ([`TVeloxTelemetryWall`](src/Velox.Telem
 
 ---
 
+### 5. Embedded ANSI Terminal & Interactive Process Workbench (`TVeloxTerminalView`)
+
+Showcases the integrated terminal and process host ([`TVeloxTerminalView`](src/Velox.Terminal.pas)), asynchronous Win32 anonymous pipe execution, ANSI 16, 256-color and 24-bit TrueColor escape sequence parsing, fixed-pitch double-buffered terminal canvas, dynamic prompt chevron, command history buffer (`↑`/`↓`), quick shell shortcuts (`cmd`, `powershell`), working directory pill, real-time process state badge (`● RUNNING (PID 8492)`), and 1-click command execution.
+
+#### Windows 11 Terminal Workbench Dark Mode (`vtDark`)
+<p align="center">
+  <img src="resources/terminal_view.png" alt="VeloxUI Terminal Workbench Dark Mode" width="100%" />
+</p>
+
+#### Windows 11 Terminal Workbench Daylight Mode (`vtLight`)
+<p align="center">
+  <img src="resources/terminal_view_light.png" alt="VeloxUI Terminal Workbench Light Mode" width="100%" />
+</p>
+
+---
+
 ## 📝 Latest Updates & Changelog
 
 > Showing the 3 most recent updates. For full version history and release details, see **[CHANGELOG.md](CHANGELOG.md)**.
+
+### [v2.5.1] - 2026-10-22
+- **Embedded ANSI Terminal & Interactive Process Workbench (`Velox.Terminal` - Unit #85)**: Asynchronous non-blocking sub-process hosting via Win32 anonymous pipes (`PeekNamedPipe`), full ANSI/VT100/xterm-256 and 24-bit TrueColor parsing, fixed-pitch double-buffered terminal display, command history navigation (`↑`/`↓`), integrated prompt bar with vector chevron, quick shell action buttons, and plain text/ANSI export.
+- **Sub-Pixel Chevron & Input Baseline Centering**: Mathematically aligned vector chevron prompts (`❯`) and edit control text to exact component centerlines.
+- **Expanded Verification Suite**: 374/374 automated tests passing (100% success).
 
 ### [v2.5.0] - 2026-10-22
 - **5 High-Value Composite Workflow Components (Expanding Framework to 84 Units)**:
@@ -166,7 +187,7 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 
 ---
 
-## 📦 84 Framework Modules (7 Core + 63 Expansion + 14 Composite)
+## 📦 85 Framework Modules (7 Core + 63 Expansion + 15 Composite)
 
 ### Part I — 7 Core Foundation Modules
 
@@ -268,6 +289,7 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 | **82** | [`src/Velox.TelemetryWall.pas`](src/Velox.TelemetryWall.pas) | `TVeloxTelemetryWall` | Executive Mission Control combining `TVeloxKpiGrid`, `TVeloxCharts` (donut gauges & dual sparklines), `TVeloxThresholdAlert` (hysteresis anti-spike guard), and `TVeloxPower` (AC/battery telemetry). |
 | **83** | [`src/Velox.CrashFlightRecorder.pas`](src/Velox.CrashFlightRecorder.pas) | `TVeloxCrashFlightRecorder` | Diagnostic Crash Center & Blackbox combining `TVeloxCrashReporter` (`dbghelp.dll` minidumps), `TVeloxTimeline` (flight recorder breadcrumbs), `TVeloxMemory` (working set telemetry), and `TVeloxCrypto` (BCrypt SHA-256). |
 | **84** | [`src/Velox.DataStudio.pas`](src/Velox.DataStudio.pas) | `TVeloxDataStudio` | Virtual Data Table, Filter Bar & Pagination Hub combining `TVeloxVirtualGrid`, `TVeloxPagination`, `TVeloxStyledButton` (filter chips), `TVeloxSearchBox`, and `TVeloxExporter` with instant sorting, searching, and tabular export. |
+| **85** | [`src/Velox.Terminal.pas`](src/Velox.Terminal.pas) | `TVeloxTerminalView` | Embedded ANSI Terminal Workbench & Interactive Process Console combining Win32 anonymous pipe sub-process hosting (`PeekNamedPipe`), full ANSI/VT100/xterm-256/TrueColor 24-bit parsing, fixed-pitch double-buffered canvas, command history, and prompt bar. |
 
 ---
 
@@ -412,13 +434,14 @@ lazbuild -B tests\veloxtest.lpi
 | **`[75/78]` Responsive Flex Stack Layout** | `5` | Horizontal auto-positioning, gap computation (`8 + 80 + 8 = 96`), `ContentWidth`, vertical orientation layout, and `ContentHeight` |
 | **`[76/78]` Per-Monitor v2 Auto-Scaled Context** | `5` | Dynamic DPI scaling (`144 DPI = 150%`), `Scale(10) = 15`, `ScaleRect`, sub-pixel GDI+ `DrawCard`, and auto-scaled `DrawIcon` |
 | **`[77/78]` Accessibility & Focus Rings** | `5` | Tab traversal across controls (`TVeloxFocusManager`), `FocusNext`, `IsActivationKey` (Space/Enter), and 2-tone Fluent `DrawFocusRing` |
-| **`[78/84]` DWM Desktop Acrylic & System Blur** | `5` | Windows 11 `DWMSBT_TRANSIENTWINDOW (3)` Acrylic blur, `SupportsSystemBackdrop`, `SupportsDarkMode`, and `ConfigureFloatingPopup` |
-| **`[79/84]` Embedded HTTP REST Studio** | `10` | WinHTTP method dispatch, URL query string formatting, header serialization, 1-click cURL CLI generation, and latency sparkline |
-| **`[80/84]` Streaming Log Analyzer & Tail** | `7` | Circular log entry addition, severity filtering, CSV and JSON serialization, level string mapping, and buffer clearing |
-| **`[81/84]` Profile Configuration Studio** | `6` | Two-column PropertyGrid item initialization, environment switching, JSON profile serialization, diff view, and undo stack |
-| **`[82/84]` Mission Control Telemetry Wall** | `4` | Responsive KPI cards, multi-channel telemetry streaming, sustained hysteresis alert escalation, and battery power query |
-| **`[83/84]` Crash Flight Recorder Blackbox** | `5` | Breadcrumb timeline tracking, fatal exception simulation, diagnostic report generation, and binary SHA-256 validation |
-| **`[84/84]` Virtual Paginated Data Studio** | `8` | 60-row inventory generation, 3-page virtual pagination calculation, status chip filtering, and CSV/JSON/Markdown export |
+| **`[78/85]` DWM Desktop Acrylic & System Blur** | `5` | Windows 11 `DWMSBT_TRANSIENTWINDOW (3)` Acrylic blur, `SupportsSystemBackdrop`, `SupportsDarkMode`, and `ConfigureFloatingPopup` |
+| **`[79/85]` Embedded HTTP REST Studio** | `10` | WinHTTP method dispatch, URL query string formatting, header serialization, 1-click cURL CLI generation, and latency sparkline |
+| **`[80/85]` Streaming Log Analyzer & Tail** | `7` | Circular log entry addition, severity filtering, CSV and JSON serialization, level string mapping, and buffer clearing |
+| **`[81/85]` Profile Configuration Studio** | `6` | Two-column PropertyGrid item initialization, environment switching, JSON profile serialization, diff view, and undo stack |
+| **`[82/85]` Mission Control Telemetry Wall** | `4` | Responsive KPI cards, multi-channel telemetry streaming, sustained hysteresis alert escalation, and battery power query |
+| **`[83/85]` Crash Flight Recorder Blackbox** | `5` | Breadcrumb timeline tracking, fatal exception simulation, diagnostic report generation, and binary SHA-256 validation |
+| **`[84/85]` Virtual Paginated Data Studio** | `8` | 60-row inventory generation, 3-page virtual pagination calculation, status chip filtering, and CSV/JSON/Markdown export |
+| **`[85/85]` Embedded ANSI Terminal Workbench** | `14` | Process execution initiation, non-blocking pipe reading, ANSI 16 and TrueColor parser verification, command history tracking, buffer clear, and theme switching |
 
 ---
 

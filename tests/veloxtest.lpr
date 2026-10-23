@@ -101,7 +101,8 @@ uses
   Velox.ConfigStudio,
   Velox.TelemetryWall,
   Velox.CrashFlightRecorder,
-  Velox.DataStudio;
+  Velox.DataStudio,
+  Velox.Terminal;
 
 type
   TTestRow = record
@@ -462,12 +463,14 @@ var
   TelemWall: TVeloxTelemetryWall;
   FlightRec: TVeloxCrashFlightRecorder;
   DataStudio: TVeloxDataStudio;
+  TerminalView: TVeloxTerminalView;
+  TerminalDarkPath, TerminalLightPath: string;
   DensityRowH, DensityFontSz, DensityPad: Integer;
   AccHov, AccPress, AccTint: TColor;
   I: Integer;
 begin
   try
-    WriteLn('=== VeloxUI Automated Verification Suite (84 Modules) ===');
+    WriteLn('=== VeloxUI Automated Verification Suite (85 Modules) ===');
 
     // 1. Ring Buffer & Telemetry Primitives
     WriteLn('[1/78] Testing TVeloxRingBuffer, TVeloxUtils & Customization Tokens...');
@@ -1128,6 +1131,8 @@ begin
     RestLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\rest_studio_light.png');
     TelemDarkPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\telemetry_wall.png');
     TelemLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\telemetry_wall_light.png');
+    TerminalDarkPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\terminal_view.png');
+    TerminalLightPath := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\resources\terminal_view_light.png');
     Check('screenshot: RenderComponentShowcase (Dark Mode) saves PNG',
       TVeloxScreenshot.RenderComponentShowcase(GalleryDarkPath, vtDark) and FileExists(GalleryDarkPath));
     Check('screenshot: RenderComponentShowcase (Light Mode) saves PNG',
@@ -1144,6 +1149,10 @@ begin
       TVeloxScreenshot.RenderTelemetryWallShowcase(TelemDarkPath, vtDark) and FileExists(TelemDarkPath));
     Check('screenshot: RenderTelemetryWallShowcase (Light Mode) saves PNG',
       TVeloxScreenshot.RenderTelemetryWallShowcase(TelemLightPath, vtLight) and FileExists(TelemLightPath));
+    Check('screenshot: RenderTerminalShowcase (Dark Mode) saves PNG',
+      TVeloxScreenshot.RenderTerminalShowcase(TerminalDarkPath, vtDark) and FileExists(TerminalDarkPath));
+    Check('screenshot: RenderTerminalShowcase (Light Mode) saves PNG',
+      TVeloxScreenshot.RenderTerminalShowcase(TerminalLightPath, vtLight) and FileExists(TerminalLightPath));
 
     // 31. Zero-Dependency RFC-8259 JSON Reader & Builder (TVeloxJson)
     WriteLn('[31/78] Testing TVeloxJson (RFC-8259 Parser, Path Navigation & Builder)...');
@@ -2140,6 +2149,49 @@ begin
     finally
       Frm.Free;
     end;
+
+    // 85. Embedded ANSI Terminal & Interactive Process Console (TVeloxTerminalView)
+    WriteLn('[85/85] Testing TVeloxTerminalView (Embedded ANSI Terminal & Win32 Pipes)...');
+    Frm := TForm.CreateNew(nil);
+    try
+      TerminalView := TVeloxTerminalView.Create(Frm);
+      TerminalView.Parent := Frm;
+      TerminalView.SetBounds(0, 0, 860, 520);
+      Check('terminal: Initial LineCount is 0', TerminalView.LineCount = 0);
+      Check('terminal: Initial ProcessState is vpsIdle', TerminalView.ProcessState = vpsIdle);
+      Check('terminal: WorkingDirectory is non-empty', Length(TerminalView.WorkingDirectory) > 0);
+
+      TerminalView.WriteAnsi(#27'[31mRed text'#27'[0m and '#27'[32mGreen text'#27'[0m'#13#10);
+      Check('terminal: WriteAnsi creates line', TerminalView.LineCount = 1);
+      Check('terminal: Plain text extracts without escape codes', TerminalView.LineText[0] = 'Red text and Green text');
+
+      TerminalView.WriteAnsi(#27'[1;38;2;56;189;248mTrueColor'#27'[0m'#13#10);
+      Check('terminal: TrueColor line appended', TerminalView.LineCount = 2);
+      Check('terminal: TrueColor plain text matches', TerminalView.LineText[1] = 'TrueColor');
+
+      TerminalView.Clear;
+      Check('terminal: Clear resets LineCount to 0', TerminalView.LineCount = 0);
+
+      TerminalView.PopulateDemoSession;
+      Check('terminal: PopulateDemoSession creates rich log lines', TerminalView.LineCount > 10);
+      Check('terminal: ExportText contains banner', Pos('VeloxUI Terminal Workbench', TerminalView.ExportText) > 0);
+
+      TerminalView.CommandHistory.Add('git status');
+      TerminalView.CommandHistory.Add('dir');
+      Check('terminal: CommandHistory tracks items', TerminalView.CommandHistory.Count = 2);
+
+      TerminalView.Execute('echo Hello VeloxUI');
+      Check('terminal: Execute initiates process', (TerminalView.ProcessState = vpsRunning) or (TerminalView.ProcessState = vpsTerminated));
+      Sleep(40);
+      TerminalView.StopProcess;
+      Check('terminal: StopProcess transitions cleanly', TerminalView.ProcessState = vpsTerminated);
+
+      TerminalView.ApplyColors(TVeloxUtils.GetThemeColors(vtLight));
+      Check('terminal: Light theme applied cleanly', True);
+    finally
+      Frm.Free;
+    end;
+
 
   except
     on E: Exception do
