@@ -1,4 +1,4 @@
-unit Velox.Terminal;
+﻿unit Velox.Terminal;
 
 {$IFDEF FPC}
   {$MODE DELPHI}
@@ -406,7 +406,7 @@ begin
       CurY := 4 + (TotalLines - 1 - StartRow) * FLineH;
       // Draw cursor block
       Canvas.Brush.Color := FTerminalView.Colors.Accent;
-      Canvas.FillRect(Rect(CurX + 2, CurY + 2, CurX + 9, CurY + FLineH - 2));
+      Canvas.FillRect(Rect(CurX, CurY + 1, CurX + FCharW, CurY + FLineH - 1));
     end;
   end;
 end;
@@ -532,7 +532,7 @@ begin
   FTopBar := TPanel.Create(Self);
   FTopBar.Parent := Self;
   FTopBar.Align := alTop;
-  FTopBar.Height := 44;
+  FTopBar.Height := 40;
   FTopBar.BevelOuter := bvNone;
   FTopBar.DoubleBuffered := True;
   FTopBar.OnPaint := HandleTopBarPaint;
@@ -541,35 +541,35 @@ begin
   FBtnClear.Parent := FTopBar;
   FBtnClear.Caption := 'Clear';
   FBtnClear.Variant := vsbSurface;
-  FBtnClear.SetBounds(Width - 340, 8, 54, 28);
+  FBtnClear.SetBounds(Width - 336, 8, 50, 24);
   FBtnClear.OnClick := HandleClearClick;
 
   FBtnCopyAll := TVeloxStyledButton.Create(Self);
   FBtnCopyAll.Parent := FTopBar;
   FBtnCopyAll.Caption := 'Copy All';
   FBtnCopyAll.Variant := vsbSurface;
-  FBtnCopyAll.SetBounds(Width - 280, 8, 68, 28);
+  FBtnCopyAll.SetBounds(Width - 280, 8, 66, 24);
   FBtnCopyAll.OnClick := HandleCopyAllClick;
 
   FBtnStop := TVeloxStyledButton.Create(Self);
   FBtnStop.Parent := FTopBar;
   FBtnStop.Caption := 'Stop';
   FBtnStop.Variant := vsbOutline;
-  FBtnStop.SetBounds(Width - 206, 8, 52, 28);
+  FBtnStop.SetBounds(Width - 208, 8, 50, 24);
   FBtnStop.OnClick := HandleStopClick;
 
   FBtnCmd := TVeloxStyledButton.Create(Self);
   FBtnCmd.Parent := FTopBar;
   FBtnCmd.Caption := 'cmd';
   FBtnCmd.Variant := vsbSurface;
-  FBtnCmd.SetBounds(Width - 148, 8, 48, 28);
+  FBtnCmd.SetBounds(Width - 152, 8, 46, 24);
   FBtnCmd.OnClick := HandleCmdClick;
 
   FBtnPwsh := TVeloxStyledButton.Create(Self);
   FBtnPwsh.Parent := FTopBar;
   FBtnPwsh.Caption := 'powershell';
   FBtnPwsh.Variant := vsbSurface;
-  FBtnPwsh.SetBounds(Width - 94, 8, 84, 28);
+  FBtnPwsh.SetBounds(Width - 100, 8, 88, 24);
   FBtnPwsh.OnClick := HandlePwshClick;
 
   // 2. Bottom Command Input Bar
@@ -595,7 +595,7 @@ begin
   FBtnRun.Parent := FBottomBar;
   FBtnRun.Caption := 'Run ↵';
   FBtnRun.Variant := vsbPrimary;
-  FBtnRun.SetBounds(Width - 76, 7, 66, 28);
+  FBtnRun.SetBounds(Width - 76, 8, 66, 24);
   FBtnRun.OnClick := HandleRunClick;
 
   // 3. Vertical ScrollBar
@@ -714,11 +714,11 @@ begin
   inherited Resize;
   if Assigned(FTopBar) and Assigned(FBtnClear) then
   begin
-    FBtnClear.Left := Width - 340;
+    FBtnClear.Left := Width - 336;
     FBtnCopyAll.Left := Width - 280;
-    FBtnStop.Left := Width - 206;
-    FBtnCmd.Left := Width - 148;
-    FBtnPwsh.Left := Width - 94;
+    FBtnStop.Left := Width - 208;
+    FBtnCmd.Left := Width - 152;
+    FBtnPwsh.Left := Width - 100;
   end;
 
   if Assigned(FBottomBar) and Assigned(FPromptEdit) then
@@ -758,14 +758,14 @@ begin
   C.MoveTo(0, R.Bottom - 1);
   C.LineTo(R.Right, R.Bottom - 1);
 
-  // Vector terminal icon (>_)
+  // Vector terminal icon (>_) mathematically aligned to MidY = 22
   C.Pen.Color := FColors.Accent;
   C.Pen.Width := 2;
   C.MoveTo(16, 17);
-  C.LineTo(23, 22);
+  C.LineTo(22, 22);
   C.LineTo(16, 27);
-  C.MoveTo(25, 27);
-  C.LineTo(32, 27);
+  C.MoveTo(25, 26);
+  C.LineTo(32, 26);
   C.Pen.Width := 1;
 
   // Title
@@ -774,7 +774,7 @@ begin
   C.Font.Style := [fsBold];
   C.Font.Color := FColors.TextPrimary;
   C.Brush.Style := bsClear;
-  C.TextOut(40, 13, 'Terminal Workbench');
+  DrawTerminalText(C, Rect(38, 0, 180, 44), 'Terminal Workbench', DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
   // Working Directory Pill
   PathText := FWorkingDirectory;
@@ -783,8 +783,8 @@ begin
 
   C.Font.Style := [];
   C.Font.Size := 8;
-  PathR := Rect(190, 8, 190 + C.TextWidth(PathText) + 20, 36);
-  TVeloxGdiPlus.DrawCard(C, PathR, FColors.Background, FColors.Border, 6);
+  PathR := Rect(190, 8, 190 + C.TextWidth(PathText) + 20, 32);
+  TVeloxGdiPlus.DrawCard(C, PathR, FColors.Background, FColors.Border, 4);
   C.Font.Color := FColors.TextSecondary;
   DrawTerminalText(C, PathR, PathText, DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
@@ -829,8 +829,8 @@ begin
 
   C.Font.Style := [fsBold];
   C.Font.Size := 8;
-  StatusR := Rect(PathR.Right + 10, 8, PathR.Right + 10 + C.TextWidth(StatusText) + 26, 36);
-  TVeloxGdiPlus.DrawCard(C, StatusR, StatusBg, StatusBorder, 14);
+  StatusR := Rect(PathR.Right + 10, 8, PathR.Right + 10 + C.TextWidth(StatusText) + 20, 32);
+  TVeloxGdiPlus.DrawCard(C, StatusR, StatusBg, StatusBorder, 12);
 
   // Status Dot
   DotD := 6;

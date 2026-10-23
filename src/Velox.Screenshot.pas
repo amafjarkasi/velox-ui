@@ -1,4 +1,4 @@
-unit Velox.Screenshot;
+﻿unit Velox.Screenshot;
 
 {$IFDEF FPC}
   {$MODE DELPHI}
@@ -1944,16 +1944,55 @@ class function TVeloxScreenshot.RenderTerminalShowcase(const AFilePath: string;
 const
   W = 1120;
   H = 640;
+  CharW = 8;
+  LineH = 18;
+  LeftX = 42;
+  BaseY = 110;
 var
   Bmp: TBitmap;
   C: TCanvas;
   Colors: TVeloxThemeColors;
-  LeftX, TopY, PromptW, MidY: Integer;
+  MidY: Integer;
   TermR, BottomR, PathR, StatusR, RunBtnR: TRect;
-  DotD, DotY, DotGap, TextW, TotalW, StartX: Integer;
+  DotD, DotY, DotGap, TextW, TotalW, StartX, StatusW: Integer;
   StatusBg, StatusBorder, StatusFg: TColor;
-  TermBgCol: TColor;
+  TermBgCol, PromptCol, CursorCol, PrimaryCol, MutedCol: TColor;
+  CardBorderCol, BtnBorderCol, BtnTextCol, StopBgCol, StopBorderCol, StopTextCol: TColor;
+  BranchCol, GitHeadCol, GitFileCol, CompVerCol, NoteCol, LinkCol: TColor;
+  SuiteHdrCol, PassCol, ResCol, HeaderBannerCol: TColor;
   StatusText: string;
+
+  procedure DrawTerminalGridText(const ACol, ARow: Integer; const AText: string;
+    const AColor: TColor; const ABold: Boolean = False);
+  var
+    WStr: WideString;
+    OldFont: HFONT;
+    X, Y: Integer;
+  begin
+    X := LeftX + ACol * CharW;
+    Y := BaseY + ARow * LineH;
+    WStr := UTF8Decode(AText);
+    SetBkMode(C.Handle, TRANSPARENT);
+    SetTextColor(C.Handle, ColorToRGB(AColor));
+    if ABold then
+      C.Font.Style := [fsBold]
+    else
+      C.Font.Style := [];
+    OldFont := SelectObject(C.Handle, C.Font.Handle);
+    Windows.TextOutW(C.Handle, X, Y, PWideChar(WStr), Length(WStr));
+    SelectObject(C.Handle, OldFont);
+  end;
+
+  procedure DrawChevron(const AX, AY: Integer; const AColor: TColor);
+  begin
+    C.Pen.Color := AColor;
+    C.Pen.Width := 2;
+    C.MoveTo(AX, AY - 4);
+    C.LineTo(AX + 5, AY);
+    C.LineTo(AX, AY + 4);
+    C.Pen.Width := 1;
+  end;
+
 begin
   Result := False;
   Colors := TVeloxUtils.GetThemeColors(ATheme);
@@ -1964,13 +2003,53 @@ begin
     StatusBg := $143820;
     StatusBorder := $34D399;
     StatusFg := $34D399;
+    PromptCol := RGB(56, 189, 248); // Electric Cyan
+    CursorCol := RGB(56, 189, 248);
+    PrimaryCol := RGB(241, 245, 249);
+    MutedCol := RGB(100, 116, 139);
+    BranchCol := RGB(34, 197, 94);
+    GitHeadCol := RGB(148, 163, 184);
+    GitFileCol := RGB(74, 222, 128);
+    CompVerCol := RGB(203, 213, 225);
+    NoteCol := RGB(245, 158, 11);
+    LinkCol := RGB(34, 197, 94);
+    SuiteHdrCol := RGB(168, 85, 247);
+    PassCol := RGB(74, 222, 128);
+    ResCol := RGB(52, 211, 153);
+    HeaderBannerCol := RGB(99, 102, 241);
+    CardBorderCol := Colors.Border;
+    BtnBorderCol := Colors.Border;
+    BtnTextCol := Colors.TextSecondary;
+    StopBgCol := TVeloxUtils.BlendColor(Colors.SurfaceCard, RGB(239, 68, 68), 0.15);
+    StopBorderCol := RGB(239, 68, 68);
+    StopTextCol := RGB(248, 113, 113);
   end
   else
   begin
     TermBgCol := RGB(248, 250, 252); // #F8FAFC Clean Daylight Slate
-    StatusBg := $DCFCE7;
-    StatusBorder := $16A34A;
-    StatusFg := $15803D;
+    StatusBg := RGB(220, 252, 231);  // #DCFCE7 Light emerald container
+    StatusBorder := RGB(22, 163, 74); // #16A34A Emerald border
+    StatusFg := RGB(20, 83, 45);     // #14532D High contrast deep forest green (WCAG AAA)
+    PromptCol := RGB(2, 132, 199);   // #0284C7 Deep Sky Blue
+    CursorCol := RGB(2, 132, 199);
+    PrimaryCol := RGB(15, 23, 42);   // #0F172A Deep Ink / Slate 900
+    MutedCol := RGB(51, 65, 85);     // #334155 Slate 700 (High contrast)
+    BranchCol := RGB(21, 128, 61);   // #15803D Forest Green 700
+    GitHeadCol := RGB(51, 65, 85);   // #334155 Slate 700
+    GitFileCol := RGB(22, 101, 52);  // #166534 Deep Green 800
+    CompVerCol := RGB(30, 41, 59);   // #1E293B Slate 800
+    NoteCol := RGB(154, 52, 18);     // #9A3412 Rich Amber/Orange 800
+    LinkCol := RGB(22, 101, 52);     // #166534 Deep Green 800
+    SuiteHdrCol := RGB(107, 33, 168);// #6B21A8 Deep Indigo-Purple 800
+    PassCol := RGB(22, 101, 52);     // #166534 Deep Forest Green 800
+    ResCol := RGB(20, 83, 45);       // #14532D Pitch Dark Green 900
+    HeaderBannerCol := RGB(67, 56, 202); // #4338CA Deep Indigo 700
+    CardBorderCol := RGB(203, 213, 225); // #CBD5E1 Crisp Slate 300
+    BtnBorderCol := RGB(203, 213, 225);  // #CBD5E1
+    BtnTextCol := RGB(30, 41, 59);       // #1E293B Slate 800 (High contrast)
+    StopBgCol := RGB(254, 226, 226);     // #FEE2E2 Light Rose Red
+    StopBorderCol := RGB(239, 68, 68);   // #EF4444
+    StopTextCol := RGB(185, 28, 28);     // #B91C1C Deep Crimson (WCAG AAA)
   end;
 
   Bmp := TBitmap.Create;
@@ -1984,58 +2063,57 @@ begin
     C.FillRect(Rect(0, 0, W, H));
 
     // Outer Main Window Frame (Top: 12, Bottom: 628)
-    TVeloxGdiPlus.DrawCard(C, Rect(16, 12, W - 16, 628), Colors.Surface, Colors.Border, 10);
+    TVeloxGdiPlus.DrawCard(C, Rect(16, 12, W - 16, 628), Colors.Surface, CardBorderCol, 10);
 
-    // 1. Title Bar (Y: 12..46)
-    // Vector Terminal Icon (>_) in Header
+    // 1. Title Bar (Y: 12..46, MidY = 29)
+    // Vector Terminal Icon (>_) in Header, perfectly centered to MidY = 29
     C.Pen.Color := Colors.Accent;
     C.Pen.Width := 2;
-    C.MoveTo(34, 23);
-    C.LineTo(42, 28);
-    C.LineTo(34, 33);
-    C.MoveTo(44, 33);
-    C.LineTo(52, 33);
+    C.MoveTo(32, 24);
+    C.LineTo(38, 29);
+    C.LineTo(32, 34);
+    C.MoveTo(41, 33);
+    C.LineTo(48, 33);
     C.Pen.Width := 1;
 
-    // Title
+    // Title text vertically centered in titlebar (Y: 12..46)
     C.Brush.Style := bsClear;
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 9;
     C.Font.Style := [fsBold];
     C.Font.Color := Colors.TextPrimary;
-    C.TextOut(60, 20, 'VeloxUI Terminal Workbench - Win32 ConPTY & Anonymous Pipe Process Host');
+    DrawShowcaseText(C, Rect(54, 12, W - 120, 46),
+      'VeloxUI Terminal Workbench - Win32 ConPTY & Anonymous Pipe Process Host',
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // Titlebar Window Controls (_ [ ] X)
+    // Titlebar Window Controls (_ [ ] X) vertically centered in titlebar
     C.Font.Size := 9;
     C.Font.Style := [];
     C.Font.Color := Colors.TextSecondary;
-    C.TextOut(W - 96, 20, '_');
-    C.TextOut(W - 70, 20, '[ ]');
-    C.TextOut(W - 42, 20, 'X');
+    DrawShowcaseText(C, Rect(W - 104, 12, W - 80, 46), '_', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 76, 12, W - 52, 46), '[ ]', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, Rect(W - 48, 12, W - 24, 46), 'X', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // Titlebar bottom separator line
-    C.Pen.Color := Colors.Border;
+    C.Pen.Color := CardBorderCol;
     C.Pen.Width := 1;
     C.MoveTo(16, 46); C.LineTo(W - 16, 46);
 
-    // 2. Sub-Header Toolbar (Y: 54..90)
-    TVeloxGdiPlus.DrawCard(C, Rect(26, 54, W - 26, 90), Colors.SurfaceCard, Colors.Border, 6);
+    // 2. Sub-Header Toolbar (Y: 54..90, Height 36px)
+    TVeloxGdiPlus.DrawCard(C, Rect(26, 54, W - 26, 90), Colors.SurfaceCard, CardBorderCol, 6);
 
-    // Working Directory Pill
-    PathR := Rect(36, 58, 380, 86);
-    TVeloxGdiPlus.DrawCard(C, PathR, Colors.Surface, Colors.Border, 4);
+    // Working Directory Pill (Height 24px, Y: 60..84)
+    PathR := Rect(36, 60, 360, 84);
+    TVeloxGdiPlus.DrawCard(C, PathR, Colors.Surface, CardBorderCol, 4);
     C.Font.Name := 'Consolas';
     C.Font.Size := 8;
     C.Font.Style := [];
-    C.Font.Color := Colors.TextSecondary;
+    C.Font.Color := BtnTextCol;
     DrawShowcaseText(C, PathR, 'C:\Users\jbdt\Documents\antigravity\velox-ui',
       DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
-    // Status Pill: RUNNING (PID 8492)
-    StatusText := 'RUNNING (PID 8492)';
-    StatusR := Rect(390, 58, 544, 86);
-    TVeloxGdiPlus.DrawCard(C, StatusR, StatusBg, StatusBorder, 14);
-
+    // Status Pill: EXITED (0) - Tight, compact badge (Height 24px, Y: 60..84)
+    StatusText := 'EXITED (0)';
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
@@ -2043,192 +2121,161 @@ begin
 
     TextW := C.TextWidth(StatusText);
     DotD := 6;
-    DotGap := 8;
+    DotGap := 6;
     TotalW := DotD + DotGap + TextW;
-    StartX := StatusR.Left + (StatusR.Right - StatusR.Left - TotalW) div 2;
+    StatusW := TotalW + 18;
+    StatusR := Rect(370, 60, 370 + StatusW, 84);
+    TVeloxGdiPlus.DrawCard(C, StatusR, StatusBg, StatusBorder, 12);
+
+    StartX := StatusR.Left + 9;
     DotY := StatusR.Top + (StatusR.Bottom - StatusR.Top - DotD) div 2;
 
-    // Green indicator dot
+    // Status indicator dot
     TVeloxGdiPlus.DrawCard(C, Rect(StartX, DotY, StartX + DotD, DotY + DotD), StatusFg, StatusFg, DotD div 2);
 
     // Status Text
     DrawShowcaseText(C, Rect(StartX + DotD + DotGap, StatusR.Top, StatusR.Right - 4, StatusR.Bottom),
       StatusText, DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // Action Buttons on Right
+    // Action Buttons on Right (Height 24px, Y: 60..84)
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 8;
     C.Font.Style := [];
 
     // [Clear]
-    TVeloxGdiPlus.DrawCard(C, Rect(W - 378, 58, W - 326, 86), Colors.Surface, Colors.Border, 4);
-    C.Font.Color := Colors.TextSecondary;
-    DrawShowcaseText(C, Rect(W - 378, 58, W - 326, 86), 'Clear', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 364, 60, W - 316, 84), Colors.Surface, BtnBorderCol, 4);
+    C.Font.Color := BtnTextCol;
+    DrawShowcaseText(C, Rect(W - 364, 60, W - 316, 84), 'Clear', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // [Copy All]
-    TVeloxGdiPlus.DrawCard(C, Rect(W - 320, 58, W - 248, 86), Colors.Surface, Colors.Border, 4);
-    DrawShowcaseText(C, Rect(W - 320, 58, W - 248, 86), 'Copy All', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 310, 60, W - 246, 84), Colors.Surface, BtnBorderCol, 4);
+    DrawShowcaseText(C, Rect(W - 310, 60, W - 246, 84), 'Copy All', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // [Stop]
-    TVeloxGdiPlus.DrawCard(C, Rect(W - 242, 58, W - 190, 86),
-      TVeloxUtils.BlendColor(Colors.SurfaceCard, RGB(239, 68, 68), 0.15), RGB(239, 68, 68), 4);
-    C.Font.Color := RGB(248, 113, 113);
-    DrawShowcaseText(C, Rect(W - 242, 58, W - 190, 86), 'Stop', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 240, 60, W - 194, 84), StopBgCol, StopBorderCol, 4);
+    C.Font.Color := StopTextCol;
+    DrawShowcaseText(C, Rect(W - 240, 60, W - 194, 84), 'Stop', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // [cmd]
-    TVeloxGdiPlus.DrawCard(C, Rect(W - 184, 58, W - 136, 86), Colors.Surface, Colors.Border, 4);
-    C.Font.Color := Colors.TextSecondary;
-    DrawShowcaseText(C, Rect(W - 184, 58, W - 136, 86), 'cmd', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 188, 60, W - 144, 84), Colors.Surface, BtnBorderCol, 4);
+    C.Font.Color := BtnTextCol;
+    DrawShowcaseText(C, Rect(W - 188, 60, W - 144, 84), 'cmd', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // [powershell]
-    TVeloxGdiPlus.DrawCard(C, Rect(W - 130, 58, W - 38, 86), Colors.Surface, Colors.Border, 4);
-    DrawShowcaseText(C, Rect(W - 130, 58, W - 38, 86), 'powershell', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 138, 60, W - 36, 84), Colors.Surface, BtnBorderCol, 4);
+    DrawShowcaseText(C, Rect(W - 138, 60, W - 36, 84), 'powershell', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // 3. Terminal Client Screen Area (Y: 98..544)
     TermR := Rect(26, 98, W - 26, 544);
-    TVeloxGdiPlus.DrawCard(C, TermR, TermBgCol, Colors.Border, 8);
+    TVeloxGdiPlus.DrawCard(C, TermR, TermBgCol, CardBorderCol, 8);
 
     // Vertical Scrollbar track and thumb on right edge
-    TVeloxGdiPlus.DrawCard(C, Rect(W - 42, 106, W - 32, 536), Colors.Surface, Colors.Border, 3);
+    TVeloxGdiPlus.DrawCard(C, Rect(W - 42, 106, W - 32, 536), Colors.Surface, CardBorderCol, 3);
     TVeloxGdiPlus.DrawCard(C, Rect(W - 41, 150, W - 33, 260), Colors.Accent, Colors.Accent, 3);
 
-    // Terminal Text Content (Consolas 9.5pt)
+    // Terminal Text Content (Consolas 9pt Monospace Character Grid)
     C.Font.Name := 'Consolas';
     C.Font.Size := 9;
-    LeftX := 42;
-    TopY := 108;
 
-    // Line 1: Header Banner (Indigo)
-    C.Font.Style := [fsBold];
-    C.Font.Color := RGB(99, 102, 241);
-    C.TextOut(LeftX, TopY, '=== VeloxUI Terminal Workbench v2.5.0 ===');
-    TopY := TopY + 19;
+    // Row 0: Header Banner
+    DrawTerminalGridText(0, 0, '=== VeloxUI Terminal Workbench v2.5.0 ===', HeaderBannerCol, True);
 
-    // Line 2: Sub-banner (Slate)
-    C.Font.Style := [];
-    C.Font.Color := RGB(100, 116, 139);
-    C.TextOut(LeftX, TopY, 'Native Win32 Anonymous ConPTY Host | 0 Runtime DLLs | High-DPI GDI+');
-    TopY := TopY + 22;
+    // Row 1: Sub-banner
+    DrawTerminalGridText(0, 1, 'Native Win32 Anonymous ConPTY Host | 0 Runtime DLLs | High-DPI GDI+', MutedCol, False);
 
-    // Line 3: git status (Seamlessly aligned prompt arrow and command text)
-    PromptW := C.TextWidth('> ');
-    C.Font.Style := [fsBold];
-    C.Font.Color := RGB(56, 189, 248);
-    C.TextOut(LeftX, TopY, '> ');
-    C.Font.Color := Colors.TextPrimary;
-    C.TextOut(LeftX + PromptW, TopY, 'git status');
-    TopY := TopY + 19;
+    // Row 2: (blank row)
 
-    // Line 4-7: git output
-    C.Font.Style := [];
-    C.Font.Color := RGB(34, 197, 94);
-    C.TextOut(LeftX, TopY, 'On branch master  |  Your branch is up to date with ''origin/master''.');
-    TopY := TopY + 19;
+    // Row 3: git status (Col 0: Vector chevron with apex at optical centerline +5, Col 2: command text)
+    DrawChevron(LeftX + 2, BaseY + 3 * LineH + 5, PromptCol);
+    DrawTerminalGridText(2, 3, 'git status', PrimaryCol, True);
 
-    C.Font.Color := RGB(148, 163, 184);
-    C.TextOut(LeftX, TopY, 'Changes to be committed:');
-    TopY := TopY + 19;
+    // Row 4: git output branch status
+    DrawTerminalGridText(0, 4, 'On branch master  |  Your branch is up to date with ''origin/master''.', BranchCol, False);
 
-    C.Font.Color := RGB(74, 222, 128);
-    C.TextOut(LeftX + 24, TopY, 'new file:   src/Velox.Terminal.pas (Unit #85)');
-    TopY := TopY + 19;
-    C.TextOut(LeftX + 24, TopY, 'modified:   src/Velox.Screenshot.pas');
-    TopY := TopY + 22;
+    // Row 5: Changes header
+    DrawTerminalGridText(0, 5, 'Changes to be committed:', GitHeadCol, False);
 
-    // Line 8: Compiler Command
-    PromptW := C.TextWidth('> ');
-    C.Font.Style := [fsBold];
-    C.Font.Color := RGB(56, 189, 248);
-    C.TextOut(LeftX, TopY, '> ');
-    C.Font.Color := Colors.TextPrimary;
-    C.TextOut(LeftX + PromptW, TopY, 'fpc -Mdelphi -O3 -FEbin tests/veloxtest.lpr');
-    TopY := TopY + 19;
+    // Row 6: new file (indented exactly 4 character columns)
+    DrawTerminalGridText(4, 6, 'new file:   src/Velox.Terminal.pas (Unit #85)', GitFileCol, False);
 
-    // Line 9-11: Compiler output
-    C.Font.Style := [];
-    C.Font.Color := RGB(203, 213, 225);
-    C.TextOut(LeftX, TopY, 'Free Pascal Compiler version 3.2.2 [2021/05/16] for x86_64');
-    TopY := TopY + 19;
+    // Row 7: modified file (indented exactly 4 character columns)
+    DrawTerminalGridText(4, 7, 'modified:   src/Velox.Screenshot.pas', GitFileCol, False);
 
-    C.Font.Color := RGB(245, 158, 11);
-    C.TextOut(LeftX, TopY, '[NOTE] Generics.Collections optimized via aggressive inlining');
-    TopY := TopY + 19;
+    // Row 8: (blank row)
 
-    C.Font.Color := RGB(34, 197, 94);
-    C.TextOut(LeftX, TopY, 'Linking bin/veloxtest.exe (2,148,352 bytes, 1.48 seconds)');
-    TopY := TopY + 22;
+    // Row 9: Compiler Command (Col 0: Vector chevron with apex at optical centerline +5, Col 2: command text)
+    DrawChevron(LeftX + 2, BaseY + 9 * LineH + 5, PromptCol);
+    DrawTerminalGridText(2, 9, 'fpc -Mdelphi -O3 -FEbin tests/veloxtest.lpr', PrimaryCol, True);
 
-    // Line 12: Test Suite Run
-    PromptW := C.TextWidth('> ');
-    C.Font.Style := [fsBold];
-    C.Font.Color := RGB(56, 189, 248);
-    C.TextOut(LeftX, TopY, '> ');
-    C.Font.Color := Colors.TextPrimary;
-    C.TextOut(LeftX + PromptW, TopY, './bin/veloxtest.exe');
-    TopY := TopY + 19;
+    // Row 10: Compiler version output
+    DrawTerminalGridText(0, 10, 'Free Pascal Compiler version 3.2.2 [2021/05/16] for x86_64', CompVerCol, False);
 
-    // Test output lines
-    C.Font.Style := [];
-    C.Font.Color := RGB(168, 85, 247);
-    C.TextOut(LeftX, TopY, '=== VeloxUI Automated Verification Suite (85 Modules) ===');
-    TopY := TopY + 19;
+    // Row 11: Inlining optimization note
+    DrawTerminalGridText(0, 11, '[NOTE] Generics.Collections optimized via aggressive inlining', NoteCol, False);
 
-    C.Font.Color := RGB(74, 222, 128);
-    C.TextOut(LeftX, TopY, 'PASS: [85/85] TVeloxTerminalView - ANSI 16/256/TrueColor parsed cleanly');
-    TopY := TopY + 19;
-    C.TextOut(LeftX, TopY, 'PASS: [85/85] TVeloxTerminalView - Win32 pipe non-blocking I/O verified');
-    TopY := TopY + 19;
+    // Row 12: Linking binary
+    DrawTerminalGridText(0, 12, 'Linking bin/veloxtest.exe (2,148,352 bytes, 1.48 seconds)', LinkCol, False);
 
-    C.Font.Style := [fsBold];
-    C.Font.Color := RGB(52, 211, 153);
-    C.TextOut(LeftX, TopY, 'Results: 374 passed, 0 failed  [ALL VELOXUI TESTS PASSED]');
-    TopY := TopY + 22;
+    // Row 13: (blank row)
 
-    // Active prompt with Cursor
-    PromptW := C.TextWidth('> ');
-    C.Font.Style := [fsBold];
-    C.Font.Color := RGB(56, 189, 248);
-    C.TextOut(LeftX, TopY, '> ');
-    // Cursor block perfectly positioned right after prompt
-    TVeloxGdiPlus.DrawCard(C, Rect(LeftX + PromptW, TopY + 2, LeftX + PromptW + 8, TopY + 16), Colors.Accent, Colors.Accent, 1);
+    // Row 14: Test Suite Run (Col 0: Vector chevron with apex at optical centerline +5, Col 2: command text)
+    DrawChevron(LeftX + 2, BaseY + 14 * LineH + 5, PromptCol);
+    DrawTerminalGridText(2, 14, './bin/veloxtest.exe', PrimaryCol, True);
+
+    // Row 15: Test Suite Header Banner
+    DrawTerminalGridText(0, 15, '=== VeloxUI Automated Verification Suite (85 Modules) ===', SuiteHdrCol, False);
+
+    // Row 16: Test PASS line 1
+    DrawTerminalGridText(0, 16, 'PASS: [85/85] TVeloxTerminalView - ANSI 16/256/TrueColor parsed cleanly', PassCol, False);
+
+    // Row 17: Test PASS line 2
+    DrawTerminalGridText(0, 17, 'PASS: [85/85] TVeloxTerminalView - Win32 pipe non-blocking I/O verified', PassCol, False);
+
+    // Row 18: Summary Results Line
+    DrawTerminalGridText(0, 18, 'Results: 374 passed, 0 failed  [ALL VELOXUI TESTS PASSED]', ResCol, True);
+
+    // Row 19: (blank row)
+
+    // Row 20: Active Shell Prompt & Real Terminal Block Cursor
+    // Vector prompt chevron with apex at optical centerline +5
+    DrawChevron(LeftX + 2, BaseY + 20 * LineH + 5, PromptCol);
+    // Real monospaced terminal block cursor snapped to exact character cell at Col 2
+    C.Brush.Style := bsSolid;
+    C.Brush.Color := CursorCol;
+    C.FillRect(Rect(LeftX + 2 * CharW, BaseY + 20 * LineH, LeftX + 3 * CharW, BaseY + 20 * LineH + 11));
 
     // 4. Bottom Command Bar (Y: 552..588)
     BottomR := Rect(26, 552, W - 26, 588);
-    TVeloxGdiPlus.DrawCard(C, BottomR, Colors.SurfaceCard, Colors.Border, 6);
+    TVeloxGdiPlus.DrawCard(C, BottomR, Colors.SurfaceCard, CardBorderCol, 6);
 
     MidY := BottomR.Top + (BottomR.Bottom - BottomR.Top) div 2;
 
     // Vector prompt chevron on the left, mathematically aligned with text center
-    C.Pen.Color := Colors.Accent;
-    C.Pen.Width := 2;
-    C.MoveTo(40, MidY - 5);
-    C.LineTo(45, MidY);
-    C.LineTo(40, MidY + 5);
-    C.Pen.Width := 1;
+    DrawChevron(40, MidY, PromptCol);
 
     // Command text in edit container, centered vertically to the exact middle of the card
     C.Font.Name := 'Consolas';
     C.Font.Size := 9;
     C.Font.Style := [];
-    C.Font.Color := Colors.TextPrimary;
-    DrawShowcaseText(C, Rect(54, BottomR.Top, W - 100, BottomR.Bottom),
+    C.Font.Color := PrimaryCol;
+    DrawShowcaseText(C, Rect(54, BottomR.Top, W - 104, BottomR.Bottom),
       'pwsh.exe -Command "Get-Process | Sort-Object WS -Descending | Select-Object -First 5"',
       DT_SINGLELINE or DT_VCENTER or DT_LEFT);
 
-    // Run Button (Top: 556, Bottom: 584)
-    RunBtnR := Rect(W - 92, 556, W - 34, 584);
+    // Run Button (Top: 558, Bottom: 582, Height 24px)
+    RunBtnR := Rect(W - 92, 558, W - 34, 582);
     TVeloxGdiPlus.DrawCard(C, RunBtnR, Colors.Accent, Colors.Accent, 4);
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 8;
     C.Font.Style := [fsBold];
     C.Font.Color := RGB(255, 255, 255);
-    DrawShowcaseText(C, RunBtnR, 'Run', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
+    DrawShowcaseText(C, RunBtnR, 'Run ↵', DT_SINGLELINE or DT_VCENTER or DT_CENTER);
 
     // 5. Footer Status Line (Y: 596..620)
     C.Font.Name := 'Segoe UI';
     C.Font.Size := 8;
     C.Font.Style := [];
-    C.Font.Color := Colors.TextSecondary;
+    C.Font.Color := MutedCol;
     DrawShowcaseText(C, Rect(36, 596, W - 36, 620),
       'Win32 Anonymous Pipes | Non-Blocking PeekNamedPipe Poller | ANSI/VT100/TrueColor Engine | TVeloxTerminalView v2.5.0');
 

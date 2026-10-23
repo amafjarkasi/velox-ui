@@ -82,7 +82,7 @@ Showcases the executive operations wall ([`TVeloxTelemetryWall`](src/Velox.Telem
 
 ### 5. Embedded ANSI Terminal & Interactive Process Workbench (`TVeloxTerminalView`)
 
-Showcases the integrated terminal and process host ([`TVeloxTerminalView`](src/Velox.Terminal.pas)), asynchronous Win32 anonymous pipe execution, ANSI 16, 256-color and 24-bit TrueColor escape sequence parsing, fixed-pitch double-buffered terminal canvas, dynamic prompt chevron, command history buffer (`↑`/`↓`), quick shell shortcuts (`cmd`, `powershell`), working directory pill, real-time process state badge (`● RUNNING (PID 8492)`), and 1-click command execution.
+Showcases the integrated terminal and process host ([`TVeloxTerminalView`](src/Velox.Terminal.pas)), asynchronous Win32 anonymous pipe execution, ANSI 16, 256-color and 24-bit TrueColor escape sequence parsing, fixed-pitch double-buffered terminal canvas, dynamic prompt chevron, command history buffer (`↑`/`↓`), quick shell shortcuts (`cmd`, `powershell`), working directory pill, real-time process state badge (`● EXITED (0)` / `● RUNNING`), strict monospace character grid alignment with solid terminal block cursor, and 1-click command execution.
 
 #### Windows 11 Terminal Workbench Dark Mode (`vtDark`)
 <p align="center">
