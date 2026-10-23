@@ -18,11 +18,18 @@ The project adheres to [Semantic Versioning](https://semver.org/).
 - **Terminal Showcase Generator (`TVeloxScreenshot.RenderTerminalShowcase`)**: High-DPI programmatic rendering in Windows 11 Fluent Dark (`vtDark`) and Daylight (`vtLight`) modes.
 
 ### Fixed
-- **Sub-Pixel Chevron & Input Baseline Centering (`Velox.Terminal`, `Velox.Screenshot`)**:
-  - Replaced mismatched characters with mathematically centered anti-aliased GDI+ vector chevrons aligned to text centerlines.
-  - Fixed terminal line prompt character spacing (`PromptW := C.TextWidth('> ')`) for natural font-metric separation.
-  - Corrected 32-bit DIB alpha channel preservation (`pf24bit` RGB) in `SaveBitmapToPng` to prevent font transparency artifacts.
-
+- **Sub-Pixel Chevron & Monospace Optical Alignment (`Velox.Terminal`, `Velox.Screenshot`)**:
+  - Aligned prompt chevron apex to $Y+5$ (`BaseY + Row * LineH + 5`), matching the exact optical centerline of lowercase command text (`git status`, `fpc ...`, `./bin/veloxtest.exe`).
+  - Snapped the terminal cursor to a solid monospaced character cell block (8px x 11px) positioned collinearly at Column 2.
+  - Aligned the titlebar vector terminal icon (`>_`) to the exact titlebar vertical centerline ($Y=29$) with a tight 7px optical gap.
+- **Compact Toolbar Geometry & Status Pill Sizing**:
+  - Reduced height of all toolbar buttons, path pill, and status badge from 28px to 24px (`Y: 60..84`), providing clean 6px margins inside the 36px bar.
+  - Dynamically sized status pill width based on text metrics (88px) to eliminate oversized pill appearance.
+- **Daylight Theme (`vtLight`) High-Contrast Overhaul**:
+  - Upgraded terminal colors to WCAG AAA contrast against `#FFFFFF`/`#F8FAFC` using deep Slate-900 `#0F172A`, deep forest green `#166534`, Slate-800 metadata `#1E293B`, rich amber `#9A3412`, and crimson `#B91C1C`.
+  - Added crisp `#CBD5E1` Slate-300 borders for clear card and button definition on light backgrounds.
+- **DIB Alpha Channel Preservation**: Corrected 32-bit DIB alpha channel preservation (`pf24bit` RGB) in `SaveBitmapToPng` to prevent font transparency artifacts.
+- **Win32 Anonymous Pipe Deadlock Prevention**: Implemented non-blocking `PeekNamedPipe` polling on 20ms timer and immediate parent write-handle closing to guarantee clean EOF detection without GUI freezes.
 ---
 
 ## [v2.5.0] - 2026-10-22

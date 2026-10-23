@@ -7,7 +7,7 @@
   <a href="#-getting-started--installation"><img src="https://img.shields.io/badge/Compilers-Delphi%20VCL%20%7C%20Free%20Pascal%203.2.2%20LCL-38bdf8?style=for-the-badge" alt="Compilers" /></a>
   <a href="#-before-vs-after-85-less-boilerplate"><img src="https://img.shields.io/badge/Boilerplate%20Reduction--85%25%20LOC-10b981?style=for-the-badge" alt="Boilerplate Reduction" /></a>
   <a href="#-automated-verification-suite-374374-passing"><img src="https://img.shields.io/badge/Tests-374%2F374%20Passing-34d399?style=for-the-badge" alt="Tests" /></a>
-  <a href="#-17-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win11%20Fluent-DWM%20Mica%20%7C%20GDI%2B%20%7C%20High--DPI-f59e0b?style=for-the-badge" alt="Win11 Fluent" /></a>
+  <a href="#-20-hard-won-win32--vcl--lcl-gotchas-solved"><img src="https://img.shields.io/badge/Win32%20Gotchas-20%20Hard--Won%20Solutions-f59e0b?style=for-the-badge" alt="20 Win32 Gotchas Solved" /></a>
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Changelog-v2.5.1-8b5cf6?style=for-the-badge" alt="Changelog" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-f43f5e?style=for-the-badge" alt="License" /></a>
 </p>
@@ -102,8 +102,10 @@ Showcases the integrated terminal and process host ([`TVeloxTerminalView`](src/V
 
 ### [v2.5.1] - 2026-10-22
 - **Embedded ANSI Terminal & Interactive Process Workbench (`Velox.Terminal` - Unit #85)**: Asynchronous non-blocking sub-process hosting via Win32 anonymous pipes (`PeekNamedPipe`), full ANSI/VT100/xterm-256 and 24-bit TrueColor parsing, fixed-pitch double-buffered terminal display, command history navigation (`↑`/`↓`), integrated prompt bar with vector chevron, quick shell action buttons, and plain text/ANSI export.
-- **Sub-Pixel Chevron & Input Baseline Centering**: Mathematically aligned vector chevron prompts (`❯`) and edit control text to exact component centerlines.
-- **Expanded Verification Suite**: 374/374 automated tests passing (100% success).
+- **Sub-Pixel Monospace Grid & Command Line Optical Alignment**: Mathematically aligned the prompt chevron apex to the command line optical waistline ($Y+5$), matching the exact centerline of lowercase Consolas characters (`git status`, `fpc ...`, `./bin/veloxtest.exe`) and snapping character cell block cursors collinearly.
+- **Compact Toolbar Sizing & Button Geometry**: Scaled all toolbar buttons (`[Clear]`, `[Copy All]`, `[Stop]`, `[cmd]`, `[powershell]`), path pill, and status pill to a sleek 24px height with clean 6px top/bottom margins in confined bars; dynamically sized status pill width (88px) to eliminate bulky spacing.
+- **Daylight Mode High-Contrast Palette**: Enhanced `vtLight` palette across `TVeloxTerminalView` to meet WCAG AAA requirements with deep Slate-900 `#0F172A` text, Slate-800 metadata, deep forest greens `#166534`, rich amber `#9A3412`, crimson `#B91C1C`, and crisp `#CBD5E1` card borders.
+- **Expanded Verification Suite**: 374/374 automated tests passing (100% success) across 85 modules.
 
 ### [v2.5.0] - 2026-10-22
 - **5 High-Value Composite Workflow Components (Expanding Framework to 84 Units)**:
@@ -321,7 +323,7 @@ flowchart TD
 
 ---
 
-## 🧠 17 Hard-Won Win32 / VCL / LCL Gotchas Solved
+## 🧠 20 Hard-Won Win32 / VCL / LCL Gotchas Solved
 
 | # | The Win32 / Delphi / Lazarus Trap | Root Cause | How **VeloxUI** Solves It Automatically |
 | :---: | :--- | :--- | :--- |
@@ -342,15 +344,18 @@ flowchart TD
 | **15** | **Unhandled Exception Crashes with Blank Error Dialogs** | Standard `ShowException` shows a brief message and loses the call stack and recent telemetry history | [`Velox.CrashReporter.pas`](src/Velox.CrashReporter.pas) captures stack frames via `BackTraceStrFunc`, flushes `TVeloxLogger` ring buffers, writes a native `.dmp` minidump via `dbghelp.dll`, and renders a dark-mode modal |
 | **16** | **Stack Deallocation of `PWideChar` when wrapping Windows API String Constants** | Expressions like `PWideChar(WideString('Literal'))` construct temporary stack variables destroyed immediately after the call | Declare typed constants (`const BCRYPT_ALG: UnicodeString = '...';`) in [`Velox.Crypto.pas`](src/Velox.Crypto.pas) and [`Velox.Theme.pas`](src/Velox.Theme.pas) for permanent static string pointers |
 | **17** | **Headless LCL Tests Crash with `Error 1407: Cannot find window class`** | Accessing `Canvas.TextWidth` or `Handle` on unparented/unshown controls in non-GUI test suites forces immediate win32 handle creation | [`Velox.Breadcrumb.pas`](src/Velox.Breadcrumb.pas) and [`Velox.Tabs.pas`](src/Velox.Tabs.pas) check `HandleAllocated` and compute character bounds arithmetically when headless |
+| **18** | **Win32 Anonymous Pipe Deadlock & GUI Thread Freeze** when reading sub-process output | Calling `ReadFile` synchronously on Win32 anonymous pipes (`CreatePipe`) blocks until bytes arrive or EOF; if the child pauses or the parent keeps write handles open, the message loop deadlocks permanently | [`TVeloxTerminalView`](src/Velox.Terminal.pas) polls `PeekNamedPipe` on a 20ms timer to read only when `TotalBytesAvail > 0`, and immediately closes the parent's write-pipe copy post-spawn so EOF (`ERROR_BROKEN_PIPE`) signals cleanly upon exit |
+| **19** | **GDI `TextOutW` on 32-bit DIB Bitmaps Zeroes Alpha Channel** (`pf32bit` Font Disappearance) | Win32 GDI text rendering (`TextOutW`/`DrawTextW`) with `SetBkMode(TRANSPARENT)` is alpha-unaware: it writes RGB bytes while setting alpha to `00` (100% transparent), causing text to vanish when serialized to PNG or alpha-composited | [`TVeloxScreenshot`](src/Velox.Screenshot.pas) enforces `PixelFormat := pf24bit` before GDI text rasterization passes, guaranteeing opaque anti-aliased character glyphs without alpha cutout corruption |
+| **20** | **Optical Waistline Desync between Vector Prompts & Monospace Glyphs** | Monospace fonts (e.g. Consolas 9pt in an 18px line cell) place glyphs at cap-top $Y+2$ and baseline $Y+7$ leaving trailing row padding; centering prompts on geometric cell midpoints (`LineH div 2 = 9`) places icons 3–4px below the text, making commands appear floating | [`TVeloxTerminalView`](src/Velox.Terminal.pas) and [`TVeloxScreenshot`](src/Velox.Screenshot.pas) anchor vector prompt chevrons and character cell block cursors directly to the font's optical waistline ($Y+5$), ensuring sub-pixel horizontal collinearity |
 
 ---
 
-## 🧪 Automated Verification Suite (`315/315 Passing`)
+## 🧪 Automated Verification Suite (`374/374 Passing`)
 
-VeloxUI includes a self-contained console verification suite ([`tests/veloxtest.lpr`](tests/veloxtest.lpr)) that tests all **78 modules** headlessly and regenerates the Dark/Light component gallery PNGs in ~2.8 seconds:
+VeloxUI includes a self-contained console verification suite ([`tests/veloxtest.lpr`](tests/veloxtest.lpr)) that tests all **85 modules** headlessly and regenerates the Dark/Light component gallery PNGs in ~3.5 seconds:
 
 ```powershell
-# Compile and run the 315-assertion verification suite with Lazarus / Free Pascal
+# Compile and run the 374-assertion verification suite with Lazarus / Free Pascal
 lazbuild -B tests\veloxtest.lpi
 .\tests\lib\veloxtest.exe
 ```
