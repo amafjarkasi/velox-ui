@@ -133,19 +133,18 @@ Showcases the integrated terminal and process host ([`TVeloxTerminalView`](src/V
 
 ---
 
-## 🎯 Why VeloxUI Exists
+## 💡 Why VeloxUI Exists
 
-Native Object Pascal (`Delphi` and `Free Pascal / Lazarus`) is one of the most productive secrets in systems software: it compiles in **~2 seconds** into a **~1.8 MB standalone native executable** that starts in **45 ms**, uses **~11 MB of RAM**, and requires **zero external runtime DLLs** (compared to 180+ MB and 300+ MB RAM for Electron/WebView2).
+Native Object Pascal (`Delphi` and `Free Pascal / Lazarus`) is one of the most productive secrets in systems software: it compiles in **~1.5 seconds** into a **~2.1 MB standalone native executable** that boots in **45 ms**, consumes **~12 MB of RAM**, and requires **zero external runtime DLLs** (compared to 180+ MB disk and 300+ MB RAM for Electron/WebView2).
 
-However, building a **modern Windows 11 Fluent Dark Mode** application in raw VCL/LCL traditionally forces developers to fight dozens of undocumented Win32 quirks:
-- Native `TComboBox` controls ignore `.Height` and render taller than adjacent buttons at High-DPI.
-- Standard bordered `TEdit` controls clip placeholder text against the top-left border with no vertical centering.
-- Native `TCheckBox`, `TButton`, and `TSplitter` controls draw black-on-dark unreadable captions, glaring white Win32 bevels, or 1990s XOR stripes on dark panels.
-- Standard `TListView` tables flash white on background erase, lose row selection on refresh, and show blinding white scrollbars in dark mode.
-- Standard `MessageDlg` and `InputQuery` dialogs pop up blinding white legacy Win32 windows inside a dark-themed app.
-- Standard GDI `Canvas.RoundRect` and `Canvas.Polyline` look jagged and aliased on modern High-DPI displays.
+However, building a modern, production-grade **Windows 11 Fluent application** in raw VCL/LCL traditionally forces developers to reinvent weeks of low-level Win32 plumbing:
+- **Sub-Process Execution & Terminals**: Hosting interactive CLI tools (`git`, `fpc`, `pwsh`) requires perilous Win32 anonymous pipe plumbing (`PeekNamedPipe`), ConPTY coordination, and non-blocking timers to avoid deadlocking the UI.
+- **Modern REST Debugging**: Testing APIs traditionally requires heavyweight Indy/OpenSSL DLL deployments or tabbing out to external electron tools like Postman.
+- **Post-Mortem Diagnostics**: Unhandled exceptions crash with sterile Win32 dialogs, leaving no minidumps (`dbghelp.dll`), breadcrumb timelines, or memory footprints.
+- **Windows 11 Dark Mode Quirks**: Blinding white scrollbars (`DarkMode_Explorer`), un-centered edit controls, mismatched combobox heights, and legacy beveled checkboxes on dark surfaces.
+- **High-DPI GDI Jagged Edges**: Legacy `Canvas.RoundRect` and `Canvas.Polyline` appear pixelated without hardware-accelerated GDI+ anti-aliasing.
 
-**VeloxUI solves all of these permanently.** Drop the `src/` folder into any Delphi or Lazarus project and build production-grade, flicker-free Windows 11 telemetry dashboards and desktop tools with **85% less code**.
+**VeloxUI solves all of these permanently.** Drop the `src/` folder into any Delphi or Lazarus project and assemble flicker-free Windows 11 developer workbenches, telemetry walls, and desktop tools with **85% less code**.
 
 ---
 
@@ -153,16 +152,16 @@ However, building a **modern Windows 11 Fluent Dark Mode** application in raw VC
 
 | # | Flagship Feature | Key Modules | Practical Breakthrough & UX Impact |
 | :---: | :--- | :--- | :--- |
-| **1** | **Windows 11 Fluent Dark Mode & Mica Engine** | [`Velox.Theme`](src/Velox.Theme.pas), [`Velox.Types`](src/Velox.Types.pas) | True OS DWM Mica/Acrylic backdrops (`Attr 38`), dark titlebars, undocumented `uxtheme.dll` dark scrollbars (`DarkMode_Explorer`), and runtime palettes (`vtDark`, `vtLight`, `vctMidnight`, `vctNord`, `vctHighContrast`). |
-| **2** | **1-Line Desktop Application Shell** | [`Velox.AppShell`](src/Velox.AppShell.pas) | Full Windows 11 desktop application shell with collapsible sidebar navigation, vertically centered header search edit, multi-page router, and status bar in a single call. |
-| **3** | **Anti-Aliased GDI+ Vector Suite** | [`Velox.GdiPlus`](src/Velox.GdiPlus.pas), [`Velox.Charts`](src/Velox.Charts.pas) | Sub-pixel antialiased custom cards, donut gauges, dual-series sparklines, heatmaps, soft alpha glowing focus rings (`DrawGlowBorder`), and ambient elevation drop shadows (`DrawDropShadow`). |
-| **4** | **High-Frequency Virtual Grid & SparkGrid** | [`Velox.VirtualGrid`](src/Velox.VirtualGrid.pas), [`Velox.SparkGrid`](src/Velox.SparkGrid.pas) | Zero-allocation `OwnerData` virtual list view with double-buffering, generic QuickSort, natural sort direction tracking (`▲`/`▼`), and inline micro-heatbars, sparklines, and status dot cells. |
-| **5** | **VS Code / Raycast Fuzzy Command Palette** | [`Velox.CommandPalette`](src/Velox.CommandPalette.pas) | Word-boundary bonus fuzzy matcher, dark-mode overlay, categorized action groups, shortcut hints, and instant keyboard navigation (`Ctrl+K`). |
-| **6** | **Live Transactional Property Inspector Studio** | [`Velox.InspectorStudio`](src/Velox.InspectorStudio.pas), [`Velox.Undo`](src/Velox.Undo.pas) | Two-column categorized typed editors (strings, booleans, integers, colors) with real-time dirty tracking and multi-level Undo/Redo rollback transactions (`Apply` / `Discard`). |
-| **7** | **Interactive JSON Document & Hierarchy Explorer** | [`Velox.JsonTreeViewer`](src/Velox.JsonTreeViewer.pas), [`Velox.Json`](src/Velox.Json.pas) | RFC-8259 DOM parser + O(N) hierarchical tree builder + live breadcrumb navigation with color-coded type badges (`[obj]`, `[arr]`, `[str]`, `[num]`, `[bool]`, `[null]`). |
-| **8** | **Side-by-Side & Unified Diff Visualizer** | [`Velox.DiffInspector`](src/Velox.DiffInspector.pas), [`Velox.Diff`](src/Velox.Diff.pas) | Myers LCS line diff engine with Levenshtein distance, similarity percentage, addition/deletion line counters, and one-click switching between Side-by-Side and Unified views. |
-| **9** | **Windows 11 `Win+V` Clipboard Palette** | [`Velox.ClipboardPalette`](src/Velox.ClipboardPalette.pas), [`Velox.Clipboard`](src/Velox.Clipboard.pas) | Event-driven clipboard listener using `AddClipboardFormatListener` / `WM_CLIPBOARDUPDATE` with pin toggling (`★`), instant fuzzy search, MRU deduplication, and JSON history persistence. |
-| **10** | **Zero-Dependency Native Security Core** | [`Velox.Crypto`](src/Velox.Crypto.pas), [`Velox.AuditSecurityLog`](src/Velox.AuditSecurityLog.pas) | Native Windows CNG BCrypt hardware SHA-256, SHA-1, MD5, CRC32, Base64, non-blocking `ReadDirectoryChangesW` file watcher, and real-time chronological audit timeline. |
+| **1** | **Windows 11 Fluent Dark Mode & Mica Engine** | [`Velox.Theme`](src/Velox.Theme.pas), [`Velox.Types`](src/Velox.Types.pas), [`Velox.Backdrop`](src/Velox.Backdrop.pas) | True OS DWM Mica/Acrylic backdrops (`Attr 38`), dark titlebars, undocumented `uxtheme.dll` dark scrollbars (`DarkMode_Explorer`), and runtime palettes (`vtDark`, `vtLight`, `vctMidnight`, `vctNord`). |
+| **2** | **Embedded ANSI Terminal & Process Host** | [`Velox.Terminal`](src/Velox.Terminal.pas) | Asynchronous Win32 anonymous pipe sub-process hosting (`PeekNamedPipe`), full ANSI/VT100/TrueColor parser, fixed-pitch double-buffered screen, sub-pixel prompt alignment, and command history. |
+| **3** | **Embedded HTTP REST API Studio & Debugger** | [`Velox.RestStudio`](src/Velox.RestStudio.pas), [`Velox.Http`](src/Velox.Http.pas) | Native WinHTTP TLS 1.3 workbench with two-column header/param inspector, JSON syntax highlighter, payload regression diffing (`TVeloxDiffView`), latency sparklines, and 1-click cURL export. |
+| **4** | **1-Line Desktop Application Shell** | [`Velox.AppShell`](src/Velox.AppShell.pas) | Complete Windows 11 desktop app shell with collapsible sidebar navigation, vertically centered header search edit, multi-page router, and status bar in a single call. |
+| **5** | **Mission Control Telemetry Wall** | [`Velox.TelemetryWall`](src/Velox.TelemetryWall.pas), [`Velox.Charts`](src/Velox.Charts.pas) | Responsive operations wall with real-time KPI metric cards, anti-aliased GDI+ donut gauges, rolling multi-channel telemetry streams, and sustained hysteresis anti-spike alerting. |
+| **6** | **High-Frequency Virtual Grid & SparkGrid** | [`Velox.VirtualGrid`](src/Velox.VirtualGrid.pas), [`Velox.SparkGrid`](src/Velox.SparkGrid.pas) | Zero-allocation `OwnerData` virtual list view with double-buffering, generic QuickSort, natural sort direction tracking (`▲`/`▼`), and inline micro-heatbars, sparklines, and status dots. |
+| **7** | **Crash Flight Recorder Blackbox** | [`Velox.CrashFlightRecorder`](src/Velox.CrashFlightRecorder.pas), [`Velox.CrashReporter`](src/Velox.CrashReporter.pas) | Enterprise crash diagnostics combining `dbghelp.dll` minidumps, chronological breadcrumb timelines, working set RAM telemetry, and BCrypt SHA-256 binary validation. |
+| **8** | **Side-by-Side & Unified Diff Visualizer** | [`Velox.DiffInspector`](src/Velox.DiffInspector.pas), [`Velox.DiffView`](src/Velox.DiffView.pas) | Myers LCS line diff engine with Levenshtein distance, similarity percentage, addition/deletion line counters, and one-click switching between Side-by-Side and Unified views. |
+| **9** | **VS Code / Raycast Fuzzy Command Palette** | [`Velox.CommandPalette`](src/Velox.CommandPalette.pas) | Word-boundary bonus fuzzy matcher, dark-mode overlay, categorized action groups, shortcut hints, and instant keyboard navigation (`Ctrl+K`). |
+| **10** | **Zero-Dependency Native Security & Cryptography** | [`Velox.Crypto`](src/Velox.Crypto.pas), [`Velox.FileWatcher`](src/Velox.FileWatcher.pas) | Native Windows CNG BCrypt hardware SHA-256, SHA-1, MD5, CRC32, Base64, non-blocking `ReadDirectoryChangesW` file watcher, and chronological audit logging. |
 
 ---
 
